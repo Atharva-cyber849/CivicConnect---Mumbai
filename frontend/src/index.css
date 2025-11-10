@@ -1,0 +1,332 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Variables */
+:root {
+  --mobile-vh: 100vh;
+  --safe-area-inset-top: 0px;
+  --safe-area-inset-bottom: 0px;
+  --bottom-nav-height: 80px;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .mobile-layout {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-app {
+    min-height: var(--mobile-vh);
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom));
+  }
+
+  /* Touch-friendly inputs */
+  input, textarea, select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  /* Enhanced touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Smooth scrolling */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* PWA-specific styles */
+@media all and (display-mode: standalone) {
+  /* Hide browser UI when in PWA mode */
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  /* Safe area support for notch devices */
+  .safe-area-top {
+    padding-top: var(--safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+}
+
+/* Loading animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0); 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Custom components */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-effect {
+  background-color: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-gray-50 {
+    background-color: white;
+  }
+  
+  .text-gray-600 {
+    color: black;
+  }
+  
+  button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    color: black !important;
+    background: white !important;
+  }
+}
+
+/* Custom utility classes */
+.text-balance {
+  text-wrap: balance;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Touch feedback */
+.touch-feedback {
+  transition: all 0.1s ease-in-out;
+}
+
+.touch-feedback:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-civic-blue-600 text-white hover:bg-civic-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1 text-sm;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-civic-blue-500 focus:border-transparent;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .badge {
+    @apply inline-block px-3 py-1 text-sm font-semibold rounded-full;
+  }
+
+  .badge-pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-in-progress, .badge-in_progress {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  .badge-resolved {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .badge-rejected {
+    @apply bg-red-100 text-red-800;
+  }
+
+  /* Custom marker cluster styles */
+  .marker-cluster-small {
+    @apply bg-civic-blue-200 text-civic-blue-800;
+  }
+  
+  .marker-cluster-medium {
+    @apply bg-civic-blue-300 text-civic-blue-900;
+  }
+  
+  .marker-cluster-large {
+    @apply bg-civic-blue-400 text-white;
+  }
+  
+  .marker-cluster {
+    border-radius: 50%;
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .marker-cluster div {
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+  }
+}
+
+/* Leaflet map fixes */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+/* React Toastify customization */
+.Toastify__toast {
+  border-radius: 8px;
+}
+
+.Toastify__toast--success {
+  background-color: #10b981;
+}
+
+.Toastify__toast--error {
+  background-color: #ef4444;
+}
+
+.Toastify__toast--info {
+  background-color: #0078D7;
+}
+
+/* Loading spinner */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,39 @@
+# FastAPI Core
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Basic image processing only for now
+Pillow==11.0.0
+numpy==1.26.4
+
+# Utilities
+python-jose[cryptography]==3.3.0
+pydantic>=2.0.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
+
+# Mumbai-specific dependencies
+geopy==2.4.0
+
+# Optional ML framework dependencies (install as needed)
+# TensorFlow (for TensorFlow models)
+# tensorflow>=2.13.0
+
+# PyTorch (for PyTorch models) 
+# torch>=2.0.0
+# torchvision>=0.15.0
+
+# ONNX Runtime (for ONNX models)
+# onnxruntime>=1.16.0
+
+# HuggingFace Transformers (for NLP models)
+# transformers>=4.35.0
+# tokenizers>=0.14.0
+
+# Development and testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Logging and monitoring
+structlog==23.2.0

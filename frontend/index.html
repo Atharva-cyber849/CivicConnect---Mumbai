@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Cache Busting -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <!-- Permanent BMC Portal Styles -->
+    <style>
+      .bmc-portal-permanent {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background-color: #dc2626 !important;
+        color: white !important;
+        font-weight: bold !important;
+        border: 2px solid #b91c1c !important;
+        padding: 12px 16px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        cursor: pointer !important;
+        z-index: 9999 !important;
+        position: relative !important;
+        min-width: 200px !important;
+        font-size: 16px !important;
+      }
+      .bmc-portal-permanent:hover {
+        background-color: #b91c1c !important;
+      }
+    </style>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="background-color" content="#f9fafb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="CivicConnect" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="shortcut icon" href="/icons/icon-192x192.png" />
+    
+    <!-- SEO Meta Tags -->
+    <title>CivicConnect Mumbai - BMC Complaint Management System</title>
+    <meta name="description" content="Mumbai BMC Civic Complaint Management System - Report issues, track complaints, and connect with municipal services in Mumbai." />
+    <meta name="keywords" content="Mumbai, BMC, civic issues, complaints, municipal services, Mumbai corporation, ward complaints" />
+    <meta name="author" content="Mumbai BMC" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://civicconnect.mumbai.gov.in/" />
+    <meta property="og:title" content="CivicConnect Mumbai - BMC Complaint Management" />
+    <meta property="og:description" content="Report civic issues and track complaints with Mumbai BMC's digital platform." />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://civicconnect.mumbai.gov.in/" />
+    <meta property="twitter:title" content="CivicConnect Mumbai - BMC Complaint Management" />
+    <meta property="twitter:description" content="Report civic issues and track complaints with Mumbai BMC's digital platform." />
+    <meta property="twitter:image" content="/icons/icon-512x512.png" />
+    
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="/data/mumbai-wards.geojson" as="fetch" crossorigin="anonymous" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registration successful');
+            })
+            .catch(function(error) {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

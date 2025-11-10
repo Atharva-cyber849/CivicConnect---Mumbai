@@ -1,0 +1,354 @@
+const CACHE_NAME = 'civicconnect-v1';
+const STATIC_CACHE = `${CACHE_NAME}-static`;
+const DYNAMIC_CACHE = `${CACHE_NAME}-dynamic`;
+const OFFLINE_PAGE = '/offline.html';
+
+// Resources to cache immediately
+const STATIC_ASSETS = [
+  '/',
+  '/offline.html',
+  '/manifest.json',
+  '/static/js/bundle.js',
+  '/static/css/main.css',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+];
+
+// API endpoints to cache
+const API_ENDPOINTS = [
+  '/api/complaints/',
+  '/api/complaints/my/',
+  '/api/wards/',
+  '/api/departments/',
+  '/api/auth/user/'
+];
+
+// Install event - cache static assets
+self.addEventListener('install', (event) => {
+  console.log('Service Worker: Installing...');
+  
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then(cache => {
+        console.log('Service Worker: Caching static assets');
+        return cache.addAll(STATIC_ASSETS);
+      })
+      .then(() => {
+        console.log('Service Worker: Static assets cached');
+        return self.skipWaiting(); // Take control immediately
+      })
+      .catch(error => {
+        console.error('Service Worker: Failed to cache static assets', error);
+      })
+  );
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker: Activating...');
+  
+  event.waitUntil(
+    caches.keys()
+      .then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+              console.log('Service Worker: Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(() => {
+        console.log('Service Worker: Activated');
+        return self.clients.claim(); // Take control of all clients
+      })
+  );
+});
+
+// Fetch event - network first for API, cache first for static assets
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // Handle API requests - Network First strategy
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirstStrategy(request));
+    return;
+  }
+
+  // Handle static assets - Cache First strategy
+  if (STATIC_ASSETS.some(asset => url.pathname === asset) || 
+      request.destination === 'image' || 
+      request.destination === 'style' || 
+      request.destination === 'script') {
+    event.respondWith(cacheFirstStrategy(request));
+    return;
+  }
+
+  // Handle navigation requests - Network First with offline fallback
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirstWithOfflineFallback(request));
+    return;
+  }
+
+  // Default strategy for other requests
+  event.respondWith(networkFirstStrategy(request));
+});
+
+// Network First Strategy - for API calls and dynamic content
+async function networkFirstStrategy(request) {
+  try {
+    const networkResponse = await fetch(request);
+    
+    if (networkResponse.ok) {
+      // Cache successful responses
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    console.log('Service Worker: Network failed, serving from cache');
+    
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Return offline response for API calls
+    if (request.url.includes('/api/')) {
+      return new Response(
+        JSON.stringify({
+          error: 'Offline',
+          message: 'Unable to fetch data. Please check your connection.',
+          cached: false
+        }),
+        {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+    
+    throw error;
+  }
+}
+
+// Cache First Strategy - for static assets
+async function cacheFirstStrategy(request) {
+  const cachedResponse = await caches.match(request);
+  
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+  
+  try {
+    const networkResponse = await fetch(request);
+    
+    if (networkResponse.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    console.error('Service Worker: Failed to fetch asset:', request.url);
+    throw error;
+  }
+}
+
+// Network First with Offline Fallback - for navigation
+async function networkFirstWithOfflineFallback(request) {
+  try {
+    const networkResponse = await fetch(request);
+    return networkResponse;
+  } catch (error) {
+    console.log('Service Worker: Navigation failed, serving offline page');
+    
+    const cachedResponse = await caches.match(OFFLINE_PAGE);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Fallback HTML if offline page is not cached
+    return new Response(
+      `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CivicConnect - Offline</title>
+        <style>
+          body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 2rem; }
+          .offline-container { max-width: 400px; margin: 2rem auto; }
+          .icon { font-size: 4rem; margin-bottom: 1rem; }
+          .retry-btn { background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; }
+        </style>
+      </head>
+      <body>
+        <div class="offline-container">
+          <div class="icon">📱</div>
+          <h1>You're Offline</h1>
+          <p>CivicConnect is not available right now. Please check your internet connection.</p>
+          <button class="retry-btn" onclick="window.location.reload()">Try Again</button>
+        </div>
+      </body>
+      </html>`,
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html'
+        }
+      }
+    );
+  }
+}
+
+// Background sync for failed requests
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'complaint-sync') {
+    console.log('Service Worker: Syncing failed complaint submissions');
+    event.waitUntil(syncFailedComplaints());
+  }
+});
+
+// Sync failed complaint submissions when online
+async function syncFailedComplaints() {
+  try {
+    // Get failed requests from IndexedDB or localStorage
+    const failedRequests = await getFailedRequests();
+    
+    for (const request of failedRequests) {
+      try {
+        await fetch(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: request.body
+        });
+        
+        // Remove successful request from storage
+        await removeFailedRequest(request.id);
+        console.log('Service Worker: Synced failed request', request.id);
+      } catch (error) {
+        console.error('Service Worker: Failed to sync request', request.id, error);
+      }
+    }
+  } catch (error) {
+    console.error('Service Worker: Background sync failed', error);
+  }
+}
+
+// Helper functions for failed request storage
+async function getFailedRequests() {
+  // Implementation would use IndexedDB or localStorage
+  // For now, return empty array
+  return [];
+}
+
+async function removeFailedRequest(id) {
+  // Implementation would remove from IndexedDB or localStorage
+  console.log('Removing failed request:', id);
+}
+
+// Push notification handling
+self.addEventListener('push', (event) => {
+  console.log('Service Worker: Push message received');
+  
+  let notificationData = {
+    title: 'CivicConnect Notification',
+    body: 'You have a new update',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-96x96.png',
+    tag: 'civicconnect-notification',
+    requireInteraction: false,
+    actions: [
+      {
+        action: 'view',
+        title: 'View',
+        icon: '/icons/icon-96x96.png'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss'
+      }
+    ]
+  };
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = { ...notificationData, ...data };
+    } catch (error) {
+      console.error('Service Worker: Failed to parse push data', error);
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, notificationData)
+  );
+});
+
+// Notification click handling
+self.addEventListener('notificationclick', (event) => {
+  console.log('Service Worker: Notification clicked');
+  
+  event.notification.close();
+
+  if (event.action === 'view') {
+    event.waitUntil(
+      clients.openWindow('/user/my-complaints')
+    );
+  } else if (event.action === 'dismiss') {
+    // Just close the notification
+  } else {
+    // Default action - open the app
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
+});
+
+// Message handling for communication with main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Periodic background sync (experimental)
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'complaint-status-check') {
+    event.waitUntil(checkComplaintUpdates());
+  }
+});
+
+async function checkComplaintUpdates() {
+  try {
+    // Check for complaint status updates
+    const response = await fetch('/api/complaints/updates/');
+    const updates = await response.json();
+    
+    if (updates.length > 0) {
+      // Show notification for updates
+      await self.registration.showNotification('Complaint Updates', {
+        body: `You have ${updates.length} complaint update(s)`,
+        icon: '/icons/icon-192x192.png',
+        tag: 'complaint-updates',
+        data: { updates }
+      });
+    }
+  } catch (error) {
+    console.error('Service Worker: Failed to check complaint updates', error);
+  }
+}

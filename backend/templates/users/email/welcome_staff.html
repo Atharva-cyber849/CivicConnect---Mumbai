@@ -1,0 +1,28 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+<h2>Welcome to Snap & Report Mumbai!</h2>
+
+<p>Dear {{ user.full_name }},</p>
+
+<p>Welcome to Snap & Report Mumbai! Your account has been successfully created as a {{ user.get_role_display }}.</p>
+
+<h3>Your Account Details:</h3>
+<ul>
+    <li>Username: {{ user.username }}</li>
+    <li>Department: {{ user.department.name }}</li>
+    <li>Ward: {{ user.ward }}</li>
+    <li>Designation: {{ user.designation }}</li>
+</ul>
+
+<p>Please login using your BMC email address and temporary password. For security reasons, you will be required to change your password upon first login.</p>
+
+<div class="button-container">
+    <a href="{{ login_url }}" class="button">Login Now</a>
+</div>
+
+<p>If you have any questions or need assistance, please contact our IT support team.</p>
+
+<p>Best regards,<br>
+Snap & Report Mumbai Team</p>
+{% endblock %}

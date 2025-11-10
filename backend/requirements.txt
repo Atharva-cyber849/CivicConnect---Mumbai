@@ -1,0 +1,38 @@
+# Django Core
+Django==5.0.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+django-filter==23.5
+drf-spectacular==0.27.0
+
+# Database
+psycopg[binary]==3.2.3
+django-environ==0.11.2
+
+# Geolocation
+djangorestframework-gis==1.0.0
+shapely==2.0.2
+
+# Async Tasks
+celery==5.3.4
+redis==5.0.1
+
+# Image/File Upload
+Pillow==11.0.0
+django-storages==1.14.2
+boto3==1.34.34
+opencv-python-headless==4.9.0.80  # Headless version for server deployment
+python-magic==0.4.27  # For MIME type detection
+
+# Utilities
+python-decouple==3.8
+requests==2.31.0
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Development
+black==24.1.1
+flake8==7.0.0
+pytest==7.4.4
+pytest-django==4.7.0

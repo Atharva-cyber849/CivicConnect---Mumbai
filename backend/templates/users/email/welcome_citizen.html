@@ -1,0 +1,28 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+<h2>Welcome to Snap & Report Mumbai!</h2>
+
+<p>Dear {{ user.full_name }},</p>
+
+<p>Thank you for joining Snap & Report Mumbai! Your account has been successfully created.</p>
+
+<p>With this account, you can:</p>
+<ul>
+    <li>Report civic issues in your area</li>
+    <li>Track the status of your complaints</li>
+    <li>Interact with BMC officials</li>
+    <li>Get updates on civic improvements</li>
+</ul>
+
+<div class="button-container">
+    <a href="{{ login_url }}" class="button">Login to Your Account</a>
+</div>
+
+<p>Your registered ward is: <strong>{{ user.ward }}</strong></p>
+
+<p>Have a complaint to report? We're here to help make Mumbai better, together!</p>
+
+<p>Best regards,<br>
+Snap & Report Mumbai Team</p>
+{% endblock %}

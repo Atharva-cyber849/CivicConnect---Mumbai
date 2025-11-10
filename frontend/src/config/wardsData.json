@@ -1,0 +1,365 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "A Ward",
+        "full_name": "A Ward (Colaba, Fort, Marine Lines)",
+        "ward_code": "A",
+        "ward_number": 1,
+        "population": 45000,
+        "area_sqkm": 2.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9067, 72.8147], [18.9300, 72.8147], [18.9300, 72.8400], [18.9067, 72.8400], [18.9067, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "B Ward",
+        "full_name": "B Ward (Dongri, Mazgaon)",
+        "ward_code": "B",
+        "ward_number": 2,
+        "population": 52000,
+        "area_sqkm": 3.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9300, 72.8147], [18.9500, 72.8147], [18.9500, 72.8400], [18.9300, 72.8400], [18.9300, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "C Ward",
+        "full_name": "C Ward (JJ Hospital, Byculla)",
+        "ward_code": "C",
+        "ward_number": 3,
+        "population": 48000,
+        "area_sqkm": 2.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9500, 72.8147], [18.9700, 72.8147], [18.9700, 72.8400], [18.9500, 72.8400], [18.9500, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "D Ward",
+        "full_name": "D Ward (Tardeo, Nana Chowk)",
+        "ward_code": "D",
+        "ward_number": 4,
+        "population": 55000,
+        "area_sqkm": 4.1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9700, 72.8147], [18.9900, 72.8147], [18.9900, 72.8400], [18.9700, 72.8400], [18.9700, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "E Ward",
+        "full_name": "E Ward (Byculla East)",
+        "ward_code": "E",
+        "ward_number": 5,
+        "population": 62000,
+        "area_sqkm": 3.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9900, 72.8147], [19.0100, 72.8147], [19.0100, 72.8400], [18.9900, 72.8400], [18.9900, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "F/N Ward",
+        "full_name": "F/N Ward (Parel, Matunga)",
+        "ward_code": "F/N",
+        "ward_number": 6,
+        "population": 78000,
+        "area_sqkm": 5.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.0100, 72.8147], [19.0300, 72.8147], [19.0300, 72.8400], [19.0100, 72.8400], [19.0100, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "F/S Ward",
+        "full_name": "F/S Ward (Parel, Elphinstone)",
+        "ward_code": "F/S",
+        "ward_number": 7,
+        "population": 65000,
+        "area_sqkm": 4.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.0300, 72.8147], [19.0500, 72.8147], [19.0500, 72.8400], [19.0300, 72.8400], [19.0300, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "G/N Ward",
+        "full_name": "G/N Ward (Dadar, Mahim)",
+        "ward_code": "G/N",
+        "ward_number": 8,
+        "population": 85000,
+        "area_sqkm": 6.1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.0500, 72.8147], [19.0700, 72.8147], [19.0700, 72.8400], [19.0500, 72.8400], [19.0500, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "G/S Ward",
+        "full_name": "G/S Ward (Worli, Lower Parel)",
+        "ward_code": "G/S",
+        "ward_number": 9,
+        "population": 72000,
+        "area_sqkm": 5.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.0700, 72.8147], [19.0900, 72.8147], [19.0900, 72.8400], [19.0700, 72.8400], [19.0700, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "H/E Ward",
+        "full_name": "H/E Ward (Bandra East)",
+        "ward_code": "H/E",
+        "ward_number": 10,
+        "population": 95000,
+        "area_sqkm": 7.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.0900, 72.8147], [19.1100, 72.8147], [19.1100, 72.8400], [19.0900, 72.8400], [19.0900, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "H/W Ward",
+        "full_name": "H/W Ward (Bandra West)",
+        "ward_code": "H/W",
+        "ward_number": 11,
+        "population": 88000,
+        "area_sqkm": 6.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.1100, 72.8147], [19.1300, 72.8147], [19.1300, 72.8400], [19.1100, 72.8400], [19.1100, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "K/E Ward",
+        "full_name": "K/E Ward (Andheri East)",
+        "ward_code": "K/E",
+        "ward_number": 12,
+        "population": 125000,
+        "area_sqkm": 9.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.1300, 72.8147], [19.1500, 72.8147], [19.1500, 72.8400], [19.1300, 72.8400], [19.1300, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "K/W Ward",
+        "full_name": "K/W Ward (Andheri West)",
+        "ward_code": "K/W",
+        "ward_number": 13,
+        "population": 118000,
+        "area_sqkm": 8.9
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.1500, 72.8147], [19.1700, 72.8147], [19.1700, 72.8400], [19.1500, 72.8400], [19.1500, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "L Ward",
+        "full_name": "L Ward (Kurla)",
+        "ward_code": "L",
+        "ward_number": 14,
+        "population": 102000,
+        "area_sqkm": 7.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.1700, 72.8147], [19.1900, 72.8147], [19.1900, 72.8400], [19.1700, 72.8400], [19.1700, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "M/E Ward",
+        "full_name": "M/E Ward (Chembur)",
+        "ward_code": "M/E",
+        "ward_number": 15,
+        "population": 115000,
+        "area_sqkm": 8.6
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.1900, 72.8147], [19.2100, 72.8147], [19.2100, 72.8400], [19.1900, 72.8400], [19.1900, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "M/W Ward",
+        "full_name": "M/W Ward (Chembur West)",
+        "ward_code": "M/W",
+        "ward_number": 16,
+        "population": 98000,
+        "area_sqkm": 7.3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.2100, 72.8147], [19.2300, 72.8147], [19.2300, 72.8400], [19.2100, 72.8400], [19.2100, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "N Ward",
+        "full_name": "N Ward (Ghatkopar)",
+        "ward_code": "N",
+        "ward_number": 17,
+        "population": 135000,
+        "area_sqkm": 10.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.2300, 72.8147], [19.2500, 72.8147], [19.2500, 72.8400], [19.2300, 72.8400], [19.2300, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "P/N Ward",
+        "full_name": "P/N Ward (Malad)",
+        "ward_code": "P/N",
+        "ward_number": 18,
+        "population": 145000,
+        "area_sqkm": 11.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.2500, 72.8147], [19.2700, 72.8147], [19.2700, 72.8400], [19.2500, 72.8400], [19.2500, 72.8147]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "P/S Ward",
+        "full_name": "P/S Ward (Goregaon)",
+        "ward_code": "P/S",
+        "ward_number": 19,
+        "population": 132000,
+        "area_sqkm": 10.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9067, 72.8400], [18.9300, 72.8400], [18.9300, 72.8653], [18.9067, 72.8653], [18.9067, 72.8400]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R/C Ward",
+        "full_name": "R/C Ward (Borivali)",
+        "ward_code": "R/C",
+        "ward_number": 20,
+        "population": 165000,
+        "area_sqkm": 12.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9300, 72.8400], [18.9500, 72.8400], [18.9500, 72.8653], [18.9300, 72.8653], [18.9300, 72.8400]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R/N Ward",
+        "full_name": "R/N Ward (Dahisar)",
+        "ward_code": "R/N",
+        "ward_number": 21,
+        "population": 155000,
+        "area_sqkm": 13.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9500, 72.8400], [18.9700, 72.8400], [18.9700, 72.8653], [18.9500, 72.8653], [18.9500, 72.8400]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "R/S Ward",
+        "full_name": "R/S Ward (Kandivali)",
+        "ward_code": "R/S",
+        "ward_number": 22,
+        "population": 148000,
+        "area_sqkm": 11.9
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9700, 72.8400], [18.9900, 72.8400], [18.9900, 72.8653], [18.9700, 72.8653], [18.9700, 72.8400]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "S Ward",
+        "full_name": "S Ward (Bhandup)",
+        "ward_code": "S",
+        "ward_number": 23,
+        "population": 125000,
+        "area_sqkm": 9.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.9900, 72.8400], [19.0100, 72.8400], [19.0100, 72.8653], [18.9900, 72.8653], [18.9900, 72.8400]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "T Ward",
+        "full_name": "T Ward (Mulund)",
+        "ward_code": "T",
+        "ward_number": 24,
+        "population": 142000,
+        "area_sqkm": 11.3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.0100, 72.8400], [19.0300, 72.8400], [19.0300, 72.8653], [19.0100, 72.8653], [19.0100, 72.8400]]]
+      }
+    }
+  ]
+}

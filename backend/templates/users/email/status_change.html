@@ -1,0 +1,35 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+<h2>Account Status Update</h2>
+
+<p>Dear {{ user.full_name }},</p>
+
+<p>Your account status has been changed from <strong>{{ old_status }}</strong> to <strong>{{ new_status }}</strong>.</p>
+
+{% if new_status == 'active' %}
+<p>Your account is now active and you can access all features of Snap & Report Mumbai.</p>
+
+<div class="button-container">
+    <a href="{{ login_url }}" class="button">Login Now</a>
+</div>
+
+{% elif new_status == 'inactive' %}
+<p>Your account has been deactivated. If you believe this is an error, please contact your department administrator or IT support.</p>
+
+{% elif new_status == 'suspended' %}
+<p>Your account has been suspended. This may be due to:
+    <ul>
+        <li>Multiple failed login attempts</li>
+        <li>Violation of terms of service</li>
+        <li>Administrative action</li>
+    </ul>
+</p>
+<p>Please contact your department administrator or IT support for assistance.</p>
+{% endif %}
+
+<p>If you did not request this change or have any questions, please contact our support team immediately.</p>
+
+<p>Best regards,<br>
+Snap & Report Mumbai Team</p>
+{% endblock %}
