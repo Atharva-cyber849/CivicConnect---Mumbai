@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
@@ -23,8 +23,9 @@ import {
 import { officersApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { DEPARTMENTS } from '../../config/constants';
-import { isSuperAdmin, isAdmin } from '../../utils/roleBasedAccess';
+import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
 import wardsData from '../../config/wardsData.json';
+import { ExclamationIcon } from '@heroicons/react/24/solid';
 
 const OfficerDetails = () => {
   const { id } = useParams();
@@ -168,6 +169,36 @@ const OfficerDetails = () => {
           <h2 className="mt-4 text-lg font-medium text-gray-900">Error Loading Officer</h2>
           <p className="mt-2 text-sm text-gray-600">
             {error.response?.data?.message || 'Failed to load officer details'}
+          </p>
+          <button
+            onClick={() => navigate('/admin/officers')}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Back to Officers
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user can access this officer's details
+  const canAccessOfficer = useMemo(() => {
+    if (!officerData) return false;
+    if (userIsSuperAdmin) return true; // Super admin sees all
+    if (userIsAdmin && officerData.department === user?.department) return true; // Admin sees own dept
+    if (userIsOfficer) return false; // Officers cannot view other officers
+    return false;
+  }, [officerData, userIsSuperAdmin, userIsAdmin, userIsOfficer, user?.department]);
+
+  // Access denial screen
+  if (!canAccessOfficer) {
+    return (
+      <div className="min-h-96 flex items-center justify-center bg-gray-50 p-4">
+        <div className="text-center max-w-md">
+          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-4">
+            You don't have permission to view this officer's details.
           </p>
           <button
             onClick={() => navigate('/admin/officers')}

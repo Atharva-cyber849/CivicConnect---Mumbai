@@ -27,11 +27,16 @@ import {
 
 import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../api/adminApi';
+import { isOfficer } from '../../utils/roleBasedAccess';
+import { ExclamationIcon } from '@heroicons/react/24/solid';
 
 const OfficerDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState('7');
+
+  // Role-based access verification
+  const isValidOfficer = isOfficer(user) && user?.assigned_ward;
 
   // Fetch dashboard statistics
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -212,6 +217,24 @@ const OfficerDashboard = () => {
               <div key={i} className="bg-gray-200 h-24 rounded"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Access denial check
+  if (!isValidOfficer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="text-center max-w-md">
+          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-4">
+            Only Ward Officers can access this dashboard.
+          </p>
+          <p className="text-sm text-gray-500">
+            Please contact your system administrator if you believe this is an error.
+          </p>
         </div>
       </div>
     );
