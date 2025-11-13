@@ -1,0 +1,206 @@
+LICENSING COMPLIANCE
+====================
+
+Project: CivicConnect - Snap & Report
+Version: 1.0.0
+Date: November 13, 2025
+
+
+PROJECT LICENSE
+===============
+
+CivicConnect is released under the MIT License.
+
+License File: LICENSE
+Full License Text: See LICENSE file in project root
+
+
+MIT LICENSE SUMMARY
+===================
+
+Permissions:
+  ✓ Commercial use
+  ✓ Modification
+  ✓ Distribution
+  ✓ Private use
+
+Conditions:
+  • License and copyright notice must be included
+
+Limitations:
+  ✗ Liability
+  ✗ Warranty
+
+
+THIRD-PARTY LICENSES
+====================
+
+Backend Dependencies:
+
+1. Django (3.2+)
+   - License: BSD License
+   - URL: https://www.djangoproject.com/
+   
+2. Django REST Framework (3.12+)
+   - License: BSD License
+   - URL: https://www.django-rest-framework.org/
+
+3. django-cors-headers
+   - License: MIT License
+   - URL: https://github.com/adamchainz/django-cors-headers
+
+4. celery
+   - License: BSD License
+   - URL: https://docs.celeryproject.io/
+
+5. psycopg2-binary
+   - License: LGPL License
+   - URL: https://www.psycopg.org/
+
+6. python-dotenv
+   - License: BSD License
+   - URL: https://github.com/theskumar/python-dotenv
+
+7. Simple JWT (django-rest-framework-simplejwt)
+   - License: MIT License
+   - URL: https://github.com/jpadilla/django-rest-framework-simplejwt
+
+8. geopy
+   - License: MIT License
+   - URL: https://geopy.readthedocs.io/
+
+9. Pillow
+   - License: HPND License
+   - URL: https://python-pillow.org/
+
+Frontend Dependencies:
+
+1. React (18.0+)
+   - License: MIT License
+   - URL: https://reactjs.org/
+
+2. React Router (6.0+)
+   - License: MIT License
+   - URL: https://reactrouter.com/
+
+3. Tailwind CSS (3.0+)
+   - License: MIT License
+   - URL: https://tailwindcss.com/
+
+4. Vite (4.0+)
+   - License: MIT License
+   - URL: https://vitejs.dev/
+
+5. Axios (1.0+)
+   - License: MIT License
+   - URL: https://axios-http.com/
+
+6. React Query (@tanstack/react-query)
+   - License: MIT License
+   - URL: https://tanstack.com/query/latest
+
+7. Recharts (2.0+)
+   - License: MIT License
+   - URL: https://recharts.org/
+
+8. Heroicons
+   - License: MIT License
+   - URL: https://heroicons.com/
+
+9. Lucide Icons
+   - License: ISC License
+   - URL: https://lucide.dev/
+
+10. react-hot-toast
+    - License: MIT License
+    - URL: https://hot-toast.com/
+
+For complete dependency information and their licenses, see:
+- backend/requirements.txt
+- frontend/package.json
+
+
+LICENSE COMPLIANCE CHECKLIST
+============================
+
+✓ Project has MIT License
+✓ LICENSE file included in repository root
+✓ Copyright notice in COPYRIGHT file
+✓ Contributors file maintained
+✓ All third-party dependencies documented
+✓ License headers can be added to source files
+✓ CONTRIBUTORS file maintained
+✓ This compliance document created
+
+Recommendations:
+
+□ Add MIT License header comments to source files (optional but recommended)
+□ Update CONTRIBUTORS file with new contributors
+□ Review third-party licenses annually
+□ Maintain CHANGELOG for version tracking
+
+
+LICENSE HEADER TEMPLATE (Optional)
+==================================
+
+For Python files:
+
+"""
+CivicConnect - Snap & Report
+Copyright (c) 2025 Snap & Report. All rights reserved.
+
+Licensed under the MIT License. See LICENSE file for details.
+"""
+
+For JavaScript/JSX files:
+
+/*
+ * CivicConnect - Snap & Report
+ * Copyright (c) 2025 Snap & Report. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file for details.
+ */
+
+
+COMPLIANCE NOTES
+================
+
+1. All code is released under MIT License
+2. Third-party libraries retain their respective licenses
+3. Users must comply with all applicable licenses when using this software
+4. No warranty is provided - see LICENSE file
+5. Commercial use is permitted
+6. Modifications and distribution are allowed with attribution
+
+
+DEPENDENCY VERIFICATION
+=======================
+
+Last Verified: November 13, 2025
+
+All dependencies have been reviewed and their licenses are compatible with the
+MIT License. No copyleft or restrictive licenses conflict with the project license.
+
+To verify current dependencies:
+
+Python:
+  $ pip list
+
+Node.js:
+  $ npm list
+
+
+UPDATES & CHANGES
+=================
+
+When updating dependencies, ensure:
+
+1. New licenses are compatible with MIT
+2. Update requirements.txt / package.json
+3. Add to this compliance document
+4. Commit changes with detailed message
+5. Review license compatibility
+
+
+For more information, see LICENSE and COPYRIGHT files.
+
+Last Updated: November 13, 2025

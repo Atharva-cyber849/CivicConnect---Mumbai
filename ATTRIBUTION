@@ -1,0 +1,213 @@
+ATTRIBUTION
+===========
+
+Project: CivicConnect - Snap & Report
+Version: 1.0.0
+Copyright (c) 2025 Snap & Report
+All rights reserved.
+
+
+FRAMEWORK & TECHNOLOGY ATTRIBUTION
+===================================
+
+Backend Framework:
+  Django (https://www.djangoproject.com/)
+  - Python web framework
+  - BSD License
+  
+  Django REST Framework (https://www.django-rest-framework.org/)
+  - REST API framework for Django
+  - BSD License
+
+
+Frontend Framework:
+  React (https://reactjs.org/)
+  - JavaScript UI library
+  - MIT License
+  
+  React Router (https://reactrouter.com/)
+  - Client-side routing
+  - MIT License
+
+
+Styling:
+  Tailwind CSS (https://tailwindcss.com/)
+  - Utility-first CSS framework
+  - MIT License
+
+
+Build Tools:
+  Vite (https://vitejs.dev/)
+  - Frontend build tool
+  - MIT License
+  
+  Vite (https://vitejs.dev/)
+  - Lightning fast build tool
+  - MIT License
+
+
+State Management:
+  React Context API (Built-in)
+  - State management
+  - Included with React
+
+  TanStack Query (https://tanstack.com/query/)
+  - Server state management
+  - MIT License
+
+
+UI Components & Icons:
+  Heroicons (https://heroicons.com/)
+  - Hero-based SVG icons
+  - MIT License
+  
+  Lucide Icons (https://lucide.dev/)
+  - Clean, consistent SVG icons
+  - ISC License
+  
+  react-hot-toast (https://hot-toast.com/)
+  - Toast notifications
+  - MIT License
+
+
+Data Visualization:
+  Recharts (https://recharts.org/)
+  - Chart library
+  - MIT License
+
+
+HTTP Client:
+  Axios (https://axios-http.com/)
+  - Promise-based HTTP client
+  - MIT License
+
+
+Backend Libraries:
+  
+  django-cors-headers
+  - CORS handling
+  - MIT License
+  
+  Celery (http://www.celeryproject.org/)
+  - Async task queue
+  - BSD License
+  
+  python-dotenv
+  - Environment variable management
+  - BSD License
+  
+  Simple JWT (django-rest-framework-simplejwt)
+  - JWT authentication
+  - MIT License
+  
+  geopy (https://geopy.readthedocs.io/)
+  - Geocoding library
+  - MIT License
+  
+  Pillow (https://python-pillow.org/)
+  - Image processing library
+  - HPND License
+
+
+Database:
+  PostgreSQL (https://www.postgresql.org/)
+  - Relational database
+  - PostgreSQL License
+  
+  Redis (https://redis.io/)
+  - In-memory data store
+  - BSD License
+
+
+Container & Deployment:
+  Docker (https://www.docker.com/)
+  - Container platform
+  - Docker License
+
+
+GIT REPOSITORIES USED
+====================
+
+Main Repository:
+  https://github.com/Atharva-cyber849/CivicConnect---Mumbai
+
+Contributing to this project acknowledges the above frameworks and tools.
+
+
+OPEN SOURCE COMMUNITY
+====================
+
+This project would not be possible without the vibrant open-source community.
+We gratefully acknowledge:
+
+- Django Software Foundation
+- React Core Team
+- Node.js Foundation
+- Python Software Foundation
+- All individual contributors to the above projects
+
+
+DATA & RESOURCES
+================
+
+Geographic Data:
+  - Mumbai Ward boundaries (GeoJSON)
+  - Mumbai administrative divisions
+  - OpenStreetMap reference data
+
+Icons & Assets:
+  - Heroicons by Tailwind Labs
+  - Lucide Icons community
+
+
+SUPPORT & DOCUMENTATION
+=======================
+
+This project uses documentation and examples from:
+
+- Django Documentation (https://docs.djangoproject.com/)
+- React Documentation (https://reactjs.org/docs/)
+- Tailwind CSS Documentation (https://tailwindcss.com/docs/)
+- MDN Web Docs (https://developer.mozilla.org/)
+
+
+COMPLIANCE
+==========
+
+All third-party components used in this project are properly attributed and
+their licenses are compatible with the MIT License under which CivicConnect
+is released.
+
+For a complete list of dependencies and licenses, see:
+- LICENSING_COMPLIANCE file
+- backend/requirements.txt
+- frontend/package.json
+- LICENSE file
+
+
+HOW TO CONTRIBUTE
+=================
+
+If you use this project and would like to contribute back:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your improvements
+4. Submit a Pull Request
+5. Your contribution will be recognized in CONTRIBUTORS file
+
+
+REPORTING ISSUES
+================
+
+If you find any attribution errors or missing credits, please:
+
+1. Open an issue on GitHub
+2. Provide details about the missing attribution
+3. We will promptly address and credit appropriately
+
+
+Last Updated: November 13, 2025
+
+We appreciate and respect all open-source projects and contributors
+that made CivicConnect possible!
