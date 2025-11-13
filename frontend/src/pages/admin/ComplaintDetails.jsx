@@ -393,14 +393,23 @@ const ComplaintDetails = () => {
   // Check role-based access
   const canViewComplaint = userIsSuperAdmin || userIsAdmin || userIsOfficer;
   
-  // Check if user can edit this complaint based on role
-  const canEditComplaint = useMemo(() => {
+  // Check if user can view this specific complaint (super admin sees all, admin sees own department, officer sees own ward)
+  const canAccessThisComplaint = useMemo(() => {
     if (!complaintData) return false;
-    if (userIsSuperAdmin) return true; // Super admin can edit all
-    if (userIsAdmin && complaintData.department === user?.department) return true; // Admin can edit their department
-    if (userIsOfficer && complaintData.assigned_ward === user?.assigned_ward) return true; // Officer can edit their ward
+    if (userIsSuperAdmin) return true;
+    if (userIsAdmin && complaintData.department === user?.department) return true;
+    if (userIsOfficer && complaintData.assigned_ward === user?.assigned_ward) return true;
     return false;
   }, [complaintData, userIsSuperAdmin, userIsAdmin, userIsOfficer, user?.department, user?.assigned_ward]);
+  
+  // Check if user can edit this complaint based on role
+  const canEditComplaint = useMemo(() => {
+    if (!canAccessThisComplaint) return false;
+    if (userIsSuperAdmin) return true;
+    if (userIsAdmin && complaintData?.department === user?.department) return true;
+    if (userIsOfficer && complaintData?.assigned_officer === user?.id) return true;
+    return false;
+  }, [complaintData, userIsSuperAdmin, userIsAdmin, userIsOfficer, user?.department, user?.id, canAccessThisComplaint]);
 
   if (!canViewComplaint) {
     return (
@@ -409,7 +418,21 @@ const ComplaintDetails = () => {
           <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
           <h2 className="mt-4 text-lg font-medium text-gray-900">Access Denied</h2>
           <p className="mt-2 text-sm text-gray-600">
-            You don't have permission to view this complaint.
+            You don't have permission to access this complaint.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canAccessThisComplaint) {
+    return (
+      <div className="min-h-96 flex items-center justify-center">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
+          <h2 className="mt-4 text-lg font-medium text-gray-900">Access Restricted</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            This complaint is not in your department or ward.
           </p>
         </div>
       </div>
@@ -911,36 +934,46 @@ const ComplaintDetails = () => {
                 <p className="text-xs text-gray-500 mt-2">These notes will be sent to the citizen as an update.</p>
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
-                  onClick={handleStatusUpdate}
-                  disabled={isUpdating || !newStatus}
-                  className="flex-1 flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {isUpdating ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <PencilIcon className="h-4 w-4 mr-2" />
-                      Update Status
-                    </>
-                  )}
-                </button>
-                
-                {newStatus === 'RESOLVED' && (
+              {/* Action Buttons - Role-Based Restrictions */}
+              {canEditComplaint ? (
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button
-                    onClick={() => setShowResolutionForm(true)}
-                    className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-green-600 text-green-700 font-semibold rounded-lg hover:bg-green-50 transition-all"
+                    onClick={handleStatusUpdate}
+                    disabled={isUpdating || !newStatus}
+                    className="flex-1 flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    <CheckCircleIcon className="h-4 w-4 mr-2" />
-                    Add Resolution Proof
+                    {isUpdating ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <PencilIcon className="h-4 w-4 mr-2" />
+                        Update Status
+                      </>
+                    )}
                   </button>
-                )}
-              </div>
+                  
+                  {newStatus === 'RESOLVED' && (
+                    <button
+                      onClick={() => setShowResolutionForm(true)}
+                      className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-green-600 text-green-700 font-semibold rounded-lg hover:bg-green-50 transition-all"
+                    >
+                      <CheckCircleIcon className="h-4 w-4 mr-2" />
+                      Add Resolution Proof
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
+                  <p className="text-sm flex items-center">
+                    <ExclamationIcon className="h-4 w-4 mr-2" />
+                    You don't have permission to edit this complaint.
+                  </p>
+                </div>
+              )}
+            </div>
             </div>
           </div>
 

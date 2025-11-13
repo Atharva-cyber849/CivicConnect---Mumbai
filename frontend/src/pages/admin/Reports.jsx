@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   ChartBarIcon,
@@ -41,6 +41,7 @@ import { adminApi } from '../../api/adminApi';
 import { useAuth } from '../../context/AuthContext';
 import { DEPARTMENTS, WARD_CHOICES, USER_ROLES } from '../../config/constants';
 import { isSuperAdmin, isAdmin, isOfficer, canExportReports } from '../../utils/roleBasedAccess';
+import { ExclamationIcon } from '@heroicons/react/24/solid';
 
 const Reports = () => {
   const { user } = useAuth();
@@ -53,19 +54,23 @@ const Reports = () => {
   const userIsAdmin = isAdmin(user);
   const userIsSuperAdmin = isSuperAdmin(user);
 
-  // Pre-fill ward for officers
-  useMemo(() => {
-    if (userIsOfficer && user?.assigned_ward && !selectedWard) {
-      setSelectedWard(user.assigned_ward);
-    }
-  }, [userIsOfficer, user?.assigned_ward]);
+  // Check if user can access reports
+  const canAccessReports = userIsSuperAdmin || userIsAdmin || userIsOfficer;
 
-  // Pre-fill department for admins
-  useMemo(() => {
-    if (userIsAdmin && user?.department && !selectedDepartment) {
-      setSelectedDepartment(user.department);
+  // Apply role-based automatic filters
+  useEffect(() => {
+    // For officers: Auto-restrict to their assigned ward
+    if (userIsOfficer && user?.assigned_ward) {
+      setSelectedWard(user.assigned_ward);
+      setSelectedDepartment(''); // Clear department for officers
     }
-  }, [userIsAdmin, user?.department]);
+    // For admins: Auto-restrict to their department
+    else if (userIsAdmin && user?.department) {
+      setSelectedDepartment(user.department);
+      setSelectedWard(''); // Clear ward for admins
+    }
+    // Super admins can see everything - no pre-fill
+  }, [userIsOfficer, userIsAdmin, user?.assigned_ward, user?.department]);
 
   // Fetch analytics data
   const { data: analyticsData, isLoading } = useQuery({
@@ -258,6 +263,24 @@ const Reports = () => {
               <div key={i} className="bg-gray-200 h-24 rounded"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Access Denial Screen - Check if user can access reports
+  if (!canAccessReports) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="text-center max-w-md">
+          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-4">
+            You don't have permission to access the Reports & Analytics page.
+          </p>
+          <p className="text-sm text-gray-500">
+            Please contact your administrator if you believe this is an error.
+          </p>
         </div>
       </div>
     );

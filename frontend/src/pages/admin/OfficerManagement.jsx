@@ -51,6 +51,16 @@ const OfficerManagement = () => {
     fullName: feature.properties.full_name
   })).sort((a, b) => a.code.localeCompare(b.code));
 
+  // Determine which officers user can see based on role
+  const getVisibleOfficers = useMemo(() => {
+    if (!officers || !Array.isArray(officers)) return [];
+    
+    if (userIsSuperAdmin) return officers; // Super admin sees all officers
+    if (userIsAdmin) return officers.filter(o => o.department === user?.department); // Admin sees only their department officers
+    
+    return []; // Officers cannot manage officers
+  }, [officers, userIsSuperAdmin, userIsAdmin, user?.department]);
+
   // Fetch officers data with proper error handling
   const { data: officersData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['officers'],
@@ -125,11 +135,11 @@ const OfficerManagement = () => {
     }
   });
 
-  // Filter officers based on search and filters
+    // Filter officers based on search and filters AND role-based visibility
   const filteredOfficers = useMemo(() => {
-    if (!officers || !Array.isArray(officers)) return [];
+    if (!getVisibleOfficers || !Array.isArray(getVisibleOfficers)) return [];
     
-    return officers.filter(officer => {
+    return getVisibleOfficers.filter(officer => {
       if (!officer) return false;
       
       const searchLower = searchTerm.toLowerCase();
@@ -145,13 +155,11 @@ const OfficerManagement = () => {
       
       const matchesDepartment = !selectedDepartment || officer.department === selectedDepartment;
       const matchesWard = !selectedWard || officer.ward === selectedWard;
-      const matchesStatus = !selectedStatus || 
-                          (selectedStatus === 'active' && officer.is_active) || 
-                          (selectedStatus === 'inactive' && !officer.is_active);
+      const matchesStatus = !selectedStatus || (selectedStatus === 'active' ? officer.is_active : !officer.is_active);
       
-      return matchesSearch && matchesDepartment && matchesWard && matchesStatus;
+      return matchesDepartment && matchesWard && matchesSearch && matchesStatus;
     });
-  }, [officers, searchTerm, selectedDepartment, selectedWard, selectedStatus]);
+  }, [getVisibleOfficers, searchTerm, selectedDepartment, selectedWard, selectedStatus]);
 
   const handleDeleteOfficer = async (id) => {
     await deleteOfficerMutation.mutateAsync(id);
@@ -464,24 +472,28 @@ const OfficerManagement = () => {
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       
-                      {userIsSuperAdmin && (
+                      {(userIsSuperAdmin || (userIsAdmin && officer.department === user?.department)) && (
                         <>
-                          <button
-                            onClick={() => navigate(`/admin/officers/${officer.id}/edit`)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                            title="Edit Officer"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
+                          {userIsSuperAdmin && (
+                            <button
+                              onClick={() => navigate(`/admin/officers/${officer.id}/edit`)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                              title="Edit Officer"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                          )}
                           
-                          <button
-                            onClick={() => resetPasswordMutation.mutate(officer.id)}
-                            disabled={resetPasswordMutation.isLoading}
-                            className="text-orange-600 hover:text-orange-900"
-                            title="Reset Password"
-                          >
-                            <KeyIcon className="h-4 w-4" />
-                          </button>
+                          {userIsSuperAdmin && (
+                            <button
+                              onClick={() => resetPasswordMutation.mutate(officer.id)}
+                              disabled={resetPasswordMutation.isLoading}
+                              className="text-orange-600 hover:text-orange-900"
+                              title="Reset Password"
+                            >
+                              <KeyIcon className="h-4 w-4" />
+                            </button>
+                          )}
                           
                           <button
                             onClick={() => sendInvitationMutation.mutate(officer.id)}
@@ -492,13 +504,15 @@ const OfficerManagement = () => {
                             <EnvelopeIcon className="h-4 w-4" />
                           </button>
                           
-                          <button
-                            onClick={() => setShowDeleteDialog(officer)}
-                            className="text-red-600 hover:text-red-900"
-                            title="Delete Officer"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
+                          {userIsSuperAdmin && (
+                            <button
+                              onClick={() => setShowDeleteDialog(officer)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete Officer"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          )}
                         </>
                       )}
                     </td>
