@@ -1,0 +1,300 @@
+COPYRIGHT NOTICE
+================
+
+Project: CivicConnect - Snap & Report
+Copyright (c) 2025 Snap & Report
+All rights reserved.
+
+Licensed under the MIT License - See LICENSE file for details.
+
+
+COPYRIGHTED WORKS
+=================
+
+This copyright notice applies to the following software components and source code files:
+
+
+BACKEND APPLICATION (Django/Python)
+===================================
+
+Core Configuration:
+  - backend/manage.py
+  - backend/core/settings.py
+  - backend/core/urls.py
+  - backend/core/wsgi.py
+  - backend/core/asgi.py
+  - backend/core/middleware.py
+  - backend/core/celery.py
+
+User Management Module:
+  - backend/apps/users/models.py
+  - backend/apps/users/serializers.py
+  - backend/apps/users/serializers_jwt.py
+  - backend/apps/users/views.py
+  - backend/apps/users/urls.py
+  - backend/apps/users/admin.py
+  - backend/apps/users/permissions.py
+  - backend/apps/users/custom_permissions.py
+  - backend/apps/users/auth.py
+  - backend/apps/users/utils.py
+  - backend/apps/users/typing.py
+  - backend/apps/users/signals.py
+  - backend/apps/users/management/commands/create_test_users.py
+
+Complaints Management Module:
+  - backend/apps/complaints/models.py
+  - backend/apps/complaints/serializers.py
+  - backend/apps/complaints/views.py
+  - backend/apps/complaints/urls.py
+  - backend/apps/complaints/admin.py
+  - backend/apps/complaints/admin_views.py
+  - backend/apps/complaints/analytics.py
+  - backend/apps/complaints/analytics_views.py
+  - backend/apps/complaints/geocoding.py
+  - backend/apps/complaints/signals.py
+  - backend/apps/complaints/tasks.py
+
+Departments Module:
+  - backend/apps/departments/models.py
+  - backend/apps/departments/serializers.py
+  - backend/apps/departments/views.py
+  - backend/apps/departments/urls.py
+  - backend/apps/departments/admin.py
+
+Notifications Module:
+  - backend/apps/notifications/models.py
+  - backend/apps/notifications/serializers.py
+  - backend/apps/notifications/views.py
+  - backend/apps/notifications/urls.py
+
+Migrations:
+  - backend/apps/users/migrations/
+  - backend/apps/complaints/migrations/
+  - backend/apps/departments/migrations/
+  - backend/apps/notifications/migrations/
+
+Configuration Files:
+  - backend/requirements.txt
+  - backend/Dockerfile
+  - backend/.gitignore
+
+
+FRONTEND APPLICATION (React/JavaScript)
+=======================================
+
+Main Application Files:
+  - frontend/src/main.jsx
+  - frontend/src/App.jsx
+  - frontend/src/index.css
+
+API Integration Layer:
+  - frontend/src/api/index.js
+  - frontend/src/api/axiosConfig.js
+  - frontend/src/api/adminApi.js
+  - frontend/src/api/complaintsApi.js
+  - frontend/src/api/complaintDetailsApi.js
+  - frontend/src/api/departmentsApi.js
+  - frontend/src/api/officersApi.js
+  - frontend/src/api/reportsApi.js
+
+Context & State Management:
+  - frontend/src/context/AuthContext.jsx
+  - frontend/src/context/ThemeContext.jsx
+  - frontend/src/context/LanguageContext.jsx
+
+Layout Components:
+  - frontend/src/components/Layout/AdminLayout.jsx
+  - frontend/src/components/Layout/AdminSidebar.jsx
+  - frontend/src/components/Layout/CitizenLayout.jsx
+  - frontend/src/components/Layout/AuthLayout.jsx
+  - frontend/src/components/Layout/PublicLayout.jsx
+
+Authentication Components:
+  - frontend/src/components/Auth/ProtectedRoute.jsx
+  - frontend/src/components/Auth/SessionTimeoutModal.jsx
+
+Common Components:
+  - frontend/src/components/Common/ErrorBoundary.jsx
+  - frontend/src/components/Common/NotificationPanel.jsx
+
+Admin Pages:
+  - frontend/src/pages/admin/Dashboard.jsx
+  - frontend/src/pages/admin/SuperAdminDashboard.jsx
+  - frontend/src/pages/admin/DepartmentAdminDashboard.jsx
+  - frontend/src/pages/admin/OfficerDashboard.jsx
+  - frontend/src/pages/admin/Login.jsx
+  - frontend/src/pages/admin/AdminPortal.jsx
+  - frontend/src/pages/admin/AdminRegister.jsx
+  - frontend/src/pages/admin/AdminSelfRegister.jsx
+  - frontend/src/pages/admin/ComplaintsList.jsx
+  - frontend/src/pages/admin/ComplaintDetails.jsx
+  - frontend/src/pages/admin/MapView.jsx
+  - frontend/src/pages/admin/OfficerManagement.jsx
+  - frontend/src/pages/admin/OfficerDetails.jsx
+  - frontend/src/pages/admin/Reports.jsx
+  - frontend/src/pages/admin/Settings.jsx
+
+Citizen Pages:
+  - frontend/src/pages/citizen/Dashboard.jsx
+  - frontend/src/pages/citizen/Login.jsx
+  - frontend/src/pages/citizen/Register.jsx
+  - frontend/src/pages/citizen/LandingPage.jsx
+  - frontend/src/pages/citizen/ReportIssue.jsx
+  - frontend/src/pages/citizen/MyComplaints.jsx
+  - frontend/src/pages/citizen/ComplaintDetail.jsx
+  - frontend/src/pages/citizen/MapView.jsx
+  - frontend/src/pages/citizen/NotificationsCenter.jsx
+  - frontend/src/pages/citizen/Profile.jsx
+  - frontend/src/pages/citizen/TrackComplaint.jsx
+
+Routing:
+  - frontend/src/routes/AppRouter.jsx
+  - frontend/src/routes/AdminRoutes.jsx
+  - frontend/src/routes/CitizenRoutes.jsx
+
+Utilities:
+  - frontend/src/utils/mapUtils.js
+  - frontend/src/utils/roleBasedAccess.js
+
+Hooks:
+  - frontend/src/hooks/useRoleAccess.js
+
+Services:
+  - frontend/src/services/pwaService.js
+
+Configuration:
+  - frontend/src/config/constants.js
+  - frontend/src/config/wardsData.json
+
+Internationalization:
+  - frontend/src/i18n/
+  - frontend/src/locales/
+
+Configuration Files:
+  - frontend/package.json
+  - frontend/vite.config.js
+  - frontend/tailwind.config.js
+  - frontend/postcss.config.js
+  - frontend/Dockerfile
+  - frontend/Dockerfile.dev
+  - frontend/.gitignore
+
+
+INFRASTRUCTURE & CONFIGURATION
+==============================
+
+Docker:
+  - docker-compose.yml
+  - backend/Dockerfile
+  - frontend/Dockerfile
+  - frontend/Dockerfile.dev
+
+Environment Configuration:
+  - .gitignore
+  - setup.sh
+  - setup.bat
+
+
+DOCUMENTATION
+=============
+
+Primary Documentation:
+  - README.md
+  - LICENSE
+  - backend/README.md
+  - frontend/README.md
+
+Technical Documentation:
+  - docs/ARCHITECTURE.md
+  - docs/IMPLEMENTATION_GUIDE.md
+  - docs/SETUP_GUIDE.md
+  - docs/PROJECT_SUMMARY.md
+  - docs/QUICK_REFERENCE.md
+  - docs/UI_DESIGN_GUIDE.md
+
+
+THIRD-PARTY COMPONENTS
+======================
+
+This project includes and utilizes the following third-party libraries and frameworks,
+each governed by their respective licenses:
+
+Backend Dependencies:
+  - Django
+  - Django REST Framework
+  - django-cors-headers
+  - django-filter
+  - celery
+  - redis
+  - psycopg2-binary
+  - python-dotenv
+  - simple-jwt
+  - geopy
+  - pillow
+
+Frontend Dependencies:
+  - React
+  - React Router
+  - Tailwind CSS
+  - Vite
+  - Axios
+  - React Hot Toast
+  - React Query
+  - Recharts
+  - Heroicons
+  - Lucide Icons
+
+See frontend/package.json and backend/requirements.txt for complete dependency lists.
+
+
+OWNERSHIP & ATTRIBUTION
+=======================
+
+Copyright Holder: Snap & Report
+Project: CivicConnect - Mumbai BMC Complaint Management System
+Version: 1.0.0
+Year: 2025
+
+Developed by: Atharva (Atharva-cyber849)
+Repository: https://github.com/Atharva-cyber849/CivicConnect---Mumbai
+
+
+LICENSE INFORMATION
+===================
+
+All source code in this project is licensed under the MIT License.
+
+The MIT License is a permissive license that allows:
+  ✓ Commercial use
+  ✓ Modification
+  ✓ Distribution
+  ✓ Private use
+
+Subject to:
+  • License and copyright notice inclusion
+
+See the LICENSE file in the project root for complete terms and conditions.
+
+
+USAGE RIGHTS
+============
+
+The software and all copyrighted works contained herein are provided "AS IS"
+without warranty of any kind, express or implied. See LICENSE file for details.
+
+For inquiries regarding copyright, licensing, or use of this software,
+please contact: atharva@civicconnect.dev
+
+
+EXCLUSIONS
+==========
+
+The following are NOT covered by this copyright notice:
+  - Third-party libraries and frameworks (see their respective licenses)
+  - User-generated content and data
+  - Temporary files and build artifacts
+  - Environment-specific configuration files (.env)
+  - System-generated cache files (__pycache__, node_modules, etc.)
+
+
+Last Updated: November 13, 2025
