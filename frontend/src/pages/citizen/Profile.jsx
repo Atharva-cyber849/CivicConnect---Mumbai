@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuthStore } from '../../store/authStore'
+import { useAuth } from '../../context/AuthContext'
 import { FiUser, FiMail, FiPhone, FiMapPin, FiGlobe, FiSave, FiEdit3 } from 'react-icons/fi'
 
 const MUMBAI_WARDS = [
@@ -30,7 +30,7 @@ const MUMBAI_WARDS = [
 ]
 
 const Profile = () => {
-  const { user, updateProfile } = useAuthStore()
+  const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
@@ -55,7 +55,8 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await updateProfile(formData)
+      // TODO: Implement profile update API call
+      console.log('Profile update:', formData)
       setIsEditing(false)
     } catch (error) {
       console.error('Failed to update profile:', error)

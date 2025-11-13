@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useMemo } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
   PencilIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
-
-import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../api/adminApi';
 
 const ComplaintsList = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Role-based access control
+  const userIsSuperAdmin = isSuperAdmin(user);
+  const userIsAdmin = isAdmin(user);
+  const userIsOfficer = isOfficer(user);
   
   const [filters, setFilters] = useState({
     status: '',
@@ -30,15 +39,33 @@ const ComplaintsList = () => {
     limit: 10
   });
 
+  // Apply role-based filters automatically
+  const roleBasedFilters = useMemo(() => {
+    const baseFilters = { ...filters };
+    
+    // Officers can only see complaints from their ward
+    if (userIsOfficer && user?.assigned_ward) {
+      baseFilters.ward = user.assigned_ward;
+    }
+    
+    // Admins can only see complaints from their department
+    if (userIsAdmin && user?.department) {
+      baseFilters.department = user.department;
+    }
+    
+    return baseFilters;
+  }, [filters, userIsOfficer, userIsAdmin, user?.assigned_ward, user?.department]);
+
   // Fetch complaints with filters
   const { data, isLoading, error } = useQuery({
-    queryKey: ['admin-complaints', filters, pagination],
+    queryKey: ['admin-complaints', roleBasedFilters, pagination],
     queryFn: () => adminApi.getComplaints({
-      ...filters,
+      ...roleBasedFilters,
       page: pagination.page,
       limit: pagination.limit
     }),
-    keepPreviousData: true
+    keepPreviousData: true,
+    enabled: userIsSuperAdmin || userIsAdmin || userIsOfficer
   });
 
   // Update complaint status mutation
@@ -76,6 +103,21 @@ const ComplaintsList = () => {
     return colors[priority] || 'bg-gray-100 text-gray-800';
   };
 
+  // Check access
+  if (!userIsSuperAdmin && !userIsAdmin && !userIsOfficer) {
+    return (
+      <div className="min-h-96 flex items-center justify-center">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
+          <h2 className="mt-4 text-lg font-medium text-gray-900">Access Denied</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            You don't have permission to view complaints.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -105,7 +147,7 @@ const ComplaintsList = () => {
 
       {/* Filters */}
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-6' : 'grid-cols-1 md:grid-cols-5'}`}>
           {/* Search */}
           <div className="md:col-span-2 relative">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -157,6 +199,21 @@ const ComplaintsList = () => {
             <option value="MEDIUM">Medium</option>
             <option value="LOW">Low</option>
           </select>
+
+          {/* Ward Filter - Only for Super Admin */}
+          {userIsSuperAdmin && (
+            <select
+              value={filters.ward}
+              onChange={(e) => setFilters({...filters, ward: e.target.value})}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Wards</option>
+              <option value="A">A Ward</option>
+              <option value="B">B Ward</option>
+              <option value="C">C Ward</option>
+              {/* Add more wards as needed */}
+            </select>
+          )}
 
           {/* Clear Filters */}
           <button
@@ -230,10 +287,18 @@ const ComplaintsList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button 
+                        onClick={() => navigate(`/admin/complaints/${complaint.id}`)}
+                        className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-1 rounded"
+                        title="View Details"
+                      >
                         <EyeIcon className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button 
+                        onClick={() => navigate(`/admin/complaints/${complaint.id}`)}
+                        className="text-green-600 hover:text-green-900 hover:bg-green-50 p-1 rounded"
+                        title="Edit"
+                      >
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       {complaint.status === 'PENDING' && (

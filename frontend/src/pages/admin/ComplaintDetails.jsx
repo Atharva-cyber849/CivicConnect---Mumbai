@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -23,13 +23,18 @@ import {
   EyeIcon,
   StarIcon,
   ShieldCheckIcon,
-  FlagIcon
+  FlagIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import L from 'leaflet';
 
-import { complaintsApi } from '../../api/complaintsApi';
+import { complaintsApi, complaintDetailsApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { DEPARTMENTS } from '../../config/constants';
+import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
 
 // Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -45,6 +50,11 @@ const ComplaintDetails = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
+  // Role-based access control
+  const userIsSuperAdmin = isSuperAdmin(user);
+  const userIsAdmin = isAdmin(user);
+  const userIsOfficer = isOfficer(user);
+  
   const [newStatus, setNewStatus] = useState('');
   const [officerNotes, setOfficerNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -57,11 +67,50 @@ const ComplaintDetails = () => {
   const [referToDepartment, setReferToDepartment] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [showInternalNotesForm, setShowInternalNotesForm] = useState(false);
+  
+  // Lightbox and carousel state
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Fetch complaint details
   const { data: complaint, isLoading, error } = useQuery({
     queryKey: ['complaint', id],
     queryFn: () => complaintsApi.getComplaintById(id),
+    enabled: !!id
+  });
+
+  // Fetch complaint images
+  const { data: complaintImages = [] } = useQuery({
+    queryKey: ['complaint-images', id],
+    queryFn: () => complaintDetailsApi.images.getAll(id),
+    enabled: !!id
+  });
+
+  // Fetch complaint timeline
+  const { data: complaintTimeline = [] } = useQuery({
+    queryKey: ['complaint-timeline', id],
+    queryFn: () => complaintDetailsApi.timeline.getAll(id),
+    enabled: !!id
+  });
+
+  // Fetch complaint resolution
+  const { data: complaintResolution } = useQuery({
+    queryKey: ['complaint-resolution', id],
+    queryFn: () => complaintDetailsApi.resolution.get(id),
+    enabled: !!id
+  });
+
+  // Fetch officer notes
+  const { data: officerNotesList = [] } = useQuery({
+    queryKey: ['complaint-notes', id],
+    queryFn: () => complaintDetailsApi.notes.getAll(id),
+    enabled: !!id
+  });
+
+  // Fetch complaint attachments
+  const { data: complaintAttachments = [] } = useQuery({
+    queryKey: ['complaint-attachments', id],
+    queryFn: () => complaintDetailsApi.attachments.getAll(id),
     enabled: !!id
   });
 
@@ -139,7 +188,23 @@ const ComplaintDetails = () => {
     ]
   };
 
-  const complaintData = complaint || mockComplaint;
+  // Normalize complaint data - ensure images is always an array
+  const normalizeComplaintData = (data) => {
+    if (!data) return mockComplaint;
+    
+    return {
+      ...data,
+      // Handle both 'image' (singular) and 'images' (plural) fields
+      images: data.images || (data.image ? [data.image] : []),
+      // Ensure other array fields exist
+      attachments: data.attachments || [],
+      timeline: data.timeline || [],
+      officer_notes: data.officer_notes || [],
+      internal_notes: data.internal_notes || []
+    };
+  };
+
+  const complaintData = normalizeComplaintData(complaint) || mockComplaint;
 
   // Update status mutation
   const updateStatusMutation = useMutation({
@@ -309,6 +374,48 @@ const ComplaintDetails = () => {
     }
   };
 
+  // Get card border color based on status
+  const getStatusCardBorder = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'border-l-4 border-yellow-400';
+      case 'IN_PROGRESS':
+        return 'border-l-4 border-blue-400';
+      case 'RESOLVED':
+        return 'border-l-4 border-green-400';
+      case 'REJECTED':
+        return 'border-l-4 border-red-400';
+      default:
+        return 'border-l-4 border-gray-400';
+    }
+  };
+
+  // Check role-based access
+  const canViewComplaint = userIsSuperAdmin || userIsAdmin || userIsOfficer;
+  
+  // Check if user can edit this complaint based on role
+  const canEditComplaint = useMemo(() => {
+    if (!complaintData) return false;
+    if (userIsSuperAdmin) return true; // Super admin can edit all
+    if (userIsAdmin && complaintData.department === user?.department) return true; // Admin can edit their department
+    if (userIsOfficer && complaintData.assigned_ward === user?.assigned_ward) return true; // Officer can edit their ward
+    return false;
+  }, [complaintData, userIsSuperAdmin, userIsAdmin, userIsOfficer, user?.department, user?.assigned_ward]);
+
+  if (!canViewComplaint) {
+    return (
+      <div className="min-h-96 flex items-center justify-center">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
+          <h2 className="mt-4 text-lg font-medium text-gray-900">Access Denied</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            You don't have permission to view this complaint.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -340,34 +447,37 @@ const ComplaintDetails = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border-l-4 border-[#0078D7] p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+      <div className={`bg-white rounded-lg shadow-md p-8 ${getStatusCardBorder(complaintData.status)}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center flex-1">
             <button
               onClick={() => navigate('/admin/complaints')}
-              className="text-[#0078D7] hover:text-blue-800 mr-4"
+              className="text-[#0078D7] hover:text-blue-800 mr-4 transition-colors"
             >
               <ArrowLeftIcon className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900">
                 Complaint #{complaintData.id}
               </h1>
-              <p className="text-gray-600 mt-1">{complaintData.title}</p>
+              <p className="text-gray-600 mt-2 text-base">{complaintData.title}</p>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(complaintData.status)}`}>
-              {React.createElement(getStatusIcon(complaintData.status), { 
-                className: 'h-4 w-4 mr-1' 
-              })}
-              {complaintData.status}
-            </span>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(complaintData.priority)}`}>
-              {complaintData.priority} Priority
-            </span>
-          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border-2 ${getStatusColor(complaintData.status)}`}>
+            {React.createElement(getStatusIcon(complaintData.status), { 
+              className: 'h-5 w-5 mr-2' 
+            })}
+            {complaintData.status.replace('_', ' ')}
+          </span>
+          <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${getPriorityColor(complaintData.priority)}`}>
+            {complaintData.priority} Priority
+          </span>
+          <span className="text-xs text-gray-500 ml-auto">
+            Created: {new Date(complaintData.created_at).toLocaleDateString('en-IN')}
+          </span>
         </div>
       </div>
 
@@ -375,33 +485,125 @@ const ComplaintDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Panel - Details */}
         <div className="space-y-6">
-          {/* Complaint Image */}
-          {complaintData.images && complaintData.images.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <PhotoIcon className="h-5 w-5 text-[#0078D7] mr-2" />
-                Complaint Images
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {complaintData.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Complaint ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                      <EyeIcon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Complaint Image Carousel */}
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+              <PhotoIcon className="h-5 w-5 text-[#0078D7] mr-2" />
+              Complaint Images
+            </h3>
+            {complaintImages && complaintImages.length > 0 ? (
+              <div className="space-y-4">
+                {/* Main Carousel */}
+                <div className="relative group overflow-hidden rounded-lg bg-gray-100">
+                  <img
+                    src={complaintImages[currentImageIndex]?.image}
+                    alt={`Complaint ${currentImageIndex + 1}`}
+                    className="w-full h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setShowLightbox(true)}
+                  />
+                  {/* Overlay with info */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                    <div className="text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <EyeIcon className="h-12 w-12 text-white mx-auto mb-2" />
+                      <p className="text-white text-sm font-medium">Click to view full size</p>
                     </div>
                   </div>
-                ))}
+                  {/* Image counter */}
+                  <div className="absolute top-3 right-3 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    {currentImageIndex + 1} / {complaintImages.length}
+                  </div>
+                </div>
+
+                {/* Carousel Controls */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? complaintImages.length - 1 : prev - 1))}
+                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                  >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                  </button>
+                  
+                  {/* Thumbnail strip */}
+                  <div className="flex-1 mx-4 flex gap-2 overflow-x-auto pb-2">
+                    {complaintImages.map((image, index) => (
+                      <button
+                        key={image.id}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          index === currentImageIndex ? 'border-[#0078D7] shadow-md' : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <img src={image.image} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentImageIndex((prev) => (prev === complaintImages.length - 1 ? 0 : prev + 1))}
+                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                  >
+                    <ChevronRightIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500">No images uploaded for this complaint</p>
+              </div>
+            )}
+          </div>
+
+          {/* Lightbox Modal */}
+          {showLightbox && complaintImages && complaintImages.length > 0 && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
+              <div className="relative w-full h-full flex items-center justify-center p-4">
+                {/* Close button */}
+                <button
+                  onClick={() => setShowLightbox(false)}
+                  className="absolute top-4 right-4 p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition-all"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+
+                {/* Main image */}
+                <div className="relative max-w-4xl max-h-[90vh] flex items-center">
+                  <img
+                    src={complaintImages[currentImageIndex]?.image}
+                    alt={`Complaint ${currentImageIndex + 1}`}
+                    className="max-w-full max-h-[90vh] object-contain"
+                  />
+                </div>
+
+                {/* Navigation buttons */}
+                {complaintImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? complaintImages.length - 1 : prev - 1))}
+                      className="absolute left-4 p-3 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition-all"
+                    >
+                      <ChevronLeftIcon className="h-6 w-6" />
+                    </button>
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => (prev === complaintImages.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 p-3 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition-all"
+                    >
+                      <ChevronRightIcon className="h-6 w-6" />
+                    </button>
+                  </>
+                )}
+
+                {/* Image counter */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-60 text-white px-4 py-2 rounded-full text-sm font-medium">
+                  {currentImageIndex + 1} / {complaintImages.length}
+                </div>
               </div>
             </div>
           )}
 
           {/* Citizen Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <UserIcon className="h-5 w-5 text-[#0078D7] mr-2" />
               Citizen Information
             </h3>
@@ -409,34 +611,39 @@ const ComplaintDetails = () => {
               <div className="flex items-center">
                 <UserIcon className="h-4 w-4 text-gray-400 mr-3" />
                 <span className="text-gray-900">
-                  {complaintData.citizen.first_name} {complaintData.citizen.last_name}
+                  {complaintData.citizen?.first_name || complaintData.citizen_name || 'Anonymous'} {complaintData.citizen?.last_name || ''}
                 </span>
               </div>
               <div className="flex items-center">
                 <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-3" />
                 <a 
-                  href={`mailto:${complaintData.citizen.email}`}
+                  href={`mailto:${complaintData.citizen?.email || complaintData.email || ''}`}
                   className="text-[#0078D7] hover:text-blue-800"
                 >
-                  {complaintData.citizen.email}
+                  {complaintData.citizen?.email || complaintData.email || 'N/A'}
                 </a>
               </div>
               <div className="flex items-center">
                 <PhoneIcon className="h-4 w-4 text-gray-400 mr-3" />
                 <a 
-                  href={`tel:${complaintData.citizen.phone}`}
+                  href={`tel:${complaintData.citizen?.phone || complaintData.phone || ''}`}
                   className="text-[#0078D7] hover:text-blue-800"
                 >
-                  {complaintData.citizen.phone}
+                  {complaintData.citizen?.phone || complaintData.phone || 'N/A'}
                 </a>
               </div>
             </div>
           </div>
 
           {/* Complaint Description */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Description</h3>
-            <p className="text-gray-700 leading-relaxed">{complaintData.description}</p>
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+              <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#0078D7] mr-2" />
+              Description
+            </h3>
+            <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-[#0078D7]">
+              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{complaintData.description}</p>
+            </div>
           </div>
 
           {/* Attachments */}
@@ -447,20 +654,24 @@ const ComplaintDetails = () => {
                 Attachments
               </h3>
               <div className="space-y-2">
-                {complaintData.attachments.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <PaperClipIcon className="h-4 w-4 text-gray-400 mr-3" />
-                      <div>
-                        <span className="text-sm font-medium text-gray-900">{file.name}</span>
-                        <span className="text-xs text-gray-500 ml-2">({file.size})</span>
+                {complaintData.attachments && complaintData.attachments.length > 0 ? (
+                  complaintData.attachments.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center">
+                        <PaperClipIcon className="h-4 w-4 text-gray-400 mr-3" />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">{file.name}</span>
+                          <span className="text-xs text-gray-500 ml-2">({file.size})</span>
+                        </div>
                       </div>
+                      <button className="text-[#0078D7] hover:text-blue-800 text-sm">
+                        Download
+                      </button>
                     </div>
-                    <button className="text-[#0078D7] hover:text-blue-800 text-sm">
-                      Download
-                    </button>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No attachments available</p>
+                )}
               </div>
             </div>
           )}
@@ -469,37 +680,66 @@ const ComplaintDetails = () => {
         {/* Right Panel - Map & Metadata */}
         <div className="space-y-6">
           {/* Location Map */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <MapPinIcon className="h-5 w-5 text-[#0078D7] mr-2" />
               Location
             </h3>
-            <div className="h-64 rounded-lg overflow-hidden border border-gray-200">
-              <MapContainer
-                center={[complaintData.latitude, complaintData.longitude]}
-                zoom={16}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker position={[complaintData.latitude, complaintData.longitude]}>
-                  <Popup>
-                    <div className="text-sm">
-                      <strong>{complaintData.title}</strong><br />
-                      {complaintData.address}
-                    </div>
-                  </Popup>
-                </Marker>
-              </MapContainer>
+            <div className="space-y-4">
+              <div className="h-64 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                <MapContainer
+                  center={[complaintData.latitude, complaintData.longitude]}
+                  zoom={16}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <Marker position={[complaintData.latitude, complaintData.longitude]}>
+                    <Popup>
+                      <div className="text-sm">
+                        <strong>{complaintData.title}</strong><br />
+                        {complaintData.address}
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href={`https://www.google.com/maps/search/${encodeURIComponent(complaintData.address)}/@${complaintData.latitude},${complaintData.longitude},16z`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
+                >
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4 mr-2" />
+                  Open in Maps
+                </a>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${complaintData.latitude},${complaintData.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium transition-colors border border-green-200"
+                >
+                  <MapPinIcon className="h-4 w-4 mr-2" />
+                  Get Directions
+                </a>
+              </div>
+
+              {/* Address display */}
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs font-medium text-gray-500 mb-1">Location Address</p>
+                <p className="text-sm text-gray-700">{complaintData.address}</p>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 mt-2">{complaintData.address}</p>
           </div>
 
           {/* Complaint Metadata */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Complaint Details</h3>
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Complaint Details</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -552,87 +792,103 @@ const ComplaintDetails = () => {
           </div>
 
           {/* Status Timeline */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <ClockIcon className="h-5 w-5 text-[#0078D7] mr-2" />
               Status Timeline
             </h3>
-            <div className="space-y-4">
-              {complaintData.timeline.map((event, index) => (
-                <div key={index} className="flex items-start">
-                  <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
-                    index === 0 ? 'bg-[#0078D7]' : 'bg-gray-300'
-                  }`}></div>
-                  <div className="ml-4 flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-900">{event.status}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(event.timestamp).toLocaleDateString('en-IN')}
-                      </span>
+            <div className="space-y-0">
+              {complaintData.timeline && complaintData.timeline.length > 0 ? (
+                complaintData.timeline.map((event, index) => (
+                  <div key={index} className="flex pb-6 relative">
+                    {/* Vertical line */}
+                    {index < complaintData.timeline.length - 1 && (
+                      <div className="absolute left-3 top-8 w-0.5 h-12 bg-gradient-to-b from-[#0078D7] to-gray-200"></div>
+                    )}
+                    {/* Timeline dot */}
+                    <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center z-10 ${
+                      index === 0 ? 'bg-[#0078D7] text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      <div className="w-2 h-2 rounded-full bg-current"></div>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">by {event.user}</p>
+                    {/* Timeline content */}
+                    <div className="ml-4 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold text-gray-900">{event.status}</span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(event.timestamp).toLocaleDateString('en-IN')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">{event.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">by {event.user}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 italic">No timeline events available</p>
+              )}
             </div>
           </div>
 
           {/* Update Status */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border-t-4 border-[#FF9E00]">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <PencilIcon className="h-5 w-5 text-[#FF9E00] mr-2" />
               Update Status
             </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            
+            <div className="space-y-5">
+              {/* Primary Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">New Status</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">New Status *</label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078D7] focus:border-[#0078D7]"
+                    className="w-full border-2 border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-[#0078D7] transition-all"
                   >
                     <option value="">Select Status</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="RESOLVED">Resolved</option>
-                    <option value="REJECTED">Rejected</option>
+                    <option value="IN_PROGRESS">🔄 In Progress</option>
+                    <option value="RESOLVED">✓ Resolved</option>
+                    <option value="REJECTED">✗ Rejected</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Priority</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078D7] focus:border-[#0078D7]"
+                    className="w-full border-2 border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-[#0078D7] transition-all"
                   >
                     <option value="">Keep Current</option>
-                    <option value="HIGH">High</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="LOW">Low</option>
+                    <option value="HIGH">🔴 High</option>
+                    <option value="MEDIUM">🟡 Medium</option>
+                    <option value="LOW">🟢 Low</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Secondary Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Estimated Resolution (Days)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Est. Resolution (Days)</label>
                   <input
                     type="number"
                     value={estimatedDays}
                     onChange={(e) => setEstimatedDays(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078D7] focus:border-[#0078D7]"
+                    className="w-full border-2 border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-[#0078D7] transition-all"
                     placeholder="e.g., 3"
+                    min="1"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Assign To</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Assign To Officer</label>
                   <select
                     value={assignedTo}
                     onChange={(e) => setAssignedTo(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078D7] focus:border-[#0078D7]"
+                    className="w-full border-2 border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-[#0078D7] transition-all"
                   >
                     <option value="">Select Officer</option>
                     <option value="officer1">Officer Patil</option>
@@ -642,22 +898,25 @@ const ComplaintDetails = () => {
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Public Update Notes</label>
+              {/* Notes Section */}
+              <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-[#FF9E00]">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Public Update Notes</label>
                 <textarea
                   value={officerNotes}
                   onChange={(e) => setOfficerNotes(e.target.value)}
                   rows={3}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#0078D7] focus:border-[#0078D7]"
+                  className="w-full border-2 border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-[#0078D7] transition-all"
                   placeholder="Add notes that will be visible to the citizen..."
                 />
+                <p className="text-xs text-gray-500 mt-2">These notes will be sent to the citizen as an update.</p>
               </div>
               
-              <div className="flex space-x-3">
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   onClick={handleStatusUpdate}
                   disabled={isUpdating || !newStatus}
-                  className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7] disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {isUpdating ? (
                     <>
@@ -665,15 +924,19 @@ const ComplaintDetails = () => {
                       Updating...
                     </>
                   ) : (
-                    'Update Status'
+                    <>
+                      <PencilIcon className="h-4 w-4 mr-2" />
+                      Update Status
+                    </>
                   )}
                 </button>
                 
                 {newStatus === 'RESOLVED' && (
                   <button
                     onClick={() => setShowResolutionForm(true)}
-                    className="flex items-center px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50"
+                    className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-green-600 text-green-700 font-semibold rounded-lg hover:bg-green-50 transition-all"
                   >
+                    <CheckCircleIcon className="h-4 w-4 mr-2" />
                     Add Resolution Proof
                   </button>
                 )}
@@ -881,64 +1144,6 @@ const ComplaintDetails = () => {
           </div>
         </div>
       )}
-
-      {/* Performance Analytics */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <StarIcon className="h-5 w-5 text-purple-600 mr-2" />
-          Performance Analytics
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600 mb-1">2.5h</div>
-            <div className="text-sm text-gray-600">Response Time</div>
-            <div className="text-xs text-green-600 mt-1">✓ Within SLA</div>
-          </div>
-          
-          <div className="text-center p-4 bg-orange-50 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600 mb-1">4d</div>
-            <div className="text-sm text-gray-600">Age</div>
-            <div className="text-xs text-orange-600 mt-1">Target: 7d</div>
-          </div>
-          
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600 mb-1">85%</div>
-            <div className="text-sm text-gray-600">Dept. Efficiency</div>
-            <div className="text-xs text-gray-500 mt-1">This month</div>
-          </div>
-          
-          <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600 mb-1">4.2/5</div>
-            <div className="text-sm text-gray-600">Avg. Rating</div>
-            <div className="text-xs text-gray-500 mt-1">Category avg</div>
-          </div>
-        </div>
-
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-medium text-gray-900">Risk Assessment</h4>
-            <span className="flex items-center text-orange-600">
-              <FlagIcon className="h-4 w-4 mr-1" />
-              Medium Risk
-            </span>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Escalation probability</span>
-              <span className="font-medium">32%</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Media attention risk</span>
-              <span className="font-medium">Low</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Similar complaints (30d)</span>
-              <span className="font-medium">3 nearby</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

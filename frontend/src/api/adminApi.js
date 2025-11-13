@@ -3,8 +3,33 @@ import { axiosPrivate } from './axiosConfig';
 // Admin API endpoints
 export const adminApi = {
   // Get dashboard statistics
-  getDashboardStats: async () => {
-    const response = await axiosPrivate.get('/admin/dashboard/stats/');
+  getDashboardStats: async (filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/quick_stats/', { params: filters });
+    return response.data;
+  },
+
+  // Get all complaints with filters
+  getComplaints: async (filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/', { 
+      params: {
+        limit: filters.limit || 10,
+        page: filters.page || 1,
+        ordering: filters.ordering || '-created_at',
+        ...filters
+      } 
+    });
+    return response.data;
+  },
+
+  // Get recent complaints (use the complaints list endpoint with limit)
+  getRecentComplaints: async (filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/', { 
+      params: { 
+        limit: filters.limit || 5,
+        ordering: '-created_at',
+        ...filters
+      } 
+    });
     return response.data;
   },
 
@@ -101,6 +126,35 @@ export const adminApi = {
   // Get ward-wise data
   getWardData: async () => {
     const response = await axiosPrivate.get('/admin/wards/');
+    return response.data;
+  },
+
+  // Get complaint details by ID
+  getComplaintById: async (id) => {
+    const response = await axiosPrivate.get(`/complaints/${id}/`);
+    return response.data;
+  },
+
+  // Update complaint status
+  updateComplaintStatus: async (id, statusData) => {
+    const response = await axiosPrivate.patch(`/complaints/${id}/`, statusData);
+    return response.data;
+  },
+
+  // Get complaints for map view
+  getComplaintsForMap: async (filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/', { 
+      params: {
+        limit: 1000,
+        ...filters
+      } 
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get analytics data
+  getAnalytics: async (filters = {}) => {
+    const response = await axiosPrivate.get('/admin/analytics/', { params: filters });
     return response.data;
   },
 

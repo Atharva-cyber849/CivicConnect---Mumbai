@@ -101,22 +101,13 @@ api.interceptors.response.use(
       
       // If no refresh token available, redirect to login
       if (!refreshToken) {
-        // Save current state before redirecting
-        sessionStorage.setItem('lastAttemptedAction', JSON.stringify({
-          path: window.location.pathname,
-          method: originalRequest.method,
-          data: originalRequest.data instanceof FormData 
-            ? Object.fromEntries(originalRequest.data.entries())
-            : originalRequest.data
-        }))
-        
         // Clear auth data
         localStorage.removeItem('auth_token')
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('user_data')
         
         // Redirect to login
-        window.location.href = '/auth/login?redirect=' + window.location.pathname
+        window.location.href = '/auth/login'
         return Promise.reject(new Error('Authentication required'))
       }
 
@@ -158,43 +149,47 @@ api.interceptors.response.use(
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('user_data')
         
-        // Save attempted action
-        sessionStorage.setItem('lastAttemptedAction', JSON.stringify({
-          path: window.location.pathname,
-          method: originalRequest.method,
-          data: originalRequest.data instanceof FormData 
-            ? Object.fromEntries(originalRequest.data.entries())
-            : originalRequest.data
-        }))
-        
         // Redirect to login
-        window.location.href = '/auth/login?redirect=' + window.location.pathname
+        window.location.href = '/auth/login'
         return Promise.reject(new Error('Session expired. Please log in again.'))
       }
     }
 
-    // Handle CSRF errors
+    // Handle CSRF errors (but don't logout - just reload)
     if (error.response?.status === 403 && error.response?.data?.detail?.includes('CSRF')) {
       // Reload the page to get a new CSRF token
       window.location.reload()
       return Promise.reject(new Error('Session expired. Please try again.'))
     }
 
-    // Show error toast with appropriate message
-    let errorMessage
-    if (error.response?.status === 413) {
-      errorMessage = 'File size exceeds the maximum limit'
-    } else if (error.response?.status === 429) {
-      errorMessage = 'Too many requests. Please try again later.'
-    } else {
-      errorMessage = error.response?.data?.detail || 
-                    error.response?.data?.message ||
-                    Object.entries(error.response?.data || {})
-                      .map(([key, value]) => `${key}: ${value}`)
-                      .join(', ') ||
-                    'An error occurred'
+    // Handle permission denied (403) errors - actual auth errors
+    if (error.response?.status === 403 && !error.response?.data?.detail?.includes('CSRF')) {
+      // This is a permission error, not an auth error - don't logout
+      console.warn('Permission denied:', error.response?.data);
+      return Promise.reject(error);
     }
-    toast.error(errorMessage)
+
+    // Handle 404 and other client errors - don't show toast, just reject silently for dashboard queries
+    // These can happen during data fetching and shouldn't trigger error notifications
+    if (error.response?.status === 404) {
+      console.warn('Resource not found:', originalRequest.url);
+      return Promise.reject(error);
+    }
+
+    // Show error toast only for actual server errors (5xx) and rate limiting
+    if (error.response?.status >= 500 || error.response?.status === 429) {
+      let errorMessage
+      if (error.response?.status === 413) {
+        errorMessage = 'File size exceeds the maximum limit'
+      } else if (error.response?.status === 429) {
+        errorMessage = 'Too many requests. Please try again later.'
+      } else {
+        errorMessage = error.response?.data?.detail || 
+                      error.response?.data?.message ||
+                      'Server error occurred'
+      }
+      toast.error(errorMessage)
+    }
 
     return Promise.reject(error)
   }

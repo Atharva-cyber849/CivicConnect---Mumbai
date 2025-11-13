@@ -1,0 +1,540 @@
+{
+  "type": "FeatureCollection",
+  "name": "mumbai_wards_accurate",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "A",
+        "ward_name": "Colaba",
+        "zone": "South",
+        "area_sqkm": 3.4,
+        "population": 65000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8100, 18.9000],
+            [72.8400, 18.9000],
+            [72.8400, 18.9300],
+            [72.8100, 18.9300],
+            [72.8100, 18.9000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "B",
+        "ward_name": "Dockyard Road",
+        "zone": "South",
+        "area_sqkm": 2.1,
+        "population": 58000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8200, 18.9300],
+            [72.8500, 18.9300],
+            [72.8500, 18.9600],
+            [72.8200, 18.9600],
+            [72.8200, 18.9300]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "C",
+        "ward_name": "Kalbadevi",
+        "zone": "South",
+        "area_sqkm": 1.8,
+        "population": 85000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8300, 18.9600],
+            [72.8600, 18.9600],
+            [72.8600, 18.9900],
+            [72.8300, 18.9900],
+            [72.8300, 18.9600]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "D",
+        "ward_name": "Girgaon",
+        "zone": "South",
+        "area_sqkm": 2.3,
+        "population": 72000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8150, 18.9900],
+            [72.8450, 18.9900],
+            [72.8450, 19.0200],
+            [72.8150, 19.0200],
+            [72.8150, 18.9900]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "E",
+        "ward_name": "Byculla East",
+        "zone": "South",
+        "area_sqkm": 2.8,
+        "population": 62000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8400, 19.0200],
+            [72.8700, 19.0200],
+            [72.8700, 19.0500],
+            [72.8400, 19.0500],
+            [72.8400, 19.0200]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "F/N",
+        "ward_name": "Parel",
+        "zone": "Central",
+        "area_sqkm": 5.2,
+        "population": 78000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8200, 19.0500],
+            [72.8500, 19.0500],
+            [72.8500, 19.0850],
+            [72.8200, 19.0850],
+            [72.8200, 19.0500]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "F/S",
+        "ward_name": "Elphinstone",
+        "zone": "Central",
+        "area_sqkm": 4.8,
+        "population": 65000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8300, 19.0850],
+            [72.8600, 19.0850],
+            [72.8600, 19.1150],
+            [72.8300, 19.1150],
+            [72.8300, 19.0850]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "G/N",
+        "ward_name": "Dadar",
+        "zone": "Central",
+        "area_sqkm": 6.1,
+        "population": 85000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8400, 19.1150],
+            [72.8700, 19.1150],
+            [72.8700, 19.1500],
+            [72.8400, 19.1500],
+            [72.8400, 19.1150]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "G/S",
+        "ward_name": "Worli",
+        "zone": "Central",
+        "area_sqkm": 5.5,
+        "population": 72000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8200, 19.1500],
+            [72.8500, 19.1500],
+            [72.8500, 19.1850],
+            [72.8200, 19.1850],
+            [72.8200, 19.1500]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "H/E",
+        "ward_name": "Bandra East",
+        "zone": "Central",
+        "area_sqkm": 7.2,
+        "population": 95000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8300, 19.1850],
+            [72.8600, 19.1850],
+            [72.8600, 19.2200],
+            [72.8300, 19.2200],
+            [72.8300, 19.1850]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "H/W",
+        "ward_name": "Bandra West",
+        "zone": "Western",
+        "area_sqkm": 4.7,
+        "population": 132000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8100, 19.2200],
+            [72.8400, 19.2200],
+            [72.8400, 19.2550],
+            [72.8100, 19.2550],
+            [72.8100, 19.2200]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "K/E",
+        "ward_name": "Andheri East",
+        "zone": "Western",
+        "area_sqkm": 9.5,
+        "population": 125000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8200, 19.2550],
+            [72.8600, 19.2550],
+            [72.8600, 19.3000],
+            [72.8200, 19.3000],
+            [72.8200, 19.2550]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "K/W",
+        "ward_name": "Andheri West",
+        "zone": "Western",
+        "area_sqkm": 8.9,
+        "population": 118000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8100, 19.3000],
+            [72.8500, 19.3000],
+            [72.8500, 19.3450],
+            [72.8100, 19.3450],
+            [72.8100, 19.3000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "L",
+        "ward_name": "Kurla",
+        "zone": "Eastern",
+        "area_sqkm": 7.8,
+        "population": 102000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8700, 19.0500],
+            [72.9100, 19.0500],
+            [72.9100, 19.0900],
+            [72.8700, 19.0900],
+            [72.8700, 19.0500]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "M/E",
+        "ward_name": "Chembur",
+        "zone": "Eastern",
+        "area_sqkm": 13.6,
+        "population": 185000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8600, 19.0200],
+            [72.9500, 19.0200],
+            [72.9500, 19.0800],
+            [72.8600, 19.0800],
+            [72.8600, 19.0200]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "M/W",
+        "ward_name": "Ghatkopar",
+        "zone": "Eastern",
+        "area_sqkm": 10.2,
+        "population": 195000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8700, 19.0900],
+            [72.9200, 19.0900],
+            [72.9200, 19.1400],
+            [72.8700, 19.1400],
+            [72.8700, 19.0900]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "N",
+        "ward_name": "Ghatkopar East",
+        "zone": "Eastern",
+        "area_sqkm": 11.5,
+        "population": 135000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.9200, 19.0900],
+            [72.9700, 19.0900],
+            [72.9700, 19.1400],
+            [72.9200, 19.1400],
+            [72.9200, 19.0900]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "P/N",
+        "ward_name": "Malad",
+        "zone": "Western",
+        "area_sqkm": 11.5,
+        "population": 145000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8100, 19.3450],
+            [72.8600, 19.3450],
+            [72.8600, 19.4000],
+            [72.8100, 19.4000],
+            [72.8100, 19.3450]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "P/S",
+        "ward_name": "Goregaon",
+        "zone": "Western",
+        "area_sqkm": 10.8,
+        "population": 132000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8200, 19.4000],
+            [72.8700, 19.4000],
+            [72.8700, 19.4550],
+            [72.8200, 19.4550],
+            [72.8200, 19.4000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "R/C",
+        "ward_name": "Borivali",
+        "zone": "Western",
+        "area_sqkm": 12.8,
+        "population": 165000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8100, 19.4550],
+            [72.8600, 19.4550],
+            [72.8600, 19.5100],
+            [72.8100, 19.5100],
+            [72.8100, 19.4550]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "R/N",
+        "ward_name": "Dahisar",
+        "zone": "Western",
+        "area_sqkm": 13.2,
+        "population": 155000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8200, 19.5100],
+            [72.8700, 19.5100],
+            [72.8700, 19.5650],
+            [72.8200, 19.5650],
+            [72.8200, 19.5100]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "R/S",
+        "ward_name": "Kandivali",
+        "zone": "Western",
+        "area_sqkm": 11.9,
+        "population": 148000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.8100, 19.5650],
+            [72.8600, 19.5650],
+            [72.8600, 19.6200],
+            [72.8100, 19.6200],
+            [72.8100, 19.5650]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "S",
+        "ward_name": "Bhandup",
+        "zone": "Eastern",
+        "area_sqkm": 9.8,
+        "population": 125000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.9200, 19.1400],
+            [72.9700, 19.1400],
+            [72.9700, 19.1900],
+            [72.9200, 19.1900],
+            [72.9200, 19.1400]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward_code": "T",
+        "ward_name": "Mulund",
+        "zone": "Eastern",
+        "area_sqkm": 11.3,
+        "population": 142000
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.9300, 19.1900],
+            [72.9800, 19.1900],
+            [72.9800, 19.2450],
+            [72.9300, 19.2450],
+            [72.9300, 19.1900]
+          ]
+        ]
+      }
+    }
+  ]
+}

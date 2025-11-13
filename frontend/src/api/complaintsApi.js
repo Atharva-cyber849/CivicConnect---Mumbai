@@ -9,16 +9,22 @@ export const complaintsApi = {
     });
     return response.data;
   },
-  // Get all complaints (admin view with filtering)
+  // Get all complaints (for map and public view)
   getAllComplaints: async (filters = {}) => {
-    const response = await axiosPrivate.get('/complaints/', { params: filters });
+    const response = await axiosPublic.get('/complaints/map/', { params: filters });
     return response.data;
   },
 
   // Get user's complaints
   getUserComplaints: async () => {
-    const response = await axiosPrivate.get('/complaints/');
-    return response.data;
+    try {
+      const response = await axiosPrivate.get('/complaints/');
+      console.log('getUserComplaints response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('getUserComplaints error:', error);
+      throw error;
+    }
   },
 
   // Get complaint by ID
@@ -33,12 +39,15 @@ export const complaintsApi = {
     
     // Handle file uploads
     Object.keys(complaintData).forEach(key => {
-      if (complaintData[key] instanceof File) {
-        formData.append(key, complaintData[key]);
-      } else if (Array.isArray(complaintData[key])) {
-        complaintData[key].forEach(item => formData.append(key, item));
-      } else {
-        formData.append(key, complaintData[key]);
+      const value = complaintData[key];
+      if (value !== null && value !== undefined) {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (Array.isArray(value)) {
+          value.forEach(item => formData.append(key, item));
+        } else {
+          formData.append(key, value.toString());
+        }
       }
     });
 
@@ -145,6 +154,50 @@ export const complaintsApi = {
   // Get complaints in GeoJSON format
   geoJson: async () => {
     const response = await axiosPrivate.get('/complaints/geo-json/');
+    return response.data;
+  },
+
+  // Add internal notes to complaint
+  addInternalNotes: async (id, notesData) => {
+    const response = await axiosPrivate.post(`/complaints/${id}/internal-notes/`, notesData);
+    return response.data;
+  },
+
+  // Submit resolution for complaint
+  submitResolution: async (id, resolutionData) => {
+    const formData = new FormData();
+    
+    // Handle file uploads for resolution images
+    Object.keys(resolutionData).forEach(key => {
+      const value = resolutionData[key];
+      if (value !== null && value !== undefined) {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (item instanceof File) {
+              formData.append(`${key}[${index}]`, item);
+            } else if (item.file instanceof File) {
+              formData.append(`${key}[${index}]`, item.file);
+            }
+          });
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    });
+
+    const response = await axiosPrivate.patch(`/complaints/${id}/resolution/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Refer complaint to another department
+  referToDepartment: async (id, departmentData) => {
+    const response = await axiosPrivate.patch(`/complaints/${id}/refer/`, departmentData);
     return response.data;
   }
 };

@@ -7,25 +7,49 @@ const ThemeContext = createContext();
 // Theme types
 export const THEMES = {
   LIGHT: 'light',
-  DARK: 'dark'
+  DARK: 'dark',
+  SYSTEM: 'system'
 };
 
 // Theme reducer
 const themeReducer = (state, action) => {
   switch (action.type) {
     case 'SET_THEME':
+      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const resolvedTheme = action.payload === THEMES.SYSTEM 
+        ? (isSystemDark ? THEMES.DARK : THEMES.LIGHT)
+        : action.payload;
+      
       return {
         ...state,
         theme: action.payload,
-        isDark: action.payload === THEMES.DARK
+        resolvedTheme,
+        isDark: resolvedTheme === THEMES.DARK
       };
     case 'TOGGLE_THEME':
-      const newTheme = state.theme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT;
+      const currentTheme = state.theme === THEMES.SYSTEM 
+        ? (state.isDark ? THEMES.LIGHT : THEMES.DARK)
+        : (state.theme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT);
+      
       return {
         ...state,
-        theme: newTheme,
-        isDark: newTheme === THEMES.DARK
+        theme: currentTheme,
+        resolvedTheme: currentTheme === THEMES.SYSTEM 
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.DARK : THEMES.LIGHT)
+          : currentTheme,
+        isDark: currentTheme === THEMES.DARK || 
+               (currentTheme === THEMES.SYSTEM && window.matchMedia('(prefers-color-scheme: dark)').matches)
       };
+    case 'UPDATE_SYSTEM_THEME':
+      if (state.theme === THEMES.SYSTEM) {
+        const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return {
+          ...state,
+          resolvedTheme: systemIsDark ? THEMES.DARK : THEMES.LIGHT,
+          isDark: systemIsDark
+        };
+      }
+      return state;
     default:
       return state;
   }
@@ -33,8 +57,9 @@ const themeReducer = (state, action) => {
 
 // Initial state
 const initialState = {
-  theme: THEMES.LIGHT,
-  isDark: false
+  theme: THEMES.SYSTEM,
+  resolvedTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.DARK : THEMES.LIGHT,
+  isDark: window.matchMedia('(prefers-color-scheme: dark)').matches
 };
 
 // Theme provider component
@@ -62,15 +87,32 @@ export const ThemeProvider = ({ children }) => {
     }
   }, []);
 
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleSystemThemeChange = (e) => {
+      if (state.theme === THEMES.SYSTEM) {
+        dispatch({ type: 'UPDATE_SYSTEM_THEME' });
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    };
+  }, [state.theme]);
+
   // Apply theme to document
   useEffect(() => {
     const root = window.document.documentElement;
     
     // Remove previous theme classes
-    root.classList.remove(THEMES.LIGHT, THEMES.DARK);
+    root.classList.remove(THEMES.LIGHT, THEMES.DARK, THEMES.SYSTEM);
     
     // Add current theme class
-    root.classList.add(state.theme);
+    root.classList.add(state.resolvedTheme);
     
     // Save to localStorage
     localStorage.setItem(STORAGE_KEYS.THEME, state.theme);
@@ -83,7 +125,7 @@ export const ThemeProvider = ({ children }) => {
         state.isDark ? '#1f2937' : '#ffffff'
       );
     }
-  }, [state.theme]);
+  }, [state.theme, state.resolvedTheme, state.isDark]);
 
   // Set specific theme
   const setTheme = (theme) => {
@@ -93,6 +135,14 @@ export const ThemeProvider = ({ children }) => {
         payload: theme
       });
     }
+  };
+  
+  // Get the current theme display name
+  const getThemeDisplayName = () => {
+    if (state.theme === THEMES.SYSTEM) {
+      return `System (${state.resolvedTheme === THEMES.DARK ? 'Dark' : 'Light'})`;
+    }
+    return state.theme.charAt(0).toUpperCase() + state.theme.slice(1);
   };
 
   // Toggle between light and dark
@@ -145,6 +195,7 @@ export const ThemeProvider = ({ children }) => {
     setTheme,
     toggleTheme,
     getThemeClasses,
+    getThemeDisplayName,
     THEMES
   };
 

@@ -1,6 +1,31 @@
 // Enhanced PWA Service for managing Progressive Web App features
-class PWAService {
+class EventEmitter {
   constructor() {
+    this.events = {};
+  }
+
+  on(event, listener) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(listener);
+    return () => this.off(event, listener);
+  }
+
+  off(event, listener) {
+    if (!this.events[event]) return;
+    this.events[event] = this.events[event].filter(l => l !== listener);
+  }
+
+  emit(event, ...args) {
+    if (!this.events[event]) return;
+    this.events[event].forEach(listener => listener(...args));
+  }
+}
+
+class PWAService extends EventEmitter {
+  constructor() {
+    super();
     this.deferredPrompt = null
     this.isInstalled = false
     this.isOnline = navigator.onLine
@@ -50,17 +75,18 @@ class PWAService {
         
         console.log(`Service Worker registered (${swPath}):`, this.swRegistration.scope)
         
-        // Listen for service worker updates
-        this.swRegistration.addEventListener('updatefound', () => {
-          const newWorker = this.swRegistration.installing
-          
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              this.updateAvailable = true
-              this.notifyUpdate()
-            }
-          })
-        })
+        // Handle service worker updates
+        this.swRegistration.onupdatefound = () => {
+          const installingWorker = this.swRegistration.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed') {
+                this.updateAvailable = true;
+                this.emit('update', { updateAvailable: true });
+              }
+            };
+          }
+        };
         
         return this.swRegistration
       } catch (error) {
@@ -120,12 +146,14 @@ class PWAService {
       this.isOnline = true
       this.hideOfflineIndicator()
       this.syncOfflineData()
+      this.emit('online', { isOnline: true });
     })
 
     window.addEventListener('offline', () => {
       console.log('App is offline')
       this.isOnline = false
       this.showOfflineIndicator()
+      this.emit('offline', { isOnline: false });
     })
   }
 
@@ -250,29 +278,42 @@ class PWAService {
 
   // Periodic Background Sync
   setupPeriodicSync() {
-    if ('serviceWorker' in navigator && 'periodicSync' in window.ServiceWorkerRegistration.prototype) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.periodicSync.register('complaint-status-check', {
-          minInterval: 24 * 60 * 60 * 1000 // 24 hours
-        }).then(() => {
-          console.log('Periodic sync registered')
+    try {
+      if ('serviceWorker' in navigator && 'periodicSync' in window.ServiceWorkerRegistration.prototype) {
+        navigator.serviceWorker.ready.then(registration => {
+          if (registration.periodicSync) {
+            registration.periodicSync.register('complaint-status-check', {
+              minInterval: 24 * 60 * 60 * 1000 // 24 hours
+            }).then(() => {
+              console.log('Periodic sync registered')
+            }).catch(error => {
+              console.warn('Periodic sync registration failed (non-critical):', error.message)
+              // Don't throw - this is non-critical
+            })
+          }
         }).catch(error => {
-          console.error('Periodic sync registration failed:', error)
+          console.warn('Service worker not ready for periodic sync:', error.message)
         })
-      })
+      }
+    } catch (error) {
+      console.warn('Periodic sync setup failed (non-critical):', error.message)
+      // Silently fail - periodic sync is optional
     }
   }
 
   // Background Sync for offline actions
   async syncOfflineData() {
-    if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
-      try {
+    try {
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
         const registration = await navigator.serviceWorker.ready
-        await registration.sync.register('complaint-sync')
-        console.log('Background sync registered')
-      } catch (error) {
-        console.error('Background sync registration failed:', error)
+        if (registration.sync) {
+          await registration.sync.register('complaint-sync')
+          console.log('Background sync registered')
+        }
       }
+    } catch (error) {
+      console.warn('Background sync registration failed (non-critical):', error.message)
+      // Silently fail - background sync is optional
     }
   }
 

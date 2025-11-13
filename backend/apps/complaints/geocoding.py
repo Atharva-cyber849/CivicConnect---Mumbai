@@ -1,42 +1,55 @@
 import requests
 import json
-from pathlib import Path
-from shapely.geometry import Point, Polygon
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from django.conf import settings
-from rest_framework.permissions import AllowAny
+import re
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
-def load_wards_data():
-    """Load Mumbai wards GeoJSON data."""
-    try:
-        frontend_path = Path(__file__).parent.parent.parent.parent / 'frontend'
-        wards_path = frontend_path / 'src' / 'config' / 'wardsData.json'
-        
-        with open(wards_path, 'r') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Error loading wards data: {e}")
-        return None
+# Mumbai ward mapping based on common area names
+WARD_MAPPING = {
+    'colaba': 'A', 'fort': 'A', 'navy nagar': 'A',
+    'dongri': 'B', 'mazgaon': 'B', 'wadi bunder': 'B',
+    'masjid': 'C', 'victoria dock': 'C',
+    'tardeo': 'D', 'haj house': 'D', 'nagpada': 'D',
+    'byculla': 'E',
+    'matunga': 'F/N', 'mahim': 'F/N',
+    'parel': 'F/S', 'sewri': 'F/S',
+    'dadar': 'G/N',
+    'worli': 'G/S', 'lower parel': 'G/S',
+    'bandra east': 'H/E',
+    'bandra west': 'H/W', 'bandra': 'H/W',
+    'andheri east': 'K/E',
+    'andheri west': 'K/W', 'andheri': 'K/W',
+    'kurla': 'L',
+    'chembur': 'M/E', 'chembur east': 'M/E',
+    'chembur west': 'M/W',
+    'ghatkopar': 'N',
+    'malad': 'P/N',
+    'goregaon': 'P/S',
+    'borivali': 'R/C',
+    'dahisar': 'R/N',
+    'kandivali': 'R/S',
+    'bhandup': 'S',
+    'mulund': 'T',
+}
 
-def find_ward(lat, lon, wards_data):
-    """Find which ward a point belongs to."""
-    if not wards_data:
+def extract_ward_from_address(address):
+    """Extract ward from address string."""
+    if not address:
         return None
-        
-    point = Point(float(lon), float(lat))
     
-    for feature in wards_data['features']:
-        try:
-            coords = feature['geometry']['coordinates'][0]
-            polygon = Polygon(coords)
-            if polygon.contains(point):
-                return feature['properties']
-        except Exception as e:
-            print(f"Error processing ward: {e}")
-            continue
-            
+    address_lower = address.lower()
+    
+    # Check for ward mentions in address
+    for area, ward in WARD_MAPPING.items():
+        if area in address_lower:
+            return ward
+    
+    # Try to extract ward code directly (e.g., "M/E Ward", "K/W Ward")
+    ward_match = re.search(r'([A-Z]/[A-Z]|[A-Z])\s*(?:ward|ward zone)', address_lower)
+    if ward_match:
+        return ward_match.group(1)
+    
     return None
 
 @api_view(['GET'])
@@ -53,7 +66,7 @@ def reverse_geocode(request):
             return Response({'error': 'Latitude and longitude are required'}, status=400)
         
         # Get address details from Nominatim
-        url = f'https://nominatim.openstreetmap.org/reverse'
+        url = 'https://nominatim.openstreetmap.org/reverse'
         params = {
             'format': 'json',
             'lat': lat,
@@ -67,38 +80,37 @@ def reverse_geocode(request):
             'Accept-Language': 'en-US,en;q=0.9',
         }
         
-        response = requests.get(url, params=params, headers=headers)
+        response = requests.get(url, params=params, headers=headers, timeout=10)
         response.raise_for_status()
         osm_data = response.json()
         
-        # Find ward information
-        wards_data = load_wards_data()
-        ward_info = find_ward(float(lat), float(lon), wards_data) if wards_data else None
-        
         # Extract address components
         address = osm_data.get('address', {})
+        full_address = osm_data.get('display_name', '')
+        
+        # Extract ward from address
+        ward = extract_ward_from_address(full_address)
         
         result = {
-            'full_address': osm_data.get('display_name', ''),
+            'full_address': full_address,
             'address_components': {
                 'road': address.get('road', ''),
                 'suburb': address.get('suburb', ''),
-                'city': 'Mumbai',  # Default to Mumbai
-                'state': 'Maharashtra',  # Default to Maharashtra
+                'city': address.get('city', 'Mumbai'),
+                'state': address.get('state', 'Maharashtra'),
                 'postcode': address.get('postcode', ''),
-                'country': 'India'
+                'country': address.get('country', 'India')
             },
-            'ward': ward_info['ward_code'] if ward_info else None,
-            'ward_name': ward_info['full_name'] if ward_info else None,
-            'coordinates': {
-                'latitude': float(lat),
-                'longitude': float(lon)
-            }
+            'ward': ward,
+            'latitude': float(lat),
+            'longitude': float(lon)
         }
         
         return Response(result)
         
-    except requests.RequestException as e:
-        return Response({'error': str(e)}, status=500)
+    except requests.exceptions.Timeout:
+        return Response({'error': 'Geocoding service timeout'}, status=504)
+    except requests.exceptions.RequestException as e:
+        return Response({'error': f'Geocoding service error: {str(e)}'}, status=502)
     except Exception as e:
-        return Response({'error': 'Internal server error'}, status=500)
+        return Response({'error': f'Internal server error: {str(e)}'}, status=500)

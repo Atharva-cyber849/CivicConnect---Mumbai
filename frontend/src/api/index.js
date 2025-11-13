@@ -1,24 +1,19 @@
+// Import all API modules first
+import { authApi } from './authApi';
+import { complaintsApi } from './complaintsApi';
+import { complaintDetailsApi } from './complaintDetailsApi';
+import { adminApi } from './adminApi';
+import { officersApi } from './officersApi';
+import { reportsApi } from './reportsApi';
+import { notificationsApi } from './notificationsApi';
+import { departmentsApi } from './departmentsApi';
+import { axiosPrivate, axiosPublic } from './axiosConfig';
+
 // Export all API modules
-export { authApi } from './authApi';
-export { complaintsApi } from './complaintsApi';
-export { adminApi } from './adminApi';
-export { reportsApi } from './reportsApi';
-export { notificationsApi } from './notificationsApi';
+export { authApi, complaintsApi, complaintDetailsApi, adminApi, officersApi, reportsApi, notificationsApi, departmentsApi };
 
 // Export axios configuration
-export { default as axiosPrivate } from './axiosConfig';
+export { axiosPrivate, axiosPublic };
 
 // Legacy exports for backward compatibility
-export { authApi as authAPI };
-export { complaintsApi as complaintAPI };
-export { notificationsApi as notificationAPI };
-export { adminApi as departmentAPI };
-export { reportsApi as analyticsAPI };
-
-export default {
-  auth: authApi,
-  complaints: complaintsApi,
-  admin: adminApi,
-  reports: reportsApi,
-  notifications: notificationsApi,
-}
+export { authApi as authAPI, complaintsApi as complaintAPI, complaintDetailsApi as complaintDetailsAPI, notificationsApi as notificationAPI, adminApi as departmentAPI, officersApi as officerAPI, reportsApi as analyticsAPI };

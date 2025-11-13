@@ -4,6 +4,7 @@ User serializers for authentication and user management.
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from .models import Officer
 
 User = get_user_model()
 
@@ -156,8 +157,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'role', 
                   'gender', 'age', 'ward', 'address', 'pincode', 'latitude', 'longitude',
-                  'language_preference', 'profile_picture', 'created_at', 'updated_at')
-        read_only_fields = ('id', 'email', 'role', 'created_at', 'updated_at')
+                  'language_preference', 'profile_picture', 'is_superuser', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'email', 'role', 'is_superuser', 'created_at', 'updated_at')
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -180,3 +181,34 @@ class ChangePasswordSerializer(serializers.Serializer):
         if attrs['new_password'] != attrs['new_password2']:
             raise serializers.ValidationError({"new_password": "Password fields didn't match."})
         return attrs
+
+
+class OfficerSerializer(serializers.ModelSerializer):
+    """Serializer for officer profile."""
+    
+    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    
+    class Meta:
+        model = Officer
+        fields = (
+            'id', 'user', 'user_name', 'user_email',
+            'department', 'department_name',
+            'assigned_ward', 'role', 'designation',
+            'phone', 'email',
+            'complaints_handled', 'average_resolution_time',
+            'is_active', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+
+class OfficerCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating officer."""
+    
+    class Meta:
+        model = Officer
+        fields = (
+            'user', 'department', 'assigned_ward', 'role', 'designation',
+            'phone', 'email', 'is_active'
+        )

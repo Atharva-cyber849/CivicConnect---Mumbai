@@ -12,13 +12,22 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .models import Complaint, ComplaintUpdate
+from .models import (
+    Complaint, ComplaintUpdate, ComplaintImage, ComplaintAttachment,
+    ComplaintTimeline, ComplaintResolution, OfficerNotes
+)
 from .serializers import (
     ComplaintListSerializer,
     ComplaintDetailSerializer,
     ComplaintCreateSerializer,
     ComplaintUpdateStatusSerializer,
-    ComplaintUpdateSerializer
+    ComplaintUpdateSerializer,
+    ComplaintImageSerializer,
+    ComplaintAttachmentSerializer,
+    ComplaintTimelineSerializer,
+    ComplaintResolutionSerializer,
+    OfficerNotesSerializer,
+    ComplaintDetailSerializerV2
 )
 from apps.users.permissions import IsAdminOrDepartmentStaff
 from .tasks import process_complaint_with_ai, send_complaint_notification, send_status_update_notification
@@ -312,3 +321,90 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset().filter(ward=ward_id)
         serializer = ComplaintListSerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class ComplaintImageViewSet(viewsets.ModelViewSet):
+    """ViewSet for complaint images."""
+    
+    permission_classes = [IsAuthenticated]
+    serializer_class = ComplaintImageSerializer
+    
+    def get_queryset(self):
+        complaint_id = self.kwargs.get('complaint_id')
+        return ComplaintImage.objects.filter(complaint_id=complaint_id)
+    
+    def perform_create(self, serializer):
+        complaint_id = self.kwargs.get('complaint_id')
+        try:
+            complaint = Complaint.objects.get(id=complaint_id)
+            serializer.save(complaint=complaint)
+        except Complaint.DoesNotExist:
+            raise serializers.ValidationError("Complaint not found")
+
+
+class ComplaintAttachmentViewSet(viewsets.ModelViewSet):
+    """ViewSet for complaint attachments."""
+    
+    permission_classes = [IsAuthenticated]
+    serializer_class = ComplaintAttachmentSerializer
+    
+    def get_queryset(self):
+        complaint_id = self.kwargs.get('complaint_id')
+        return ComplaintAttachment.objects.filter(complaint_id=complaint_id)
+    
+    def perform_create(self, serializer):
+        complaint_id = self.kwargs.get('complaint_id')
+        try:
+            complaint = Complaint.objects.get(id=complaint_id)
+            serializer.save(complaint=complaint)
+        except Complaint.DoesNotExist:
+            raise serializers.ValidationError("Complaint not found")
+
+
+class ComplaintTimelineViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for complaint timeline (read-only)."""
+    
+    permission_classes = [IsAuthenticated]
+    serializer_class = ComplaintTimelineSerializer
+    
+    def get_queryset(self):
+        complaint_id = self.kwargs.get('complaint_id')
+        return ComplaintTimeline.objects.filter(complaint_id=complaint_id)
+
+
+class ComplaintResolutionViewSet(viewsets.ModelViewSet):
+    """ViewSet for complaint resolution."""
+    
+    permission_classes = [IsAuthenticated, IsAdminOrDepartmentStaff]
+    serializer_class = ComplaintResolutionSerializer
+    
+    def get_queryset(self):
+        complaint_id = self.kwargs.get('complaint_id')
+        return ComplaintResolution.objects.filter(complaint_id=complaint_id)
+    
+    def perform_create(self, serializer):
+        complaint_id = self.kwargs.get('complaint_id')
+        try:
+            complaint = Complaint.objects.get(id=complaint_id)
+            serializer.save(complaint=complaint, resolved_by=self.request.user)
+        except Complaint.DoesNotExist:
+            raise serializers.ValidationError("Complaint not found")
+
+
+class OfficerNotesViewSet(viewsets.ModelViewSet):
+    """ViewSet for officer notes."""
+    
+    permission_classes = [IsAuthenticated, IsAdminOrDepartmentStaff]
+    serializer_class = OfficerNotesSerializer
+    
+    def get_queryset(self):
+        complaint_id = self.kwargs.get('complaint_id')
+        return OfficerNotes.objects.filter(complaint_id=complaint_id)
+    
+    def perform_create(self, serializer):
+        complaint_id = self.kwargs.get('complaint_id')
+        try:
+            complaint = Complaint.objects.get(id=complaint_id)
+            serializer.save(complaint=complaint, officer=self.request.user)
+        except Complaint.DoesNotExist:
+            raise serializers.ValidationError("Complaint not found")

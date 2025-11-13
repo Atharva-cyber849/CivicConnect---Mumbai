@@ -1,4 +1,4 @@
-import axiosPrivate from './axiosConfig';
+import { axiosPrivate } from './axiosConfig';
 import { API_ROUTES } from '../config/apiRoutes';
 
 export const departmentsApi = {
@@ -72,5 +72,3 @@ export const departmentsApi = {
     return response.data;
   }
 };
-
-export default departmentsApi;

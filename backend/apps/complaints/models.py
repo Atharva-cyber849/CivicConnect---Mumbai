@@ -75,15 +75,23 @@ class Complaint(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     
-    # Media
+    # Media (deprecated - use ComplaintImage model instead)
     image = models.ImageField(upload_to='complaints/', blank=True, null=True)
+    
+    # Assignment Details
+    estimated_resolution_days = models.IntegerField(null=True, blank=True)
+    assigned_officer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                         related_name='officer_assigned_complaints')
+    
+    # Public Update
+    public_update = models.TextField(blank=True, null=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
     
-    # Admin Notes
+    # Admin Notes (deprecated - use OfficerNotes model instead)
     admin_notes = models.TextField(blank=True, null=True)
     
     class Meta:
@@ -161,3 +169,117 @@ class ComplaintUpdate(models.Model):
             return f"Update on {title} by {email}"
         except (AttributeError, Complaint.DoesNotExist, User.DoesNotExist):
             return f"Complaint Update {getattr(self, 'id', 'New')}"
+
+
+class ComplaintImage(models.Model):
+    """
+    Store multiple images for a complaint.
+    """
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='complaints/images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'complaint_images'
+        ordering = ['uploaded_at']
+    
+    def __str__(self) -> str:
+        return f"Image for {self.complaint.title}"
+
+
+class ComplaintAttachment(models.Model):
+    """
+    Store attachments for a complaint.
+    """
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='complaints/attachments/')
+    file_name = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=50)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'complaint_attachments'
+        ordering = ['uploaded_at']
+    
+    def __str__(self) -> str:
+        return f"{self.file_name} - {self.complaint.title}"
+
+
+class ComplaintTimeline(models.Model):
+    """
+    Track all status changes and updates for a complaint.
+    """
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='timeline')
+    
+    # Status Change
+    previous_status = models.CharField(max_length=20, choices=Complaint.STATUS_CHOICES)
+    new_status = models.CharField(max_length=20, choices=Complaint.STATUS_CHOICES)
+    
+    # Update Info
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='complaint_timeline_updates')
+    notes = models.TextField(blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'complaint_timeline'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['complaint', '-created_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.complaint.title}: {self.previous_status} → {self.new_status}"
+
+
+class ComplaintResolution(models.Model):
+    """
+    Store resolution details and proof for a complaint.
+    """
+    complaint = models.OneToOneField(Complaint, on_delete=models.CASCADE, related_name='resolution')
+    
+    # Resolution Details
+    resolution_notes = models.TextField()
+    resolution_date = models.DateTimeField()
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='resolved_complaints')
+    
+    # Proof
+    proof_image = models.ImageField(upload_to='complaints/resolutions/')
+    proof_document = models.FileField(upload_to='complaints/resolutions/', blank=True, null=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'complaint_resolutions'
+    
+    def __str__(self) -> str:
+        return f"Resolution for {self.complaint.title}"
+
+
+class OfficerNotes(models.Model):
+    """
+    Store internal notes from officers on complaints.
+    """
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='officer_notes')
+    officer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='complaint_notes')
+    
+    # Notes
+    notes = models.TextField()
+    is_internal = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'officer_notes'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['complaint', '-created_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"Notes by {self.officer.email if self.officer else 'Unknown'} on {self.complaint.title}"

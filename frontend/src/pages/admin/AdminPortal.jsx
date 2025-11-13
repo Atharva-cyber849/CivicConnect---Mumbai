@@ -19,6 +19,8 @@ const AdminPortal = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   
+  console.log('AdminPortal - Rendering with auth state:', { isAuthenticated, user: user?.email });
+  
   const [quickStats, setQuickStats] = useState({
     todayIssues: 0,
     pendingIssues: 0,
@@ -73,7 +75,7 @@ const AdminPortal = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
+      {/* Header - Only show back to public portal link */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">

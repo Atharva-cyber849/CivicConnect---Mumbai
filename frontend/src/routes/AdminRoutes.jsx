@@ -1,97 +1,25 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-
-// Layout
-import AdminLayout from '../components/Layout/AdminLayout';
-
-// Admin Pages
-import Dashboard from '../pages/admin/Dashboard';
-import ComplaintsList from '../pages/admin/ComplaintsList';
-import ComplaintDetails from '../pages/admin/ComplaintDetails';
-import AdminRegister from '../pages/admin/AdminRegister';
-import OfficerManagement from '../pages/admin/OfficerManagement';
-
-// Additional Admin Pages (to be created)
-import MapView from '../pages/admin/MapView';
-import Reports from '../pages/admin/Reports';
-import Settings from '../pages/admin/Settings';
-
-// Admin Management Components
-import AdminRegistrationRequests from '../components/admin/AdminRegistrationRequests';
-import CreateSuperAdmin from '../components/admin/CreateSuperAdmin';
-
-// Route Protection for Super Admin only
-import ProtectedRoute from './ProtectedRoute';
+import { useAuth } from '../context/AuthContext';
 import { USER_ROLES } from '../config/constants';
 
+// This file is kept for reference but admin routes are now handled in AppRouter.jsx
+// The AppRouter.jsx file contains all admin routing logic and should be the source of truth
+
+// If you need to add new admin routes, update AppRouter.jsx instead
+
 const AdminRoutes = () => {
+  const { user } = useAuth();
+  
+  console.warn('AdminRoutes.jsx is deprecated. Use AppRouter.jsx for admin routing.');
+  
   return (
-    <AdminLayout>
-      <Routes>
-        {/* Main Admin Dashboard */}
-        <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        
-        {/* Complaints Management */}
-        <Route path="complaints" element={<ComplaintsList />} />
-        <Route path="complaints/:id" element={<ComplaintDetails />} />
-        
-        {/* Map View */}
-        <Route path="map" element={<MapView />} />
-        
-        {/* Reports & Analytics */}
-        <Route path="reports" element={<Reports />} />
-        
-        {/* Officers Management */}
-        <Route path="officers" element={<OfficerManagement />} />
-        <Route path="officers/:id" element={<div>Officer Details - Coming Soon</div>} />
-        <Route path="officers/:id/edit" element={<div>Edit Officer - Coming Soon</div>} />
-        
-        {/* Settings */}
-        <Route path="settings" element={<Settings />} />
-        
-        {/* Super Admin Only Routes */}
-        <Route 
-          path="register" 
-          element={
-            <ProtectedRoute 
-              allowedRoles={[USER_ROLES.ADMIN]}
-              requireSuperAdmin={true}
-            >
-              <AdminRegister />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="registration-requests" 
-          element={
-            <ProtectedRoute 
-              allowedRoles={[USER_ROLES.ADMIN]}
-              requireSuperAdmin={true}
-            >
-              <AdminRegistrationRequests />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="create-super-admin" 
-          element={
-            <ProtectedRoute 
-              allowedRoles={[USER_ROLES.ADMIN]}
-              requireSuperAdmin={true}
-            >
-              <CreateSuperAdmin />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Legacy routes for backward compatibility */}
-        <Route path="users" element={<OfficerManagement />} />
-        <Route path="departments" element={<OfficerManagement />} />
-      </Routes>
-    </AdminLayout>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Routing Configuration</h1>
+        <p className="text-gray-600 mb-2">Admin routes are now configured in AppRouter.jsx</p>
+        <p className="text-sm text-gray-500">Current user role: {user?.role || 'Not authenticated'}</p>
+      </div>
+    </div>
   );
 };
 

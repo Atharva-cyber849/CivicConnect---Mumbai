@@ -14,16 +14,64 @@ const MyComplaints = () => {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
 
-  const { data: complaintsResponse, isLoading } = useQuery({
+  const { data: complaintsResponse, isLoading, error } = useQuery({
     queryKey: ['userComplaints', searchTerm, statusFilter, categoryFilter],
-    queryFn: () => complaintAPI.getAll({
-      search: searchTerm,
-      status: statusFilter !== 'ALL' ? statusFilter : undefined,
-      category: categoryFilter !== 'ALL' ? categoryFilter : undefined
-    }),
+    queryFn: () => complaintsApi.getUserComplaints(),
   })
 
-  const complaints = complaintsResponse?.data?.results || []
+  // Get complaints from response - handle different response formats
+  let allComplaints = []
+  console.log('MyComplaints - Full Response:', complaintsResponse)
+  
+  if (complaintsResponse) {
+    // Try different response formats
+    if (complaintsResponse?.results) {
+      allComplaints = complaintsResponse.results
+    } else if (complaintsResponse?.data?.results) {
+      allComplaints = complaintsResponse.data.results
+    } else if (Array.isArray(complaintsResponse?.data)) {
+      allComplaints = complaintsResponse.data
+    } else if (Array.isArray(complaintsResponse)) {
+      allComplaints = complaintsResponse
+    } else if (typeof complaintsResponse === 'object') {
+      // If it's an object but not matching above patterns, try to extract array
+      const values = Object.values(complaintsResponse)
+      if (Array.isArray(values[0])) {
+        allComplaints = values[0]
+      }
+    }
+  }
+  console.log('MyComplaints - Extracted complaints:', allComplaints, 'Count:', allComplaints.length)
+  
+  // Log ward field status
+  if (allComplaints.length > 0) {
+    console.log('First complaint ward field:', allComplaints[0].ward)
+    console.log('First complaint address field:', allComplaints[0].address)
+    console.log('First complaint full object:', JSON.stringify(allComplaints[0], null, 2))
+  }
+
+  // Apply client-side filtering and search
+  const complaints = allComplaints.filter(complaint => {
+    const matchesSearch = searchTerm === '' || 
+      complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.id.toString().includes(searchTerm)
+    
+    const matchesStatus = statusFilter === 'ALL' || complaint.status === statusFilter
+    const matchesCategory = categoryFilter === 'ALL' || complaint.category === categoryFilter
+    
+    return matchesSearch && matchesStatus && matchesCategory
+  }).map(complaint => {
+    // Ensure ward field is populated - extract from address if missing
+    if (!complaint.ward && complaint.address) {
+      // Try to extract ward from address (e.g., "M/E Ward, Zone 5, Mumbai...")
+      const wardMatch = complaint.address.match(/([A-Z](?:\/[A-Z])?)\s*(?:Ward|ward)/i)
+      if (wardMatch) {
+        complaint.ward = wardMatch[1]
+      }
+    }
+    return complaint
+  })
 
   const getStatusConfig = (status) => {
     const config = COMPLAINT_STATUS.find(s => s.value === status)
@@ -138,6 +186,16 @@ const MyComplaints = () => {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-semibold">Error Loading Complaints</h3>
+          <p className="text-red-700 text-sm mt-1">
+            {error.message || 'Failed to load complaints. Please try refreshing the page.'}
+          </p>
+        </div>
+      )}
+
       {/* Complaints List */}
       <div className="space-y-4">
         {isLoading ? (
@@ -180,6 +238,7 @@ const MyComplaints = () => {
           complaints.map((complaint) => {
             const statusConfig = getStatusConfig(complaint.status)
             const categoryInfo = getCategoryInfo(complaint.category)
+            console.log(`Rendering complaint ${complaint.id}: ward="${complaint.ward}"`)
             
             return (
               <div
@@ -215,7 +274,7 @@ const MyComplaints = () => {
                           </span>
                           <span className="flex items-center">
                             <FiMapPin className="w-4 h-4 mr-1" />
-                            Ward {complaint.ward || 'Unknown'}
+                            {complaint.ward ? `Ward ${complaint.ward}` : 'Ward Unknown'}
                           </span>
                           <span className="flex items-center">
                             <FiCalendar className="w-4 h-4 mr-1" />

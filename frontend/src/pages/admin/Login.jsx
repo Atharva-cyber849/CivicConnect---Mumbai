@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { USER_ROLES } from '../../config/constants'
@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 const AdminLogin = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { login } = useAuth()
+  const { login, isAuthenticated, user } = useAuth()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -19,6 +19,13 @@ const AdminLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const roleParam = searchParams.get('role')
+
+  // Always redirect to dashboard if authenticated and user is set
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -33,12 +40,8 @@ const AdminLogin = () => {
     try {
       // Pass true to indicate this is an admin login
       const result = await login(formData, true)
-      console.log('AdminLogin - Login result:', result)
-      
       if (result.success) {
-        const { user, redirectTo } = result
-        console.log('AdminLogin - Login successful:', { user, redirectTo })
-        
+        const { user } = result
         // Additional role validation based on roleParam
         if (roleParam === 'super-admin' && !user.is_superuser) {
           throw new Error('Access Denied: You do not have Super Admin privileges')
@@ -49,18 +52,12 @@ const AdminLogin = () => {
         if (roleParam === 'officer' && !user.is_ward_officer && !user.is_superuser) {
           throw new Error('Access Denied: You do not have Ward Officer privileges')
         }
-        
-        // Show success message
         toast.success('Login successful! Redirecting to admin dashboard...')
-        
-        // Use the redirectTo path from the login result
-        console.log('AdminLogin - Redirecting to:', redirectTo)
-        navigate(redirectTo)
+        // The useEffect above will handle the redirect as soon as auth state updates
       } else {
         throw new Error(result.error || 'Login failed')
       }
     } catch (error) {
-      console.error('AdminLogin - Login error:', error)
       const errorMessage = error.message || 'Login failed. Please check your credentials.'
       toast.error(errorMessage)
       setError(errorMessage)

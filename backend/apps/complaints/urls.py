@@ -2,8 +2,15 @@
 URL configuration for complaints app.
 """
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import ComplaintViewSet
+from rest_framework.routers import DefaultRouter, SimpleRouter
+from .views import (
+    ComplaintViewSet,
+    ComplaintImageViewSet,
+    ComplaintAttachmentViewSet,
+    ComplaintTimelineViewSet,
+    ComplaintResolutionViewSet,
+    OfficerNotesViewSet
+)
 from .geocoding import reverse_geocode
 from .analytics_views import (
     dashboard_stats,
@@ -19,6 +26,22 @@ from .analytics_views import (
 router = DefaultRouter()
 router.register(r'', ComplaintViewSet, basename='complaint')
 
+# Nested routers for complaint sub-resources
+images_router = SimpleRouter()
+images_router.register(r'images', ComplaintImageViewSet, basename='complaint-image')
+
+attachments_router = SimpleRouter()
+attachments_router.register(r'attachments', ComplaintAttachmentViewSet, basename='complaint-attachment')
+
+timeline_router = SimpleRouter()
+timeline_router.register(r'timeline', ComplaintTimelineViewSet, basename='complaint-timeline')
+
+resolution_router = SimpleRouter()
+resolution_router.register(r'resolution', ComplaintResolutionViewSet, basename='complaint-resolution')
+
+notes_router = SimpleRouter()
+notes_router.register(r'notes', OfficerNotesViewSet, basename='complaint-notes')
+
 app_name = 'complaints'
 
 urlpatterns = [
@@ -26,6 +49,13 @@ urlpatterns = [
     # Admin dashboard stats compatibility endpoint
     path('admin/dashboard/stats/', ComplaintViewSet.as_view({'get': 'statistics'}), name='admin_dashboard_stats'),
     path('', include(router.urls)),
+    
+    # Nested routes for complaint sub-resources
+    path('<int:complaint_id>/', include(images_router.urls)),
+    path('<int:complaint_id>/', include(attachments_router.urls)),
+    path('<int:complaint_id>/', include(timeline_router.urls)),
+    path('<int:complaint_id>/', include(resolution_router.urls)),
+    path('<int:complaint_id>/', include(notes_router.urls)),
     
     # Geocoding endpoint
     path('geocode/reverse/', reverse_geocode, name='reverse_geocode'),

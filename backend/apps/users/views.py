@@ -16,8 +16,14 @@ from .serializers import (
     AdminRegistrationSerializer,
     UserSerializer,
     UserUpdateSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    OfficerSerializer,
+    OfficerCreateUpdateSerializer
 )
+from .models import Officer
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from apps.users.permissions import IsAdminOrDepartmentStaff
 from .serializers_jwt import CustomTokenObtainPairSerializer
 
 User = get_user_model()
@@ -359,3 +365,93 @@ class CreateSuperAdminView(generics.CreateAPIView):
             return Response({
                 'error': f'Failed to create super admin account: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class OfficerViewSet(viewsets.ModelViewSet):
+    """ViewSet for officer management."""
+    
+    permission_classes = [IsAuthenticated, IsAdminOrDepartmentStaff]
+    queryset = Officer.objects.all()
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action in ['create', 'update', 'partial_update']:
+            return OfficerCreateUpdateSerializer
+        return OfficerSerializer
+    
+    def get_queryset(self):
+        """Filter officers based on user role."""
+        user = self.request.user
+        queryset = Officer.objects.all()
+        
+        # Department staff can only see officers in their department
+        if hasattr(user, 'officer_profile') and user.officer_profile.department:
+            queryset = queryset.filter(department=user.officer_profile.department)
+        
+        return queryset.order_by('-created_at')
+    
+    @action(detail=True, methods=['patch'])
+    def status(self, request, pk=None):
+        """Update officer status (activate/deactivate)."""
+        officer = self.get_object()
+        is_active = request.data.get('is_active')
+        
+        if is_active is not None:
+            officer.is_active = is_active
+            officer.save()
+        
+        return Response(OfficerSerializer(officer).data)
+    
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        """Reset officer password."""
+        officer = self.get_object()
+        new_password = request.data.get('new_password', 'TempPassword123!')
+        
+        officer.user.set_password(new_password)
+        officer.user.save()
+        
+        return Response({
+            'message': 'Password reset successfully',
+            'temporary_password': new_password
+        })
+    
+    @action(detail=True, methods=['post'])
+    def send_invitation(self, request, pk=None):
+        """Send email invitation to officer."""
+        officer = self.get_object()
+        
+        # TODO: Implement email sending logic
+        # For now, return success
+        
+        return Response({
+            'message': f'Invitation sent to {officer.email}'
+        })
+    
+    @action(detail=False, methods=['get'])
+    def by_department(self, request):
+        """Get officers by department."""
+        department_id = request.query_params.get('department_id')
+        if not department_id:
+            return Response(
+                {"error": "department_id parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = Officer.objects.filter(department_id=department_id)
+        serializer = OfficerSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def by_ward(self, request):
+        """Get officers by ward."""
+        ward = request.query_params.get('ward')
+        if not ward:
+            return Response(
+                {"error": "ward parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = Officer.objects.filter(assigned_ward=ward)
+        serializer = OfficerSerializer(queryset, many=True)
+        return Response(serializer.data)

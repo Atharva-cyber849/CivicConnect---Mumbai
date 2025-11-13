@@ -19,7 +19,7 @@ import {
 
 import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../api/adminApi';
-import { DEPARTMENTS, DESIGNATIONS, USER_ROLES } from '../../config/constants';
+import { DEPARTMENTS, DESIGNATIONS, USER_ROLES, isSuperAdmin as checkIsSuperAdmin } from '../../config/constants';
 import wardsData from '../../config/wardsData.json';
 
 const AdminRegister = () => {
@@ -27,7 +27,7 @@ const AdminRegister = () => {
   const navigate = useNavigate();
   
   // Check if user is super admin
-  const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
+  const isSuperAdmin = checkIsSuperAdmin(user);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -38,7 +38,7 @@ const AdminRegister = () => {
     department: '',
     designation: '',
     assignedWard: '',
-    roleType: USER_ROLES.OFFICER,
+    roleType: USER_ROLES.DEPARTMENT_STAFF,
     username: '',
     password: '',
     confirmPassword: '',
@@ -154,7 +154,7 @@ const AdminRegister = () => {
         department: '',
         designation: '',
         assignedWard: '',
-        roleType: USER_ROLES.OFFICER,
+        roleType: USER_ROLES.DEPARTMENT_STAFF,
         username: '',
         password: '',
         confirmPassword: '',
@@ -475,7 +475,7 @@ const AdminRegister = () => {
                   onChange={(e) => handleInputChange('roleType', e.target.value)}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value={USER_ROLES.OFFICER}>Officer (Ward Level)</option>
+                  <option value={USER_ROLES.DEPARTMENT_STAFF}>Officer (Ward Level)</option>
                   <option value={USER_ROLES.ADMIN}>Admin (Department Head)</option>
                 </select>
               </div>

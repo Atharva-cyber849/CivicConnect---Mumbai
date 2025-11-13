@@ -17,11 +17,17 @@ def process_complaint_with_ai(complaint_id):
     """
     Process complaint image and description with AI service.
     Updates category and confidence score.
+    NOTE: AI service is optional. If not available, task completes gracefully.
     """
     from .models import Complaint
     
     try:
         complaint = Complaint.objects.get(id=complaint_id)
+        
+        # Check if AI_SERVICE_URL is configured
+        if not hasattr(settings, 'AI_SERVICE_URL') or not settings.AI_SERVICE_URL:
+            logger.info(f"AI service not configured, skipping AI processing for complaint {complaint_id}")
+            return
         
         # Prepare data for AI service
         ai_service_url = f"{settings.AI_SERVICE_URL}/predict"
@@ -36,20 +42,24 @@ def process_complaint_with_ai(complaint_id):
         if complaint.image:
             files['image'] = complaint.image.read()
         
-        # Call AI service
-        response = requests.post(ai_service_url, data=data, files=files, timeout=30)
-        
-        if response.status_code == 200:
-            result = response.json()
+        # Call AI service with timeout
+        try:
+            response = requests.post(ai_service_url, data=data, files=files, timeout=30)
             
-            # Update complaint with AI results
-            complaint.ai_category = result.get('predicted_category')
-            complaint.ai_confidence_score = result.get('confidence_score')
-            complaint.save()
-            
-            logger.info(f"AI processing completed for complaint {complaint_id}")
-        else:
-            logger.error(f"AI service returned error: {response.status_code}")
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Update complaint with AI results
+                complaint.ai_category = result.get('predicted_category')
+                complaint.ai_confidence_score = result.get('confidence_score')
+                complaint.save()
+                
+                logger.info(f"AI processing completed for complaint {complaint_id}")
+            else:
+                logger.warning(f"AI service returned status {response.status_code} for complaint {complaint_id}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"AI service unavailable for complaint {complaint_id}: {str(e)}")
+            # Continue without AI - complaint is still valid
     
     except Exception as e:
         logger.error(f"Error processing complaint {complaint_id} with AI: {str(e)}")

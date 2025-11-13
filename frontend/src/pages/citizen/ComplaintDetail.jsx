@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { complaintsApi } from '../../api/complaintsApi'
-import { useAuthStore } from '../../store/authStore'
+import { useAuth } from '../../context/AuthContext'
 import { 
   COMPLAINT_STATUS, 
   PRIORITY_LEVELS, 
@@ -40,7 +40,7 @@ import {
 const ComplaintDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   const [newUpdate, setNewUpdate] = useState('')
   const [showUpdateForm, setShowUpdateForm] = useState(false)
@@ -55,7 +55,7 @@ const ComplaintDetail = () => {
   // Fetch complaint details
   const { data: complaint, isLoading, error } = useQuery({
     queryKey: ['complaint', id],
-    queryFn: () => complaintAPI.getById(id),
+    queryFn: () => complaintsApi.getComplaintById(id),
     enabled: !!id,
   })
 
@@ -213,7 +213,7 @@ const ComplaintDetail = () => {
     )
   }
 
-  if (error) {
+  if (error || !complaint) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">
@@ -238,10 +238,10 @@ const ComplaintDetail = () => {
     )
   }
 
-  const statusConfig = getStatusConfig(complaint.status)
-  const priorityConfig = getPriorityConfig(complaint.priority)
-  const categoryInfo = getCategoryInfo(complaint.category)
-  const departmentInfo = getDepartmentInfo(complaint.department?.name)
+  const statusConfig = getStatusConfig(complaint?.status)
+  const priorityConfig = getPriorityConfig(complaint?.priority)
+  const categoryInfo = getCategoryInfo(complaint?.category)
+  const departmentInfo = getDepartmentInfo(complaint?.department?.name)
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -412,7 +412,7 @@ const ComplaintDetail = () => {
                   Updates & Comments
                 </h3>
                 
-                {user.id === complaint.user.id && (
+                {complaint && user && user.id === complaint.user?.id && (
                   <button
                     onClick={() => setShowUpdateForm(!showUpdateForm)}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"

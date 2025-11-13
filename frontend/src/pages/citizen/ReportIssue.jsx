@@ -71,21 +71,49 @@ const ReportIssue = () => {
   const [formErrors, setFormErrors] = useState({})
   const [isAddressLoading, setIsAddressLoading] = useState(false)
 
+  // Automatically fetch location on component mount
+  useEffect(() => {
+    handleUseMyLocation();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
   const createMutation = useMutation({
     mutationFn: complaintsApi.createComplaint,
     onSuccess: () => {
       toast.success('Issue reported successfully!')
-      navigate('/dashboard/my-complaints')
+      navigate('/dashboard/complaints')
     },
     onError: (error) => {
       console.error('Mutation error:', error)
-      console.log('Error response:', error.response?.data)  // Log full error response
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message ||
-                          Object.entries(error.response?.data || {})
-                            .map(([key, value]) => `${key}: ${value}`)
-                            .join(', ') ||
-                          'Failed to submit report. Please try again.'
+      console.log('Error response:', error.response?.data)
+      
+      // Extract error details
+      let errorMessage = 'Failed to submit report. Please try again.'
+      
+      if (error.response?.data) {
+        const data = error.response.data
+        
+        // Handle different error formats
+        if (data.detail) {
+          errorMessage = data.detail
+        } else if (data.message) {
+          errorMessage = data.message
+        } else if (typeof data === 'object') {
+          // Build error message from field errors
+          const messages = Object.entries(data)
+            .map(([key, value]) => {
+              if (Array.isArray(value)) {
+                return `${key}: ${value.join(', ')}`
+              }
+              return `${key}: ${value}`
+            })
+            .join('\n')
+          errorMessage = messages || errorMessage
+        }
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      console.error('Final error message:', errorMessage)
       toast.error(errorMessage)
     }
   })
@@ -110,21 +138,84 @@ const ReportIssue = () => {
     } else if (name === 'ward') {
       const standardized = standardizeWardData(value)
       setFormData(prev => ({ ...prev, [name]: standardized }))
+    } else if (name === 'latitude' || name === 'longitude') {
+      // Allow manual coordinate entry
+      const numValue = parseFloat(value)
+      if (!isNaN(numValue)) {
+        setFormData(prev => ({ ...prev, [name]: value }))
+        
+        // If both coordinates are provided, detect ward automatically
+        if (name === 'latitude' && formData.longitude) {
+          const lat = numValue
+          const lng = parseFloat(formData.longitude)
+          if (!isNaN(lng)) {
+            handleCoordinateChange(lat, lng)
+          }
+        } else if (name === 'longitude' && formData.latitude) {
+          const lat = parseFloat(formData.latitude)
+          const lng = numValue
+          if (!isNaN(lat)) {
+            handleCoordinateChange(lat, lng)
+          }
+        }
+      } else if (value === '') {
+        // Allow clearing the field
+        setFormData(prev => ({ ...prev, [name]: value }))
+      }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
   }
+
+  // Handle coordinate changes - detect ward and address
+  const handleCoordinateChange = async (lat, lng) => {
+    try {
+      // Validate coordinates are within Mumbai
+      if (!isWithinMumbai(lat, lng)) {
+        setFormErrors(prev => ({
+          ...prev,
+          latitude: 'Coordinates must be within Mumbai',
+          longitude: 'Coordinates must be within Mumbai'
+        }))
+        return
+      }
+
+      // Update marker position on map
+      setMarkerPosition({ lat, lng })
+      
+      // Pan map to new location
+      if (mapRef.current) {
+        mapRef.current.setView([lat, lng], 15)
+      }
+
+      // Reverse geocode to get address and ward
+      const geo = await reverseGeocode(lat, lng)
+      
+      setFormData(prev => ({
+        ...prev,
+        address: geo.address || prev.address,
+        ward: geo.ward || prev.ward,
+        zip_code: geo.zip_code || prev.zip_code,
+      }))
+      
+      setAutoDetectedWard(geo.ward)
+      setFormErrors(prev => ({ ...prev, latitude: null, longitude: null }))
+    } catch (error) {
+      console.error('Error detecting ward from coordinates:', error)
+      // Still allow manual entry even if geocoding fails
+    }
+  }
   
-  // Debounced address validation
+  // Debounced address validation (removed - using reverseGeocode in handleMapClick instead)
   const validateAddress = useCallback(
-    debounce(async (address) => {
-      if (!address) return
+    debounce(async (address, lat, lng) => {
+      if (!address || !lat || !lng) return
       
       setIsAddressLoading(true)
       try {
-        const response = await complaintsApi.reverseGeocode(formData.latitude, formData.longitude)
+        const geo = await reverseGeocode(lat, lng)
         
-        if (!response.ward) {
+        if (!geo.ward) {
           setFormErrors(prev => ({
             ...prev,
             address: 'Address must be within Mumbai municipal boundaries'
@@ -134,10 +225,10 @@ const ReportIssue = () => {
 
         setFormData(prev => ({
           ...prev,
-          ward: response.ward,
-          zip_code: response.address_components.postcode || prev.zip_code
-        }))
-        setAutoDetectedWard(response.ward)
+          ward: geo.ward,
+          zip_code: geo.zip_code,
+        }));
+        setAutoDetectedWard(geo.ward)
         setFormErrors(prev => ({ ...prev, address: null, ward: null }))
       } catch (error) {
         setFormErrors(prev => ({
@@ -148,25 +239,41 @@ const ReportIssue = () => {
         setIsAddressLoading(false)
       }
     }, 1000),
-    [formData.latitude, formData.longitude]
+    []
   )
 
   const handleMapClick = async (latlng) => {
     setMarkerPosition(latlng)
-    setFormData(prev => ({ ...prev, latitude: latlng.lat, longitude: latlng.lng }))
-
-    // Reverse geocode
-    const geo = await reverseGeocode(latlng.lat, latlng.lng)
-    setFormData(prev => ({
-      ...prev,
-      address: geo.address || prev.address,
-      city: geo.city || 'Mumbai',
-      state: geo.state || 'Maharashtra',
-      zip_code: geo.zip_code || prev.zip_code,
-      ward: geo.ward || prev.ward,
-    }))
-    setAutoDetectedWard(geo.ward)
-  }
+    
+    // Reverse geocode immediately
+    try {
+      const geo = await reverseGeocode(latlng.lat, latlng.lng)
+      
+      // Update all form data with reverse geocode results
+      setFormData(prev => ({
+        ...prev,
+        latitude: latlng.lat,
+        longitude: latlng.lng,
+        address: geo.address || '',
+        city: geo.city || 'Mumbai',
+        state: geo.state || 'Maharashtra',
+        zip_code: geo.zip_code || '',
+        ward: geo.ward || prev.ward,
+      }))
+      
+      setAutoDetectedWard(geo.ward)
+      setFormErrors(prev => ({ ...prev, address: null, ward: null }))
+    } catch (error) {
+      console.error('Geocoding failed:', error)
+      // Still update coordinates even if geocoding fails
+      setFormData(prev => ({
+        ...prev,
+        latitude: latlng.lat,
+        longitude: latlng.lng,
+      }))
+      toast.error('Could not fetch address details. Please enter manually.')
+    }
+  };
 
   const handleUseMyLocation = async () => {
     setLoadingLocation(true)
@@ -193,6 +300,7 @@ const ReportIssue = () => {
     // Validate form
     const { isValid, errors } = validateComplaintForm(formData)
     if (!isValid) {
+      console.log('Validation errors:', errors)
       setFormErrors(errors)
       const firstError = Object.values(errors)[0]
       toast.error(firstError)
@@ -205,36 +313,49 @@ const ReportIssue = () => {
       return
     }
 
-    // Create FormData with standardized values
-    const data = new FormData()
-    Object.keys(formData).forEach((key) => {
-      const value = formData[key]
-      if (value !== null && value !== undefined) {
-        if (key === 'latitude' || key === 'longitude') {
-          data.append(key, value.toString())
-        } else if (key === 'address') {
-          data.append(key, standardizeAddress(value))
-        } else if (key === 'ward') {
-          data.append(key, standardizeWardData(value))
-        } else if (value instanceof File) {
-          data.append(key, value)
-        } else {
-          data.append(key, value)
-        }
-      }
+    // Log form data for debugging
+    console.log('Form data before submit:', {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      ward: formData.ward,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      zip_code: formData.zip_code,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      image: formData.image ? `File: ${formData.image.name}` : 'No image'
     })
 
+    const dataToSubmit = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      ward: standardizeWardData(formData.ward),
+      address: standardizeAddress(formData.address),
+      city: formData.city,
+      state: formData.state,
+      zip_code: formData.zip_code,
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude),
+      image: formData.image,
+    };
+
+    console.log('Data to submit:', dataToSubmit)
+
     try {
-      createMutation.mutate(data)
+      createMutation.mutate(dataToSubmit);
     } catch (error) {
-      console.error('Error submitting form:', error)
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message ||
-                          Object.entries(error.response?.data || {})
-                            .map(([key, value]) => `${key}: ${value}`)
-                            .join(', ') ||
-                          'Failed to submit report. Please try again.'
-      toast.error(errorMessage)
+      console.error('Error submitting form:', error);
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        Object.entries(error.response?.data || {})
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ') ||
+        'Failed to submit report. Please try again.';
+      toast.error(errorMessage);
     }
   }
 
@@ -449,7 +570,7 @@ const ReportIssue = () => {
                 value={formData.address}
                 onChange={handleChange}
                 className={`input ${formErrors.address ? 'border-red-500' : ''}`}
-                placeholder="Street address"
+                placeholder="Street address or location name"
                 required
               />
               {isAddressLoading && (
@@ -461,6 +582,7 @@ const ReportIssue = () => {
             {formErrors.address && (
               <p className="mt-1 text-sm text-red-600">{formErrors.address}</p>
             )}
+            <p className="text-xs text-gray-500 mt-1">Auto-detected from map or enter manually</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
@@ -504,28 +626,36 @@ const ReportIssue = () => {
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Latitude</label>
+              <label className="block text-sm font-medium mb-2">Latitude *</label>
               <input
                 type="text"
                 name="latitude"
                 value={formData.latitude}
                 onChange={handleChange}
-                className="input"
-                readOnly
-                placeholder="Select on map"
+                className={`input ${formErrors.latitude ? 'border-red-500' : ''}`}
+                placeholder="e.g., 19.0760"
+                required
               />
+              {formErrors.latitude && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.latitude}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Click on map or enter manually</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Longitude</label>
+              <label className="block text-sm font-medium mb-2">Longitude *</label>
               <input
                 type="text"
                 name="longitude"
                 value={formData.longitude}
                 onChange={handleChange}
-                className="input"
-                readOnly
-                placeholder="Select on map"
+                className={`input ${formErrors.longitude ? 'border-red-500' : ''}`}
+                placeholder="e.g., 72.8777"
+                required
               />
+              {formErrors.longitude && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.longitude}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Click on map or enter manually</p>
             </div>
           </div>
 

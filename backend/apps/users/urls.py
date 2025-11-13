@@ -1,14 +1,19 @@
 """
 URL configuration for users app.
 """
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     RegisterView, ProfileView, ChangePasswordView, CustomLoginView, 
     AdminRegisterView, logout_view, AdminRegistrationRequestListView,
-    AdminRegistrationRequestActionView, CreateSuperAdminView
+    AdminRegistrationRequestActionView, CreateSuperAdminView, OfficerViewSet
 )
+from .analytics_views import AnalyticsView
+
+router = DefaultRouter()
+router.register(r'officers', OfficerViewSet, basename='officer')
 
 app_name = 'users'
 
@@ -28,4 +33,10 @@ urlpatterns = [
     path('admin-requests/', AdminRegistrationRequestListView.as_view(), name='admin_requests'),
     path('admin-requests/<int:request_id>/action/', AdminRegistrationRequestActionView.as_view(), name='admin_request_action'),
     path('create-super-admin/', CreateSuperAdminView.as_view(), name='create_super_admin'),
+    
+    # Officer management
+    path('', include(router.urls)),
+    
+    # Analytics endpoints
+    path('analytics/', AnalyticsView.as_view(), name='analytics'),
 ]

@@ -144,6 +144,81 @@ class User(AbstractUser):
         return self.role == 'DEPARTMENT_STAFF'
 
 
+class Officer(models.Model):
+    """
+    Dedicated model for officers and administrators with department and ward assignments.
+    """
+    
+    ROLE_CHOICES = [
+        ('ADMIN', 'Administrator'),
+        ('DEPARTMENT_STAFF', 'Department Staff'),
+    ]
+    
+    WARD_CHOICES = [
+        ('A', 'A Ward - Colaba, Cuffe Parade'),
+        ('B', 'B Ward - Dongri, Masjid Bunder'),
+        ('C', 'C Ward - Marine Lines, Chandanwadi'),
+        ('D', 'D Ward - Grant Road, Tardeo'),
+        ('E', 'E Ward - Byculla, Mumbai Central'),
+        ('F/N', 'F/North Ward - Matunga, Sion'),
+        ('F/S', 'F/South Ward - Parel, Sewri'),
+        ('G/N', 'G/North Ward - Dadar, Dharavi'),
+        ('G/S', 'G/South Ward - Elphinstone Road'),
+        ('H/E', 'H/East Ward - Bandra East, Khar East'),
+        ('H/W', 'H/West Ward - Bandra West, Khar West'),
+        ('K/E', 'K/East Ward - Andheri East'),
+        ('K/W', 'K/West Ward - Andheri West, Versova'),
+        ('L', 'L Ward - Kurla'),
+        ('M/E', 'M/East Ward - Chembur East'),
+        ('M/W', 'M/West Ward - Chembur West'),
+        ('N', 'N Ward - Ghatkopar'),
+        ('P/N', 'P/North Ward - Malad'),
+        ('P/S', 'P/South Ward - Goregaon'),
+        ('R/C', 'R/Central Ward - Borivali'),
+        ('R/N', 'R/North Ward - Dahisar'),
+        ('R/S', 'R/South Ward - Kandivali'),
+        ('S', 'S Ward - Bhandup'),
+        ('T', 'T Ward - Mulund'),
+    ]
+    
+    # User Reference
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='officer_profile')
+    
+    # Assignment
+    department = models.ForeignKey('departments.Department', on_delete=models.SET_NULL, 
+                                   null=True, blank=True, related_name='officers')
+    assigned_ward = models.CharField(max_length=10, choices=WARD_CHOICES)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    designation = models.CharField(max_length=100)
+    
+    # Contact
+    phone = models.CharField(max_length=15)
+    email = models.EmailField()
+    
+    # Performance Metrics
+    complaints_handled = models.IntegerField(default=0)
+    average_resolution_time = models.FloatField(default=0.0, help_text="Average days to resolve")
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'officers'
+        unique_together = [['user', 'department']]
+        indexes = [
+            models.Index(fields=['department']),
+            models.Index(fields=['assigned_ward']),
+            models.Index(fields=['role']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.user.get_full_name()} - {self.designation} ({self.assigned_ward})"
+
+
 class AdminRegistrationRequest(models.Model):
     """
     Model for pending admin registration requests that require approval.

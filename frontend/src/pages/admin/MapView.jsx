@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -18,6 +18,8 @@ import L from 'leaflet';
 import wardsData from '../../config/wardsData.json';
 import { adminApi } from '../../api/adminApi';
 import { COMPLAINT_CATEGORIES, DEPARTMENTS } from '../../config/constants';
+import { useAuth } from '../../context/AuthContext';
+import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
 
 // Fix for Leaflet icons in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -66,6 +68,13 @@ const createCustomIcon = (status) => {
 };
 
 const MapView = () => {
+  const { user } = useAuth();
+  
+  // Role-based access control
+  const userIsSuperAdmin = isSuperAdmin(user);
+  const userIsAdmin = isAdmin(user);
+  const userIsOfficer = isOfficer(user);
+  
   // Map state
   const [mapFilters, setMapFilters] = useState({
     status: '',
@@ -79,11 +88,29 @@ const MapView = () => {
   const [mapCenter] = useState([19.0760, 72.8777]); // Mumbai center
   const [mapZoom] = useState(11);
 
+  // Apply role-based filters automatically
+  const roleBasedFilters = useMemo(() => {
+    const baseFilters = { ...mapFilters };
+    
+    // Officers can only see complaints from their ward
+    if (userIsOfficer && user?.assigned_ward) {
+      baseFilters.ward = user.assigned_ward;
+    }
+    
+    // Admins can only see complaints from their department
+    if (userIsAdmin && user?.department) {
+      baseFilters.department = user.department;
+    }
+    
+    return baseFilters;
+  }, [mapFilters, userIsOfficer, userIsAdmin, user?.assigned_ward, user?.department]);
+
   // Fetch complaints for map
   const { data: mapComplaints = [], isLoading } = useQuery({
-    queryKey: ['map-complaints', mapFilters],
-    queryFn: () => adminApi.getComplaintsForMap ? adminApi.getComplaintsForMap(mapFilters) : Promise.resolve([]),
-    refetchInterval: 60000 // Refresh every minute
+    queryKey: ['map-complaints', roleBasedFilters],
+    queryFn: () => adminApi.getComplaintsForMap ? adminApi.getComplaintsForMap(roleBasedFilters) : Promise.resolve([]),
+    refetchInterval: 60000, // Refresh every minute
+    enabled: userIsSuperAdmin || userIsAdmin || userIsOfficer
   });
 
   // Mock data for development
@@ -244,7 +271,7 @@ const MapView = () => {
           </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-6' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-5'}`}>
           {/* Status Filter */}
           <select
             value={mapFilters.status}
@@ -269,29 +296,33 @@ const MapView = () => {
             ))}
           </select>
 
-          {/* Department Filter */}
-          <select
-            value={mapFilters.department}
-            onChange={(e) => handleFilterChange('department', e.target.value)}
-            className="border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent"
-          >
-            <option value="">All Departments</option>
-            {DEPARTMENTS.map(dept => (
-              <option key={dept.id} value={dept.id}>{dept.name}</option>
-            ))}
-          </select>
+          {/* Department Filter - Only for Super Admin */}
+          {userIsSuperAdmin && (
+            <select
+              value={mapFilters.department}
+              onChange={(e) => handleFilterChange('department', e.target.value)}
+              className="border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent"
+            >
+              <option value="">All Departments</option>
+              {DEPARTMENTS.map(dept => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          )}
 
-          {/* Ward Filter */}
-          <select
-            value={mapFilters.ward}
-            onChange={(e) => handleFilterChange('ward', e.target.value)}
-            className="border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent"
-          >
-            <option value="">All Wards</option>
-            {uniqueWards.map(ward => (
-              <option key={ward} value={ward}>{ward} Ward</option>
-            ))}
-          </select>
+          {/* Ward Filter - Only for Super Admin */}
+          {userIsSuperAdmin && (
+            <select
+              value={mapFilters.ward}
+              onChange={(e) => handleFilterChange('ward', e.target.value)}
+              className="border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent"
+            >
+              <option value="">All Wards</option>
+              {uniqueWards.map(ward => (
+                <option key={ward} value={ward}>{ward} Ward</option>
+              ))}
+            </select>
+          )}
 
           {/* Date Range Filter */}
           <select

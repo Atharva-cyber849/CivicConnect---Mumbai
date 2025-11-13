@@ -1,7 +1,6 @@
 import L from 'leaflet'
 import 'leaflet.markercluster'
 import 'leaflet.heat'
-import wardsData from '../config/wardsData.json'
 
 // Mumbai Map Configuration
 export const MUMBAI_CENTER = [19.0760, 72.8777]
@@ -13,8 +12,55 @@ export const MUMBAI_BOUNDS = [
   [19.2700, 72.9800], // Northeast
 ]
 
-// Ward Boundaries Data
-export const WARD_BOUNDARIES = wardsData
+// Ward Boundaries Data - Load from public GeoJSON file
+let WARD_BOUNDARIES = null
+let BOUNDARIES_LOADING = null
+
+// Initialize ward boundaries from GeoJSON file
+const initializeWardBoundaries = async () => {
+  if (WARD_BOUNDARIES) return WARD_BOUNDARIES
+  if (BOUNDARIES_LOADING) return BOUNDARIES_LOADING
+  
+  BOUNDARIES_LOADING = (async () => {
+    try {
+      // Try to load complete ward boundaries first (best coverage)
+      let response = await fetch('/data/mumbai-wards-complete.geojson')
+      if (!response.ok) {
+        console.warn('Complete boundaries not found, trying accurate boundaries')
+        response = await fetch('/data/mumbai-wards-accurate.geojson')
+      }
+      if (!response.ok) {
+        console.warn('Accurate boundaries not found, falling back to standard boundaries')
+        response = await fetch('/data/mumbai-wards.geojson')
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      WARD_BOUNDARIES = await response.json()
+      console.log('Ward boundaries loaded successfully:', WARD_BOUNDARIES.features.length, 'wards')
+      return WARD_BOUNDARIES
+    } catch (error) {
+      console.error('Failed to load ward boundaries:', error)
+      // Fallback to empty features if file not found
+      WARD_BOUNDARIES = { type: 'FeatureCollection', features: [] }
+      return WARD_BOUNDARIES
+    } finally {
+      BOUNDARIES_LOADING = null
+    }
+  })()
+  
+  return BOUNDARIES_LOADING
+}
+
+// Initialize on module load
+initializeWardBoundaries()
+
+// Export a getter function for WARD_BOUNDARIES
+export const getWardBoundaries = () => WARD_BOUNDARIES || { type: 'FeatureCollection', features: [] }
+
+// Export async function to ensure boundaries are loaded
+export const ensureWardBoundariesLoaded = async () => {
+  if (WARD_BOUNDARIES) return WARD_BOUNDARIES
+  return initializeWardBoundaries()
+}
 
 // Mumbai Zones Configuration
 export const MUMBAI_ZONES = {
@@ -136,18 +182,32 @@ export const createMarkerCluster = () => {
 export const getWardFromCoordinates = (lat, lng) => {
   try {
     const point = [lng, lat] // GeoJSON uses [lng, lat] format
+    const boundaries = getWardBoundaries()
     
-    for (const feature of WARD_BOUNDARIES.features) {
-      if (isPointInPolygon(point, feature.geometry.coordinates[0])) {
-        return feature.properties.ward_code
+    if (boundaries && boundaries.features && boundaries.features.length > 0) {
+      for (const feature of boundaries.features) {
+        if (feature.geometry && feature.geometry.coordinates) {
+          if (isPointInPolygon(point, feature.geometry.coordinates[0])) {
+            console.log(`✓ Polygon match: (${lat}, ${lng}) -> ${feature.properties.ward_code}`)
+            return feature.properties.ward_code
+          }
+        }
       }
+      // If no polygon match, use fallback
+      console.log(`✗ No polygon match for (${lat}, ${lng}), using fallback`)
+    } else {
+      console.log(`⚠ Ward boundaries not loaded, using fallback`)
     }
     
     // Fallback to approximate zones if exact match fails
-    return getApproximateWard(lat, lng)
+    const approximateWard = getApproximateWard(lat, lng)
+    console.log(`→ Fallback ward: (${lat}, ${lng}) -> ${approximateWard}`)
+    return approximateWard
   } catch (error) {
     console.error('Ward detection error:', error)
-    return getApproximateWard(lat, lng)
+    const approximateWard = getApproximateWard(lat, lng)
+    console.log(`→ Error fallback: (${lat}, ${lng}) -> ${approximateWard}`)
+    return approximateWard
   }
 }
 
@@ -168,20 +228,66 @@ const isPointInPolygon = (point, polygon) => {
   return inside
 }
 
-// Fallback ward detection based on approximate zones
+// Fallback ward detection based on GeoJSON boundaries
 const getApproximateWard = (lat, lng) => {
-  if (lat < 18.95) return 'A' // South Mumbai
-  if (lat < 19.00 && lng < 72.85) return 'F/N' // Central
-  if (lat < 19.05 && lng > 72.85) return 'K/E' // Andheri East
-  if (lat < 19.10 && lng < 72.85) return 'H/W' // Bandra West
-  if (lat < 19.15 && lng > 72.90) return 'L' // Kurla
-  if (lat < 19.20) return 'P/N' // Malad
-  return 'R/N' // Borivali (default)
+  // South Mumbai (lat < 19.05)
+  if (lat < 18.97) {
+    if (lng < 72.82) return 'A' // Colaba
+    if (lng < 72.84) return 'B' // Dockyard Road
+    if (lng < 72.86) return 'C' // Kalbadevi
+    return 'D' // Girgaon
+  }
+  
+  if (lat < 19.05) {
+    if (lng < 72.82) return 'D' // Girgaon
+    if (lng < 72.84) return 'E' // Byculla East
+    if (lng < 72.86) return 'F/N' // Parel
+    if (lng < 72.88) return 'F/S' // Elphinstone
+    return 'M/E' // Chembur
+  }
+  
+  // Central Mumbai (19.05 - 19.13)
+  if (lat < 19.13) {
+    if (lng < 72.82) return 'F/N' // Parel
+    if (lng < 72.84) return 'F/S' // Elphinstone
+    if (lng < 72.86) return 'G/N' // Dadar
+    if (lng < 72.88) return 'G/S' // Worli
+    if (lng < 72.90) return 'H/E' // Bandra East
+    if (lng < 72.92) return 'L' // Kurla
+    return 'M/E' // Chembur
+  }
+  
+  // Western Mumbai - Malad/Goregaon (19.13 - 19.25)
+  if (lat < 19.25) {
+    if (lng < 72.82) return 'P/N' // Malad
+    if (lng < 72.84) return 'P/N' // Malad
+    if (lng < 72.86) return 'P/S' // Goregaon
+    if (lng < 72.88) return 'K/W' // Andheri West
+    if (lng < 72.90) return 'H/W' // Bandra West
+    if (lng < 72.92) return 'M/W' // Ghatkopar
+    return 'N' // Ghatkopar East
+  }
+  
+  // Northern Mumbai (19.25 - 19.43)
+  if (lat < 19.43) {
+    if (lng < 72.82) return 'P/S' // Goregaon
+    if (lng < 72.84) return 'R/C' // Borivali Central
+    if (lng < 72.86) return 'R/N' // Dahisar
+    if (lng < 72.88) return 'R/S' // Kandivali
+    if (lng < 72.90) return 'K/E' // Andheri East
+    if (lng < 72.92) return 'S' // Bhandup
+    return 'T' // Mulund
+  }
+  
+  return 'T' // Default to Mulund for northern areas
 }
 
 // Get ward information including boundaries
 export const getWardInfo = (wardCode) => {
-  const ward = WARD_BOUNDARIES.features.find(
+  const boundaries = getWardBoundaries()
+  if (!boundaries || !boundaries.features) return null
+  
+  const ward = boundaries.features.find(
     feature => feature.properties.ward_code === wardCode
   )
   return ward ? ward.properties : null
@@ -189,6 +295,9 @@ export const getWardInfo = (wardCode) => {
 
 // Create ward boundary layer with styling
 export const createWardBoundaryLayer = (options = {}) => {
+  const boundaries = getWardBoundaries()
+  if (!boundaries || !boundaries.features) return null
+  
   const defaultStyle = {
     color: '#0078D7',
     weight: 2,
@@ -197,7 +306,7 @@ export const createWardBoundaryLayer = (options = {}) => {
     fillColor: '#0078D7'
   }
   
-  return L.geoJSON(WARD_BOUNDARIES, {
+  return L.geoJSON(boundaries, {
     style: (feature) => ({
       ...defaultStyle,
       ...options.style,
@@ -205,9 +314,10 @@ export const createWardBoundaryLayer = (options = {}) => {
     }),
     onEachFeature: (feature, layer) => {
       if (options.showPopup) {
+        const wardName = feature.properties.ward_name || feature.properties.full_name || feature.properties.ward_code
         layer.bindPopup(`
           <div class="ward-popup">
-            <h3 class="font-bold text-lg text-blue-600">${feature.properties.full_name}</h3>
+            <h3 class="font-bold text-lg text-blue-600">${wardName}</h3>
             <p><strong>Ward:</strong> ${feature.properties.ward_code}</p>
             <p><strong>Population:</strong> ${feature.properties.population?.toLocaleString() || 'N/A'}</p>
             <p><strong>Area:</strong> ${feature.properties.area_sqkm || 'N/A'} sq km</p>
@@ -280,6 +390,9 @@ import { axiosPrivate } from '../api/axiosConfig'
 // Enhanced reverse geocoding with ward detection using backend proxy
 export const reverseGeocode = async (lat, lng) => {
   try {
+    // Ensure ward boundaries are loaded before detecting ward
+    await ensureWardBoundariesLoaded()
+    
     const response = await axiosPrivate.get('/complaints/geocode/reverse/', {
       params: { lat, lon: lng }
     })
@@ -288,20 +401,28 @@ export const reverseGeocode = async (lat, lng) => {
     const ward = getWardFromCoordinates(lat, lng)
     const wardInfo = getWardInfo(ward)
     
+    console.log(`Reverse geocode: (${lat}, ${lng}) -> Ward: ${ward}`)
+    
     return {
-      address: data.display_name,
-      city: data.address?.city || data.address?.suburb || 'Mumbai',
-      state: data.address?.state || 'Maharashtra',
-      zip_code: data.address?.postcode || '',
+      address: data.full_address,
+      city: data.address_components?.city || 'Mumbai',
+      state: data.address_components?.state || 'Maharashtra',
+      zip_code: data.address_components?.postcode || '',
       ward: ward,
       ward_name: wardInfo?.full_name || `${ward} Ward`,
-      locality: data.address?.neighbourhood || data.address?.suburb || '',
-      road: data.address?.road || '',
+      locality: data.address_components?.suburb || '',
+      road: data.address_components?.road || '',
     }
   } catch (error) {
     console.error('Reverse geocoding failed:', error)
+    
+    // Ensure ward boundaries are loaded for fallback
+    await ensureWardBoundariesLoaded()
+    
     const ward = getWardFromCoordinates(lat, lng)
     const wardInfo = getWardInfo(ward)
+    
+    console.log(`Reverse geocode fallback: (${lat}, ${lng}) -> Ward: ${ward}`)
     
     return {
       address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
@@ -455,8 +576,11 @@ export const findNearbyComplaints = (targetLat, targetLng, complaints, radius = 
 // Get complaints statistics by ward
 export const getWardStatistics = (complaints) => {
   const stats = {}
+  const boundaries = getWardBoundaries()
   
-  WARD_BOUNDARIES.features.forEach(feature => {
+  if (!boundaries || !boundaries.features) return stats
+  
+  boundaries.features.forEach(feature => {
     const wardCode = feature.properties.ward_code
     const wardComplaints = complaints.filter(c => c.ward === wardCode)
     

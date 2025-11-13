@@ -108,7 +108,7 @@ const LandingPage = () => {
             <div className="text-3xl font-bold text-green-600 mb-2">3</div>
             <h3 className="text-xl font-bold mb-3">Track & Resolve</h3>
             <p className="text-gray-600">
-              AI routes to correct department. Track status until resolved
+              Track status until resolved
             </p>
           </div>
         </div>
@@ -117,63 +117,68 @@ const LandingPage = () => {
       {/* Features Section */}
       <section className="bg-gray-50 py-20">
         <div className="container mx-auto px-6">
+          {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Why Choose <span className="text-civic-blue-600">Snap & Report</span>?
             </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="text-3xl mb-4">🤖</div>
-              <h3 className="text-xl font-bold mb-2">AI SmartRoute™</h3>
-              <p className="text-gray-600">
-                Intelligent auto-categorization routes issues to the right BMC department instantly
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="text-3xl mb-4">🗺️</div>
-              <h3 className="text-xl font-bold mb-2">Ward-Level Tracking</h3>
-              <p className="text-gray-600">
-                Coverage across all 24 Mumbai wards (A to T) with precise geolocation
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="text-3xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold mb-2">Real-Time Updates</h3>
-              <p className="text-gray-600">
-                Get instant notifications as BMC officers update your complaint status
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="text-3xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold mb-2">Secure & Private</h3>
-              <p className="text-gray-600">
-                Your data is encrypted and secure. Only authorized BMC staff can access reports
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="text-3xl mb-4">📊</div>
-              <h3 className="text-xl font-bold mb-2">Transparent Analytics</h3>
-              <p className="text-gray-600">
-                View resolution rates, department performance, and city-wide statistics
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="text-3xl mb-4">🌐</div>
-              <h3 className="text-xl font-bold mb-2">Bilingual Support</h3>
-              <p className="text-gray-600">
-                Available in English and Marathi (मराठी) for all Mumbaikars
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Empowering citizens with transparency, efficiency, and real-time communication
             </p>
           </div>
+
+          {/* Feature Cards Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+            {/* Feature 1 */}
+            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl mb-4">🗺️</div>
+              <h3 className="text-xl font-semibold mb-2">Ward-Level Tracking</h3>
+              <p className="text-gray-600">
+                Coverage across all 24 Mumbai wards (A to T) with precise geolocation.
+              </p>
             </div>
+
+            {/* Feature 2 */}
+            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl mb-4">⚡</div>
+              <h3 className="text-xl font-semibold mb-2">Real-Time Updates</h3>
+              <p className="text-gray-600">
+                Receive instant notifications as BMC officers update your complaint status.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl mb-4">🔒</div>
+              <h3 className="text-xl font-semibold mb-2">Secure & Private</h3>
+              <p className="text-gray-600">
+                All complaint data is encrypted; only authorized municipal staff can access reports.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-xl font-semibold mb-2">Transparent Analytics</h3>
+              <p className="text-gray-600">
+                Monitor city-wide performance metrics and departmental efficiency in real time.
+              </p>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl mb-4">🌐</div>
+              <h3 className="text-xl font-semibold mb-2">Bilingual Support</h3>
+              <p className="text-gray-600">
+                Fully available in English and Marathi (मराठी) for seamless accessibility.
+              </p>
+            </div>
+
+          </div>
         </div>
       </section>
+
 
       {/* Statistics Section */}
       <section className="bg-civic-blue-600 text-white py-16">

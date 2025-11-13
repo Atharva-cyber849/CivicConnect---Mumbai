@@ -2,12 +2,13 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from apps.departments.models import Department
+from apps.users.models import Officer
 from django.utils import timezone
 
 User = get_user_model()
 
 class Command(BaseCommand):
-    help = 'Create test users for different roles with sample credentials'
+    help = 'Create test users for different roles with sample credentials and Officer profiles'
     
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,9 +16,17 @@ class Command(BaseCommand):
             action='store_true',
             help='Reset existing test users before creating new ones',
         )
+        parser.add_argument(
+            '--full-reset',
+            action='store_true',
+            help='Delete all data and recreate from scratch',
+        )
     
     def handle(self, *args, **options):
-        if options['reset']:
+        if options['full_reset']:
+            self.stdout.write(self.style.WARNING('⚠️  Performing full database reset...'))
+            self.full_reset_database()
+        elif options['reset']:
             self.stdout.write('Resetting existing test users...')
             User.objects.filter(email__endswith='@test.bmc.gov.in').delete()
             User.objects.filter(email__endswith='@citizen.test').delete()
@@ -34,6 +43,19 @@ class Command(BaseCommand):
             
         self.stdout.write(self.style.SUCCESS('✅ Test credentials created successfully!'))
         self.display_credentials()
+    
+    def full_reset_database(self):
+        """Delete all data and recreate from scratch"""
+        self.stdout.write('🗑️  Deleting all users...')
+        User.objects.all().delete()
+        
+        self.stdout.write('🗑️  Deleting all officers...')
+        Officer.objects.all().delete()
+        
+        self.stdout.write('🗑️  Deleting all departments...')
+        Department.objects.all().delete()
+        
+        self.stdout.write(self.style.SUCCESS('✅ Database reset complete!'))
     
     def create_departments(self):
         """Create sample departments"""
@@ -282,30 +304,52 @@ class Command(BaseCommand):
         ]
         
         for officer_data in officers_data:
-            if not User.objects.filter(email=officer_data['email']).exists():
-                user = User.objects.create_user(
-                    email=officer_data['email'],
-                    password='officer123',
-                    first_name=officer_data['full_name'].split()[0],
-                    last_name=' '.join(officer_data['full_name'].split()[1:]),
-                    phone=officer_data['phone'],
-                    role='DEPARTMENT_STAFF',
-                    gender=officer_data['gender'],
-                    age=officer_data['age'],
-                    ward=officer_data['ward'],
-                    address=officer_data['address'],
-                    pincode=officer_data['pincode'],
-                    latitude=officer_data['latitude'],
-                    longitude=officer_data['longitude'],
-                    language_preference=officer_data['language_preference'],
-                    is_staff=True,
-                    is_email_verified=True,
-                    is_phone_verified=True,
-                    has_accepted_terms=True,
-                )
-                self.stdout.write(f'✅ Created officer: {user.email} (Ward: {officer_data["ward"]})')
+            user, created = User.objects.get_or_create(
+                email=officer_data['email'],
+                defaults={
+                    'password': 'officer123',
+                    'first_name': officer_data['full_name'].split()[0],
+                    'last_name': ' '.join(officer_data['full_name'].split()[1:]),
+                    'phone': officer_data['phone'],
+                    'role': 'DEPARTMENT_STAFF',
+                    'gender': officer_data['gender'],
+                    'age': officer_data['age'],
+                    'ward': officer_data['ward'],
+                    'address': officer_data['address'],
+                    'pincode': officer_data['pincode'],
+                    'latitude': officer_data['latitude'],
+                    'longitude': officer_data['longitude'],
+                    'language_preference': officer_data['language_preference'],
+                    'is_staff': True,
+                    'is_email_verified': True,
+                    'is_phone_verified': True,
+                    'has_accepted_terms': True,
+                }
+            )
+            
+            if created:
+                self.stdout.write(f'✅ Created officer user: {user.email} (Ward: {officer_data["ward"]})')
+            
+            # Create Officer profile
+            officer, officer_created = Officer.objects.get_or_create(
+                user=user,
+                defaults={
+                    'department': officer_data['department'],
+                    'assigned_ward': officer_data['ward'],
+                    'role': 'DEPARTMENT_STAFF',
+                    'designation': officer_data['designation'],
+                    'phone': officer_data['phone'],
+                    'email': officer_data['email'],
+                    'is_active': True,
+                    'complaints_handled': 0,
+                    'average_resolution_time': 0.0,
+                }
+            )
+            
+            if officer_created:
+                self.stdout.write(f'✅ Created officer profile: {officer.user.email}')
             else:
-                self.stdout.write(f'📋 Officer already exists: {officer_data["email"]}')
+                self.stdout.write(f'📋 Officer profile already exists: {officer.user.email}')
     
     def create_test_citizens(self):
         """Create test citizen users"""

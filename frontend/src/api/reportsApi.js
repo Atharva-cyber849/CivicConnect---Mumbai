@@ -1,4 +1,4 @@
-import axiosPrivate from './axiosConfig';
+import { axiosPrivate } from './axiosConfig';
 import { API_ROUTES } from '../config/apiRoutes';
 
 export const reportsApi = {
@@ -66,5 +66,3 @@ export const reportsApi = {
     return response.data;
   }
 };
-
-export default reportsApi;

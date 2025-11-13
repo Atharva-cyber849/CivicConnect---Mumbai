@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   UserPlusIcon,
@@ -21,8 +22,9 @@ import {
 } from '@heroicons/react/24/outline';
 
 import { useAuth } from '../../context/AuthContext';
-import { adminApi } from '../../api/adminApi';
+import { officersApi } from '../../api';
 import { USER_ROLES, DEPARTMENTS } from '../../config/constants';
+import { isSuperAdmin, isAdmin, canManageOfficers } from '../../utils/roleBasedAccess';
 import wardsData from '../../config/wardsData.json';
 
 const OfficerManagement = () => {
@@ -30,9 +32,10 @@ const OfficerManagement = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Check if user is admin or super admin
-  const canManageOfficers = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN;
-  const isSuperAdmin = user?.role === USER_ROLES.SUPER_ADMIN;
+  // Role-based access control
+  const userCanManageOfficers = canManageOfficers(user);
+  const userIsSuperAdmin = isSuperAdmin(user);
+  const userIsAdmin = isAdmin(user);
   
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,16 +51,36 @@ const OfficerManagement = () => {
     fullName: feature.properties.full_name
   })).sort((a, b) => a.code.localeCompare(b.code));
 
-  // Fetch officers
-  const { data: officers = [], isLoading, error } = useQuery({
+  // Fetch officers data with proper error handling
+  const { data: officersData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['officers'],
-    queryFn: adminApi.getOfficers,
-    enabled: canManageOfficers
+    queryFn: async () => {
+      try {
+        const data = await officersApi.getAll();
+        return Array.isArray(data) ? data : [];
+      } catch (err) {
+        console.error('Error in officers query:', err);
+        throw err; // Re-throw to let React Query handle it
+      }
+    },
+    retry: 2, // Retry failed requests twice
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    onError: (error) => {
+      console.error('Error fetching officers:', error);
+      toast.error('Failed to load officers. Please try again.');
+    }
   });
+
+  // Safely get officers array
+  const officers = useMemo(() => {
+    if (!officersData) return [];
+    return Array.isArray(officersData) ? officersData : [];
+  }, [officersData]);
 
   // Delete officer mutation
   const deleteOfficerMutation = useMutation({
-    mutationFn: (id) => adminApi.deleteOfficer(id),
+    mutationFn: (id) => officersApi.delete(id),
     onSuccess: () => {
       toast.success('Officer deleted successfully');
       queryClient.invalidateQueries(['officers']);
@@ -70,7 +93,7 @@ const OfficerManagement = () => {
 
   // Update officer status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => adminApi.updateOfficerStatus(id, { is_active: status }),
+    mutationFn: ({ id, status }) => officersApi.updateOfficerStatus(id, { is_active: status }),
     onSuccess: () => {
       toast.success('Officer status updated successfully');
       queryClient.invalidateQueries(['officers']);
@@ -82,7 +105,7 @@ const OfficerManagement = () => {
 
   // Reset password mutation
   const resetPasswordMutation = useMutation({
-    mutationFn: (id) => adminApi.resetOfficerPassword(id),
+    mutationFn: (id) => officersApi.resetOfficerPassword(id),
     onSuccess: () => {
       toast.success('Password reset email sent to officer');
     },
@@ -93,7 +116,7 @@ const OfficerManagement = () => {
 
   // Send invitation mutation
   const sendInvitationMutation = useMutation({
-    mutationFn: (id) => adminApi.sendOfficerInvitation(id),
+    mutationFn: (id) => officersApi.sendOfficerInvitation(id),
     onSuccess: () => {
       toast.success('Invitation email sent successfully');
     },
@@ -103,21 +126,32 @@ const OfficerManagement = () => {
   });
 
   // Filter officers based on search and filters
-  const filteredOfficers = officers.filter(officer => {
-    const matchesSearch = 
-      officer.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      officer.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      officer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      officer.username?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredOfficers = useMemo(() => {
+    if (!officers || !Array.isArray(officers)) return [];
     
-    const matchesDepartment = !selectedDepartment || officer.department === selectedDepartment;
-    const matchesWard = !selectedWard || officer.assigned_ward === selectedWard;
-    const matchesStatus = !selectedStatus || 
-      (selectedStatus === 'active' && officer.is_active) ||
-      (selectedStatus === 'inactive' && !officer.is_active);
-    
-    return matchesSearch && matchesDepartment && matchesWard && matchesStatus;
-  });
+    return officers.filter(officer => {
+      if (!officer) return false;
+      
+      const searchLower = searchTerm.toLowerCase();
+      const officerName = officer.user_name?.toLowerCase() || '';
+      const officerEmail = officer.user_email?.toLowerCase() || '';
+      const officerDept = officer.department?.toLowerCase() || '';
+      const officerWard = officer.ward?.toLowerCase() || '';
+      
+      const matchesSearch = officerName.includes(searchLower) ||
+                          officerEmail.includes(searchLower) ||
+                          officerDept.includes(searchLower) ||
+                          officerWard.includes(searchLower);
+      
+      const matchesDepartment = !selectedDepartment || officer.department === selectedDepartment;
+      const matchesWard = !selectedWard || officer.ward === selectedWard;
+      const matchesStatus = !selectedStatus || 
+                          (selectedStatus === 'active' && officer.is_active) || 
+                          (selectedStatus === 'inactive' && !officer.is_active);
+      
+      return matchesSearch && matchesDepartment && matchesWard && matchesStatus;
+    });
+  }, [officers, searchTerm, selectedDepartment, selectedWard, selectedStatus]);
 
   const handleDeleteOfficer = async (id) => {
     await deleteOfficerMutation.mutateAsync(id);
@@ -140,21 +174,34 @@ const OfficerManagement = () => {
     return ward ? `${ward.code} Ward` : wardCode;
   };
 
-  const getRoleBadgeColor = (role) => {
+  const getRoleBadgeColor = (role, isSuperuser = false) => {
+    if (isSuperuser) {
+      return 'bg-purple-100 text-purple-800 border-purple-200';
+    }
     switch (role) {
-      case USER_ROLES.SUPER_ADMIN:
-        return 'bg-purple-100 text-purple-800 border-purple-200';
       case USER_ROLES.ADMIN:
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case USER_ROLES.OFFICER:
+      case USER_ROLES.DEPARTMENT_STAFF:
         return 'bg-green-100 text-green-800 border-green-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
+  const getRoleLabel = (role, isSuperuser = false) => {
+    if (isSuperuser) return 'Super Admin';
+    switch (role) {
+      case USER_ROLES.ADMIN:
+        return 'Department Admin';
+      case USER_ROLES.DEPARTMENT_STAFF:
+        return 'Officer';
+      default:
+        return role || 'Unknown';
+    }
+  };
+
   // Redirect if not authorized
-  if (!canManageOfficers) {
+  if (!userCanManageOfficers) {
     return (
       <div className="min-h-96 flex items-center justify-center">
         <div className="text-center">
@@ -170,41 +217,42 @@ const OfficerManagement = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Officer Management</h1>
-        </div>
-        <div className="bg-white shadow rounded-lg p-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-            </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-red-50 border-l-4 border-red-400 p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-red-700">
+              Failed to load officers. {error?.message || 'Please try again later.'}
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="ml-2 text-sm font-medium text-red-700 underline hover:text-red-600 focus:outline-none"
+              >
+                Retry
+              </button>
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
-          <h2 className="mt-4 text-lg font-medium text-gray-900">Error Loading Officers</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {error.response?.data?.message || 'Failed to load officers'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // Return the main content with ErrorBoundary
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <ErrorBoundary>
+      <div className="w-full">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             <UserIcon className="h-8 w-8 mr-3 text-blue-600" />
@@ -213,7 +261,7 @@ const OfficerManagement = () => {
           <p className="text-gray-600">Manage BMC officers and administrators</p>
         </div>
         
-        {isSuperAdmin && (
+        {userIsSuperAdmin && (
           <Link
             to="/admin/register"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
@@ -306,10 +354,10 @@ const OfficerManagement = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Officer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-48">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-40">
                     Ward
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -344,23 +392,44 @@ const OfficerManagement = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <BuildingOffice2Icon className="h-4 w-4 mr-2 text-gray-400" />
-                        {getDepartmentName(officer.department)}
+                    <td className="px-6 py-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <BuildingOffice2Icon className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-gray-900">
+                            {getDepartmentName(officer.department)}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {officer.department === 'ROADS' && 'Roads & Traffic'}
+                            {officer.department === 'WASTE' && 'Waste Management'}
+                            {officer.department === 'WATER' && 'Water Supply'}
+                            {officer.department === 'HEALTH' && 'Public Health'}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">{officer.designation}</div>
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">{officer.designation}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <MapPinIcon className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-gray-900">
+                            {officer.assigned_ward}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {getWardName(officer.assigned_ward)}
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />
-                        {getWardName(officer.assigned_ward)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(officer.role)}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(officer.role, officer.is_superuser)}`}>
                         <ShieldCheckIcon className="h-3 w-3 mr-1" />
-                        {officer.role}
+                        {getRoleLabel(officer.role, officer.is_superuser)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -395,7 +464,7 @@ const OfficerManagement = () => {
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       
-                      {isSuperAdmin && (
+                      {userIsSuperAdmin && (
                         <>
                           <button
                             onClick={() => navigate(`/admin/officers/${officer.id}/edit`)}
@@ -472,6 +541,7 @@ const OfficerManagement = () => {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 };
 

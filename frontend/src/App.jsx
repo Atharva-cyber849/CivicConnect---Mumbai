@@ -5,8 +5,9 @@ import { Toaster } from 'react-hot-toast'
 
 // Context Providers - Re-enabling all features
 import { ThemeProvider } from './context/ThemeContext'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
+import { LanguageProvider } from './context/LanguageContext'
 
 // Services - Re-enabling PWA with dynamic manifest system
 import pwaService from './services/pwaService'
@@ -14,6 +15,7 @@ import manifestManager from './services/manifestManager'
 
 // Route Components
 import AppRouter from './routes/AppRouter'
+import SessionTimeoutModal from './components/Auth/SessionTimeoutModal'
 
 // Components - Re-enabling PWA components
 import LoadingSpinner from './components/Layout/LoadingSpinner'
@@ -78,55 +80,45 @@ function App() {
       default: module.ReactQueryDevtools 
     }))) : null
 
+  // Create a wrapper component for auth providers
+  const AppContent = () => {
+    return (
+      <div className={`app min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors ${
+        isMobile ? 'mobile-app pb-20' : ''
+      }`}>
+        <Suspense fallback={<LoadingFallback />}>
+          <AppRouter />
+          <SessionTimeoutModal />
+          <Toaster position="top-right" />
+          <PWAInstallPrompt />
+          <PWAUpdateNotification />
+          <OfflineIndicator />
+          {isMobile && <BottomNavigation />}
+        </Suspense>
+        {process.env.NODE_ENV === 'development' && (
+          <Suspense fallback={null}>
+            <DevTools initialIsOpen={false} position="bottom-right" />
+          </Suspense>
+        )}
+      </div>
+    );
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>
-              <Suspense fallback={<LoadingFallback />}>
-                <div className={`app min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors ${
-                  isMobile ? 'mobile-app pb-20' : ''
-                }`}>
-                  {/* PWA Components - Temporarily disabled for debugging */}
-                  {/* <PWAInstallPrompt />
-                  <PWAUpdateNotification />
-                  <OfflineIndicator /> */}
-
-                  {/* Main App Router */}
-                  <AppRouter />
-
-                  {/* Mobile Bottom Navigation - Temporarily disabled */}
-                  {/* {isMobile && <BottomNavigation />} */}
-                  
-                  {/* Toast Notifications */}
-                  <Toaster 
-                    position={isMobile ? "top-center" : "top-right"}
-                    toastOptions={{
-                      duration: 4000,
-                      style: {
-                        background: '#363636',
-                        color: '#fff',
-                        fontSize: isMobile ? '14px' : '16px',
-                        maxWidth: isMobile ? '90vw' : '400px',
-                      },
-                    }}
-                  />
-                </div>
-              </Suspense>
-              
-              {/* React Query DevTools (only in development) */}
-              {DevTools && (
-                <Suspense fallback={null}>
-                  <DevTools initialIsOpen={false} />
-                </Suspense>
-              )}
+              <LanguageProvider>
+                <AppContent />
+              </LanguageProvider>
             </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
-  )
+  );
 }
 
 export default App

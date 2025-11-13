@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { complaintsApi } from '../../api/complaintsApi'
-import { useAuthStore } from '../../store/authStore'
+import { useAuth } from '../../context/AuthContext'
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { 
   MUMBAI_MAP_CONFIG, COMPLAINT_CATEGORIES, COMPLAINT_STATUS, MUMBAI_WARDS 
 } from '../../utils/constants'
-import { createCustomIcon, getCurrentLocation, isWithinMumbai } from '../../utils/mapUtils'
+import { createCustomIcon, getCurrentLocation, isWithinMumbai, calculateDistance } from '../../utils/mapUtils'
 import { format } from 'date-fns'
 import { FiFilter, FiMapPin, FiCrosshair, FiEye } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import 'leaflet/dist/leaflet.css'
 
 const CitizenMapView = () => {
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   const [filters, setFilters] = useState({
     category: '',
     status: '',
@@ -47,28 +47,58 @@ const CitizenMapView = () => {
   }, [])
 
   // Fetch nearby complaints
-  const { data: response, isLoading } = useQuery({
+  const { data: response, isLoading, error } = useQuery({
     queryKey: ['citizenMapComplaints', filters, userLocation],
     queryFn: () => {
-      const params = {
-        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v)),
-        include_coordinates: true,
-        public_view: true, // Only show public complaints
-      }
-      
-      // Add location-based filtering if user location is available
-      if (userLocation && filters.distance) {
-        params.lat = userLocation.lat
-        params.lng = userLocation.lng
-        params.radius = filters.distance
-      }
-      
-      return complaintAPI.getAll(params)
+      // Get all complaints first (backend doesn't support filtering by parameters)
+      return complaintsApi.getAllComplaints()
     },
   })
 
-  const complaints = response?.data?.results || []
-  const complaintsWithCoords = complaints.filter(c => c.latitude && c.longitude)
+  // Handle different response formats and extract complaints
+  let allComplaints = []
+  if (response?.data?.results) {
+    allComplaints = response.data.results
+  } else if (Array.isArray(response?.data)) {
+    allComplaints = response.data
+  } else if (Array.isArray(response)) {
+    allComplaints = response
+  }
+
+  // Apply client-side filtering
+  let filteredComplaints = allComplaints
+    .filter(c => c.latitude && c.longitude) // Only include complaints with coordinates
+
+  // Filter by category
+  if (filters.category) {
+    filteredComplaints = filteredComplaints.filter(c => c.category === filters.category)
+  }
+
+  // Filter by status
+  if (filters.status) {
+    filteredComplaints = filteredComplaints.filter(c => c.status === filters.status)
+  }
+
+  // Filter by ward
+  if (filters.ward) {
+    filteredComplaints = filteredComplaints.filter(c => c.ward === filters.ward)
+  }
+
+  // Filter by distance from user location
+  if (userLocation && filters.distance && filters.distance !== '') {
+    const maxDistance = parseFloat(filters.distance)
+    filteredComplaints = filteredComplaints.filter(c => {
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        c.latitude,
+        c.longitude
+      )
+      return distance <= maxDistance
+    })
+  }
+
+  const complaintsWithCoords = filteredComplaints
 
   // Clear filters
   const clearFilters = () => {
@@ -214,6 +244,16 @@ const CitizenMapView = () => {
         </div>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-semibold">Error Loading Complaints</h3>
+          <p className="text-red-700 text-sm mt-1">
+            {error.message || 'Failed to load complaints. Please try refreshing the page.'}
+          </p>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid md:grid-cols-4 gap-4">
         <div className="card bg-blue-50 text-center">
@@ -306,54 +346,81 @@ const CitizenMapView = () => {
                   position={[complaint.latitude, complaint.longitude]}
                   icon={createCustomIcon(complaint.category, complaint.status)}
                 >
-                  <Popup maxWidth={300}>
-                    <div className="p-2 max-w-sm">
-                      <div className="flex items-start gap-3">
-                        {complaint.image && (
-                          <img
-                            src={complaint.image}
-                            alt="Issue"
-                            className="w-16 h-16 rounded-lg object-cover"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-sm mb-1">
-                            {complaint.title}
-                          </h4>
-                          <div className="text-xs text-gray-600 space-y-1 mb-2">
-                            <div>
-                              <strong>Category:</strong> {getCategoryLabel(complaint.category)}
-                            </div>
-                            <div>
-                              <strong>Status:</strong> 
-                              <span className={`ml-1 px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(complaint.status)}`}>
-                                {complaint.status.replace('_', ' ')}
-                              </span>
-                            </div>
-                            <div>
-                              <strong>Ward:</strong> {complaint.ward}
-                            </div>
-                            <div>
-                              <strong>Reported:</strong> {format(new Date(complaint.created_at), 'MMM dd')}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Link
-                              to={`/track?id=${complaint.id}`}
-                              className="btn btn-sm btn-primary flex items-center gap-1 text-xs"
-                            >
-                              <FiEye className="w-3 h-3" />
-                              Track
-                            </Link>
-                            <button
-                              onClick={() => window.open(`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`, '_blank')}
-                              className="btn btn-sm btn-secondary flex items-center gap-1 text-xs"
-                            >
-                              <FiMapPin className="w-3 h-3" />
-                              Navigate
-                            </button>
+                  <Popup maxWidth={400} minWidth={350}>
+                    <div className="p-3 w-full">
+                      {/* Image */}
+                      {complaint.image && (
+                        <img
+                          src={complaint.image}
+                          alt="Issue"
+                          className="w-full h-40 rounded-lg object-cover mb-3"
+                        />
+                      )}
+                      
+                      {/* Title */}
+                      <h4 className="font-bold text-base mb-2 text-gray-900">
+                        {complaint.title}
+                      </h4>
+                      
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="font-semibold text-gray-700">Category</div>
+                          <div className="text-gray-600">{getCategoryLabel(complaint.category)}</div>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="font-semibold text-gray-700">Ward</div>
+                          <div className="text-gray-600">{complaint.ward || 'Unknown'}</div>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="font-semibold text-gray-700">Status</div>
+                          <div className={`text-xs font-medium ${getStatusBadgeColor(complaint.status).replace('bg-', 'text-').replace('text-', 'text-')}`}>
+                            {complaint.status.replace('_', ' ')}
                           </div>
                         </div>
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="font-semibold text-gray-700">Priority</div>
+                          <div className="text-gray-600">{complaint.priority || 'Normal'}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Description */}
+                      {complaint.description && (
+                        <div className="mb-3">
+                          <div className="font-semibold text-xs text-gray-700 mb-1">Description</div>
+                          <p className="text-xs text-gray-600 line-clamp-3">{complaint.description}</p>
+                        </div>
+                      )}
+                      
+                      {/* Address */}
+                      {complaint.address && (
+                        <div className="mb-3">
+                          <div className="font-semibold text-xs text-gray-700 mb-1">Location</div>
+                          <p className="text-xs text-gray-600 line-clamp-2">{complaint.address}</p>
+                        </div>
+                      )}
+                      
+                      {/* Reported Date */}
+                      <div className="text-xs text-gray-500 mb-3">
+                        Reported: {format(new Date(complaint.created_at), 'MMM dd, yyyy')}
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <Link
+                          to={`/dashboard/complaints/${complaint.id}`}
+                          className="flex-1 btn btn-sm btn-primary flex items-center justify-center gap-1 text-xs"
+                        >
+                          <FiEye className="w-3 h-3" />
+                          View Details
+                        </Link>
+                        <button
+                          onClick={() => window.open(`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`, '_blank')}
+                          className="flex-1 btn btn-sm btn-secondary flex items-center justify-center gap-1 text-xs"
+                        >
+                          <FiMapPin className="w-3 h-3" />
+                          Navigate
+                        </button>
                       </div>
                     </div>
                   </Popup>

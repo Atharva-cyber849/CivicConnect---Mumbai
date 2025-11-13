@@ -98,22 +98,6 @@ services:
     networks:
       - snap_report_network
 
-  # AI Microservice
-  ai_service:
-    build: ./ai_service
-    container_name: snap_report_ai
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./ai_service:/app
-    networks:
-      - snap_report_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   # React Frontend (Development)
   frontend:
     build: 

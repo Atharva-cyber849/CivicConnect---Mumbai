@@ -2,7 +2,10 @@
 Serializers for complaints app.
 """
 from rest_framework import serializers
-from .models import Complaint, ComplaintUpdate
+from .models import (
+    Complaint, ComplaintUpdate, ComplaintImage, ComplaintAttachment,
+    ComplaintTimeline, ComplaintResolution, OfficerNotes
+)
 
 
 class ComplaintUpdateSerializer(serializers.ModelSerializer):
@@ -114,4 +117,100 @@ class ComplaintUpdateStatusSerializer(serializers.ModelSerializer):
         return updated_complaint
 
 
+class ComplaintImageSerializer(serializers.ModelSerializer):
+    """Serializer for complaint images."""
+    
+    class Meta:
+        model = ComplaintImage
+        fields = ('id', 'complaint', 'image', 'uploaded_at')
+        read_only_fields = ('id', 'uploaded_at')
 
+
+class ComplaintAttachmentSerializer(serializers.ModelSerializer):
+    """Serializer for complaint attachments."""
+    
+    class Meta:
+        model = ComplaintAttachment
+        fields = ('id', 'complaint', 'file', 'file_name', 'file_type', 'uploaded_at')
+        read_only_fields = ('id', 'uploaded_at')
+
+
+class ComplaintTimelineSerializer(serializers.ModelSerializer):
+    """Serializer for complaint timeline."""
+    
+    updated_by_name = serializers.CharField(source='updated_by.get_full_name', read_only=True)
+    updated_by_email = serializers.CharField(source='updated_by.email', read_only=True)
+    
+    class Meta:
+        model = ComplaintTimeline
+        fields = ('id', 'complaint', 'previous_status', 'new_status', 'updated_by', 
+                  'updated_by_name', 'updated_by_email', 'notes', 'created_at')
+        read_only_fields = ('id', 'created_at')
+
+
+class ComplaintResolutionSerializer(serializers.ModelSerializer):
+    """Serializer for complaint resolution."""
+    
+    resolved_by_name = serializers.CharField(source='resolved_by.get_full_name', read_only=True)
+    resolved_by_email = serializers.CharField(source='resolved_by.email', read_only=True)
+    
+    class Meta:
+        model = ComplaintResolution
+        fields = ('id', 'complaint', 'resolution_notes', 'resolution_date', 'resolved_by',
+                  'resolved_by_name', 'resolved_by_email', 'proof_image', 'proof_document',
+                  'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+
+class OfficerNotesSerializer(serializers.ModelSerializer):
+    """Serializer for officer notes."""
+    
+    officer_name = serializers.CharField(source='officer.get_full_name', read_only=True)
+    officer_email = serializers.CharField(source='officer.email', read_only=True)
+    
+    class Meta:
+        model = OfficerNotes
+        fields = ('id', 'complaint', 'officer', 'officer_name', 'officer_email', 
+                  'notes', 'is_internal', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+
+class ComplaintDetailSerializerV2(serializers.ModelSerializer):
+    """Enhanced serializer for complaint detail view with all relationships."""
+    
+    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.get_full_name', read_only=True)
+    assigned_officer_name = serializers.CharField(source='assigned_officer.get_full_name', read_only=True)
+    
+    # Nested relationships
+    images = ComplaintImageSerializer(many=True, read_only=True)
+    attachments = ComplaintAttachmentSerializer(many=True, read_only=True)
+    timeline = ComplaintTimelineSerializer(many=True, read_only=True)
+    resolution = ComplaintResolutionSerializer(read_only=True)
+    officer_notes = OfficerNotesSerializer(many=True, read_only=True)
+    updates = ComplaintUpdateSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Complaint
+        fields = (
+            'id', 'title', 'description', 'category', 'status', 'priority',
+            'user', 'user_name', 'user_email',
+            'department', 'department_name',
+            'assigned_to', 'assigned_to_name',
+            'assigned_officer', 'assigned_officer_name',
+            'estimated_resolution_days', 'public_update',
+            'address', 'ward', 'city', 'state', 'zip_code',
+            'latitude', 'longitude',
+            'ai_category', 'ai_confidence_score',
+            'image', 'images', 'attachments',
+            'admin_notes', 'officer_notes',
+            'timeline', 'resolution', 'updates',
+            'created_at', 'updated_at', 'resolved_at'
+        )
+        read_only_fields = (
+            'id', 'user', 'ai_category', 'ai_confidence_score',
+            'created_at', 'updated_at', 'resolved_at',
+            'images', 'attachments', 'timeline', 'resolution', 'updates', 'officer_notes'
+        )
