@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { FiCheckCircle, FiMapPin, FiTrendingUp, FiSmartphone, FiClock, FiShield } from 'react-icons/fi'
 
 const LandingPage = () => {
+  console.log('===== LANDINGPAGE RENDERING =====');
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

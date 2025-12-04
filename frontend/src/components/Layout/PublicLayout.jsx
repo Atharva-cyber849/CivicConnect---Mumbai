@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 
 const PublicLayout = () => {
   useEffect(() => {
+    console.log('===== PUBLICLAYOUT MOUNTED =====');
     // Any one-time initialization can go here
     return () => {
       // Cleanup if needed
@@ -38,14 +39,6 @@ const PublicLayout = () => {
             </Link>
             
             <nav className="flex items-center space-x-4">
-              <Link
-                to="/track"
-                className="flex items-center space-x-2 text-civic-blue-600 hover:text-civic-blue-700 font-medium"
-              >
-                <FiSearch className="w-4 h-4" />
-                <span>Track Complaint</span>
-              </Link>
-
               {/* BMC Officer Portal - Professional styling */}
               <Link
                 to="/admin"
@@ -84,8 +77,8 @@ const PublicLayout = () => {
         </div>
       </header>
       
-      {/* Main content area */}
-      <main className="flex-1 container mx-auto px-6 py-8">
+      {/* Main content area - full width for LandingPage */}
+      <main className="flex-1 w-full">
         <Outlet />
       </main>
     </div>

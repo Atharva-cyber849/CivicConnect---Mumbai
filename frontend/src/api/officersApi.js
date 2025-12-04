@@ -158,4 +158,98 @@ export const officersApi = {
     });
     return response.data;
   },
+
+  // ============================================================================
+  // OFFICER SELF-SERVICE (BMC Officer Dashboard)
+  // ============================================================================
+
+  /**
+   * Get officer profile (current logged-in officer)
+   * @returns {Promise} Officer profile object
+   */
+  getProfile: async () => {
+    const response = await axiosPrivate.get('/users/officers/profile/');
+    return response.data;
+  },
+
+  /**
+   * Get assigned complaints for officer
+   * @param {Object} filters - Optional filters
+   * @param {string} filters.period - Time period (7, 30, 90 days)
+   * @param {string} filters.ward - Filter by ward
+   * @param {string} filters.status - Filter by status
+   * @returns {Promise} Array of assigned complaints
+   */
+  getAssignedComplaints: async (filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/', {
+      params: {
+        assigned_to_me: true,
+        ...filters
+      }
+    });
+    return response.data;
+  },
+
+  /**
+   * Get performance metrics for officer
+   * @param {string} period - Time period (7, 30, 90 days)
+   * @returns {Promise} Performance metrics object
+   */
+  getPerformanceMetrics: async (period = '30') => {
+    const response = await axiosPrivate.get('/users/officers/performance/', {
+      params: { period }
+    });
+    return response.data;
+  },
+
+  /**
+   * Update complaint status (officer action)
+   * @param {number} complaintId - The complaint ID
+   * @param {Object} statusData - Status update data
+   * @returns {Promise} Updated complaint object
+   */
+  updateComplaintStatus: async (complaintId, statusData) => {
+    const response = await axiosPrivate.patch(`/complaints/${complaintId}/status/`, statusData);
+    return response.data;
+  },
+
+  /**
+   * Add resolution to complaint
+   * @param {number} complaintId - The complaint ID
+   * @param {Object} resolutionData - Resolution data with optional images
+   * @returns {Promise} Updated complaint object
+   */
+  addResolution: async (complaintId, resolutionData) => {
+    const formData = new FormData();
+    Object.keys(resolutionData).forEach(key => {
+      const value = resolutionData[key];
+      if (value !== null && value !== undefined) {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (Array.isArray(value)) {
+          value.forEach(item => {
+            if (item instanceof File) {
+              formData.append(key, item);
+            }
+          });
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    });
+
+    const response = await axiosPrivate.patch(`/complaints/${complaintId}/resolution/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
+  /**
+   * Get officer workload summary
+   * @returns {Promise} Workload summary object
+   */
+  getWorkloadSummary: async () => {
+    const response = await axiosPrivate.get('/users/officers/workload/');
+    return response.data;
+  }
 };

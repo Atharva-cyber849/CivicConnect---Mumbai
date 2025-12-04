@@ -34,7 +34,7 @@ import L from 'leaflet';
 import { complaintsApi, complaintDetailsApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { DEPARTMENTS } from '../../config/constants';
-import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
+import { isSuperAdmin, isDepartmentAdmin, isOfficer } from '../../utils/roleBasedAccess';
 
 // Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -50,9 +50,9 @@ const ComplaintDetails = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  // Role-based access control
+  // Role-based access control - 3-tier admin hierarchy
   const userIsSuperAdmin = isSuperAdmin(user);
-  const userIsAdmin = isAdmin(user);
+  const userIsDepartmentAdmin = isDepartmentAdmin(user);
   const userIsOfficer = isOfficer(user);
   
   const [newStatus, setNewStatus] = useState('');
@@ -80,7 +80,7 @@ const ComplaintDetails = () => {
   });
 
   // Fetch complaint images
-  const { data: complaintImages = [] } = useQuery({
+  const { data: rawComplaintImages = [] } = useQuery({
     queryKey: ['complaint-images', id],
     queryFn: () => complaintDetailsApi.images.getAll(id),
     enabled: !!id
@@ -205,6 +205,35 @@ const ComplaintDetails = () => {
   };
 
   const complaintData = normalizeComplaintData(complaint) || mockComplaint;
+
+  // Process images to ensure full URLs - must be after complaintData is defined
+  const complaintImages = useMemo(() => {
+    if (!rawComplaintImages) return [];
+    
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    const BASE_URL = API_URL.replace('/api', '');
+    
+    // Handle both array and object responses
+    const imagesArray = Array.isArray(rawComplaintImages) ? rawComplaintImages : (rawComplaintImages.results || []);
+    
+    // If no images from ComplaintImage model, use the deprecated image field if available
+    const images = imagesArray.map(img => ({
+      ...img,
+      image: img.image ? (
+        img.image.startsWith('http') ? img.image : `${BASE_URL}${img.image}`
+      ) : null
+    })).filter(img => img.image);
+    
+    // If no images from ComplaintImage model but complaint has deprecated image field, add it
+    if (images.length === 0 && complaintData?.image) {
+      images.push({
+        id: 'deprecated-image',
+        image: complaintData.image.startsWith('http') ? complaintData.image : `${BASE_URL}${complaintData.image}`
+      });
+    }
+    
+    return images;
+  }, [rawComplaintImages, complaintData?.image]);
 
   // Update status mutation
   const updateStatusMutation = useMutation({
@@ -391,25 +420,25 @@ const ComplaintDetails = () => {
   };
 
   // Check role-based access
-  const canViewComplaint = userIsSuperAdmin || userIsAdmin || userIsOfficer;
+  const canViewComplaint = userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer;
   
-  // Check if user can view this specific complaint (super admin sees all, admin sees own department, officer sees own ward)
+  // Check if user can view this specific complaint (super admin sees all, department admin sees own department, officer sees own ward)
   const canAccessThisComplaint = useMemo(() => {
     if (!complaintData) return false;
     if (userIsSuperAdmin) return true;
-    if (userIsAdmin && complaintData.department === user?.department) return true;
+    if (userIsDepartmentAdmin && complaintData.department === user?.department) return true;
     if (userIsOfficer && complaintData.assigned_ward === user?.assigned_ward) return true;
     return false;
-  }, [complaintData, userIsSuperAdmin, userIsAdmin, userIsOfficer, user?.department, user?.assigned_ward]);
+  }, [complaintData, userIsSuperAdmin, userIsDepartmentAdmin, userIsOfficer, user?.department, user?.assigned_ward]);
   
   // Check if user can edit this complaint based on role
   const canEditComplaint = useMemo(() => {
     if (!canAccessThisComplaint) return false;
     if (userIsSuperAdmin) return true;
-    if (userIsAdmin && complaintData?.department === user?.department) return true;
+    if (userIsDepartmentAdmin && complaintData?.department === user?.department) return true;
     if (userIsOfficer && complaintData?.assigned_officer === user?.id) return true;
     return false;
-  }, [complaintData, userIsSuperAdmin, userIsAdmin, userIsOfficer, user?.department, user?.id, canAccessThisComplaint]);
+  }, [complaintData, userIsSuperAdmin, userIsDepartmentAdmin, userIsOfficer, user?.department, user?.id, canAccessThisComplaint]);
 
   if (!canViewComplaint) {
     return (
@@ -523,6 +552,10 @@ const ComplaintDetails = () => {
                     alt={`Complaint ${currentImageIndex + 1}`}
                     className="w-full h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setShowLightbox(true)}
+                    onError={(e) => {
+                      console.error('Image failed to load:', complaintImages[currentImageIndex]?.image);
+                      e.target.src = '/api/placeholder/400/300';
+                    }}
                   />
                   {/* Overlay with info */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
@@ -556,7 +589,15 @@ const ComplaintDetails = () => {
                           index === currentImageIndex ? 'border-[#0078D7] shadow-md' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <img src={image.image} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                        <img 
+                          src={image.image} 
+                          alt={`Thumbnail ${index + 1}`} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('Thumbnail failed to load:', image.image);
+                            e.target.src = '/api/placeholder/64/64';
+                          }}
+                        />
                       </button>
                     ))}
                   </div>
@@ -595,6 +636,10 @@ const ComplaintDetails = () => {
                     src={complaintImages[currentImageIndex]?.image}
                     alt={`Complaint ${currentImageIndex + 1}`}
                     className="max-w-full max-h-[90vh] object-contain"
+                    onError={(e) => {
+                      console.error('Lightbox image failed to load:', complaintImages[currentImageIndex]?.image);
+                      e.target.src = '/api/placeholder/400/300';
+                    }}
                   />
                 </div>
 
@@ -968,12 +1013,11 @@ const ComplaintDetails = () => {
               ) : (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
                   <p className="text-sm flex items-center">
-                    <ExclamationIcon className="h-4 w-4 mr-2" />
+                    <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
                     You don't have permission to edit this complaint.
                   </p>
                 </div>
               )}
-            </div>
             </div>
           </div>
 
@@ -1152,31 +1196,31 @@ const ComplaintDetails = () => {
               )}
             </div>
           </div>
+
+          {/* Officer Notes Section */}
+          {complaintData.officer_notes && complaintData.officer_notes.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#0078D7] mr-2" />
+                Officer Notes
+              </h3>
+              <div className="space-y-4">
+                {complaintData.officer_notes.map((note) => (
+                  <div key={note.id} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">{note.created_by}</span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(note.created_at).toLocaleDateString('en-IN')}
+                      </span>
+                    </div>
+                    <p className="text-gray-700">{note.note}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Officer Notes Section */}
-      {complaintData.officer_notes && complaintData.officer_notes.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#0078D7] mr-2" />
-            Officer Notes
-          </h3>
-          <div className="space-y-4">
-            {complaintData.officer_notes.map((note) => (
-              <div key={note.id} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900">{note.created_by}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(note.created_at).toLocaleDateString('en-IN')}
-                  </span>
-                </div>
-                <p className="text-gray-700">{note.note}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

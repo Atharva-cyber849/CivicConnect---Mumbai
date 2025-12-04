@@ -9,8 +9,12 @@ from .views import (
     ComplaintAttachmentViewSet,
     ComplaintTimelineViewSet,
     ComplaintResolutionViewSet,
-    OfficerNotesViewSet
+    OfficerNotesViewSet,
+    OfficerRatingViewSet,
+    OfficerPerformanceViewSet,
+    AnalyticsViewSet
 )
+from .assignment_views import ComplaintAssignmentViewSet
 from .geocoding import reverse_geocode
 from .analytics_views import (
     dashboard_stats,
@@ -20,11 +24,30 @@ from .analytics_views import (
     monthly_trends,
     user_activity,
     complaint_export,
-    public_stats
+    public_stats,
+    zone_analytics,
+    mumbai_bmc_analytics,
+    sla_metrics
 )
 
 router = DefaultRouter()
 router.register(r'', ComplaintViewSet, basename='complaint')
+
+# Assignment router
+assignment_router = DefaultRouter()
+assignment_router.register(r'assignments', ComplaintAssignmentViewSet, basename='assignment')
+
+# Rating router
+rating_router = DefaultRouter()
+rating_router.register(r'ratings', OfficerRatingViewSet, basename='rating')
+
+# Performance router
+performance_router = DefaultRouter()
+performance_router.register(r'performance', OfficerPerformanceViewSet, basename='performance')
+
+# Analytics router
+analytics_router = DefaultRouter()
+analytics_router.register(r'analytics', AnalyticsViewSet, basename='analytics')
 
 # Nested routers for complaint sub-resources
 images_router = SimpleRouter()
@@ -49,6 +72,10 @@ urlpatterns = [
     # Admin dashboard stats compatibility endpoint
     path('admin/dashboard/stats/', ComplaintViewSet.as_view({'get': 'statistics'}), name='admin_dashboard_stats'),
     path('', include(router.urls)),
+    path('', include(assignment_router.urls)),
+    path('', include(rating_router.urls)),
+    path('', include(performance_router.urls)),
+    path('', include(analytics_router.urls)),
     
     # Nested routes for complaint sub-resources
     path('<int:complaint_id>/', include(images_router.urls)),
@@ -69,4 +96,9 @@ urlpatterns = [
     path('analytics/user/', user_activity, name='user_activity'),
     path('analytics/export/', complaint_export, name='complaint_export'),
     path('analytics/public/', public_stats, name='public_stats'),
+    
+    # Mumbai BMC-specific analytics endpoints
+    path('analytics/zones/', zone_analytics, name='zone_analytics'),
+    path('analytics/mumbai-bmc/', mumbai_bmc_analytics, name='mumbai_bmc_analytics'),
+    path('sla-metrics/', sla_metrics, name='sla_metrics'),
 ]

@@ -116,6 +116,9 @@ export const AuthProvider = ({ children }) => {
 
   // Check for existing token on mount
   useEffect(() => {
+    // Mark auth check as complete immediately
+    setAuthCheckComplete(true);
+    
     const checkAuth = async () => {
       console.log('AuthContext - Checking for existing auth');
       
@@ -148,7 +151,6 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
-            setAuthCheckComplete(true);
             return;
           }
           
@@ -170,8 +172,6 @@ export const AuthProvider = ({ children }) => {
         console.log('AuthContext - No existing auth found');
       }
       
-      // Mark auth check as complete immediately
-      setAuthCheckComplete(true);
       console.log('AuthContext - Auth check complete');
     };
 

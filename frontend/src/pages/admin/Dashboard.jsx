@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { USER_ROLES } from '../../config/constants';
 import SuperAdminDashboard from './SuperAdminDashboard';
 import DepartmentAdminDashboard from './DepartmentAdminDashboard';
-import OfficerDashboard from './OfficerDashboard';
+import BMCOfficerDashboard from '../officer/BMCOfficerDashboard';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -19,7 +19,7 @@ const Dashboard = () => {
   }
   
   if (user?.role === USER_ROLES.DEPARTMENT_STAFF) {
-    return <OfficerDashboard />;
+    return <BMCOfficerDashboard />;
   }
 
   // Fallback for unknown roles

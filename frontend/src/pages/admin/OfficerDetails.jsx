@@ -25,7 +25,6 @@ import { useAuth } from '../../context/AuthContext';
 import { DEPARTMENTS } from '../../config/constants';
 import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
 import wardsData from '../../config/wardsData.json';
-import { ExclamationIcon } from '@heroicons/react/24/solid';
 
 const OfficerDetails = () => {
   const { id } = useParams();
@@ -195,7 +194,7 @@ const OfficerDetails = () => {
     return (
       <div className="min-h-96 flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center max-w-md">
-          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-4">
             You don't have permission to view this officer's details.

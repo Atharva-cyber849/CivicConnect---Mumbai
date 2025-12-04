@@ -56,80 +56,137 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
     }
   };
   
-  // Define navigation items based on user role
+  // Determine admin tier for 3-tier hierarchy
+  const isSuperAdmin = user?.role === USER_ROLES.ADMIN && user?.is_superuser;
+  const isDepartmentAdmin = user?.role === USER_ROLES.ADMIN && !user?.is_superuser;
+  const isBMCOfficer = user?.role === USER_ROLES.DEPARTMENT_STAFF;
+
+  // Define navigation items based on user role and admin tier
   const getNavigationItems = () => {
     const baseItems = [
       {
         name: 'Dashboard',
         href: '/admin/dashboard',
         icon: ChartBarIcon,
-        description: 'Overview & Statistics'
+        description: isSuperAdmin ? 'System Overview' : isDepartmentAdmin ? 'Department Overview' : 'My Assignments'
       },
       {
         name: 'Complaints',
         href: '/admin/complaints',
         icon: ClipboardDocumentListIcon,
-        description: 'Manage Complaints',
-        badge: '12' // This would come from real data
+        description: isSuperAdmin ? 'All City Complaints' : isDepartmentAdmin ? 'Department Complaints' : 'Assigned Complaints'
       },
       {
         name: 'Map View',
         href: '/admin/map',
         icon: MapIcon,
-        description: 'Geographic View'
-      },
-      {
-        name: 'Reports',
-        href: '/admin/reports',
-        icon: ChartPieIcon,
-        description: 'Analytics & Insights'
+        description: isSuperAdmin ? 'City-wide Geographic View' : 'Ward Geographic View'
       }
     ];
 
-    // Add officer management for admins
-    if (user?.role === USER_ROLES.ADMIN) {
+    // BMC Ward Dashboard - Super Admin sees all wards, Department Admin sees their ward only
+    if (isSuperAdmin) {
       baseItems.push({
-        name: 'Officers',
-        href: '/admin/officers',
-        icon: UsersIcon,
-        description: 'Manage Officers'
+        name: 'BMC Ward Dashboard',
+        href: '/admin/bmc-ward-dashboard',
+        icon: BuildingOffice2Icon,
+        description: 'All Wards Management'
       });
     }
 
-    // Add super admin specific items (checking both role and is_superuser)
-    if (user?.role === USER_ROLES.ADMIN && user?.is_superuser) {
+    // Zone Management - Super Admin only (city-wide access)
+    if (isSuperAdmin) {
+      baseItems.push({
+        name: 'Zone Management',
+        href: '/admin/bmc-zone-management',
+        icon: MapIcon,
+        description: 'Mumbai Zone Overview'
+      });
+    }
+
+    // Reports - different scope based on role
+    baseItems.push({
+      name: 'Reports',
+      href: '/admin/reports',
+      icon: ChartPieIcon,
+      description: isSuperAdmin ? 'City-Wide Analytics' : isDepartmentAdmin ? 'Department Analytics' : 'My Performance'
+    });
+
+    // Officers Management - Super Admin: all officers, Department Admin: department officers only
+    if (isSuperAdmin) {
+      baseItems.push({
+        name: 'All Officers',
+        href: '/admin/officers',
+        icon: UsersIcon,
+        description: 'Manage All BMC Officers'
+      });
+    } else if (isDepartmentAdmin) {
+      baseItems.push({
+        name: 'Department Officers',
+        href: '/admin/officers',
+        icon: UsersIcon,
+        description: 'Manage Department Staff'
+      });
+    }
+
+    // ===== SUPER ADMIN ONLY SECTIONS =====
+    if (isSuperAdmin) {
       baseItems.push({
         name: 'Self Registrations',
         href: '/admin/self-register',
         icon: UserPlusIcon,
-        description: 'View Self Registration Requests'
+        description: 'Review Self-Registered Users'
       });
       
       baseItems.push({
         name: 'Registration Requests',
         href: '/admin/registration-requests',
         icon: UserGroupIcon,
-        description: 'Approve Admin Requests',
-        badge: '3' // This would come from real data
+        description: 'Pending Registration Approvals'
       });
       
+      baseItems.push({
+        name: 'Create Admin',
+        href: '/admin/create-admin',
+        icon: ShieldCheckIcon,
+        description: 'Create Department Admin'
+      });
+
       baseItems.push({
         name: 'Create Super Admin',
         href: '/admin/create-super-admin',
         icon: ShieldCheckIcon,
         description: 'Create Super Admin Account'
       });
+
+      // System Settings - Super Admin only
+      baseItems.push({
+        name: 'System Settings',
+        href: '/admin/settings',
+        icon: CogIcon,
+        description: 'System Configuration'
+      });
     }
 
-    // Add settings for all admin users
-    baseItems.push({
-      name: 'Settings',
-      href: '/admin/settings',
-      icon: CogIcon,
-      description: 'Profile & Preferences'
-    });
+    // Profile Settings for Department Admin and Officers
+    if (isDepartmentAdmin || isBMCOfficer) {
+      baseItems.push({
+        name: 'My Profile',
+        href: '/admin/profile',
+        icon: CogIcon,
+        description: 'Profile & Preferences'
+      });
+    }
 
     return baseItems;
+  };
+
+  // Get user role display label based on admin tier
+  const getRoleLabel = () => {
+    if (isSuperAdmin) return 'Super Admin';
+    if (isDepartmentAdmin) return 'Department Admin';
+    if (isBMCOfficer) return 'BMC Officer';
+    return user?.role || 'User';
   };
 
   const navigationItems = getNavigationItems();
@@ -163,7 +220,7 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
                       {user?.first_name} {user?.last_name}
                     </p>
                     <p className="text-xs text-blue-100">
-                      {user?.role} {user?.assigned_ward && `• ${user.assigned_ward} Ward`}
+                      {getRoleLabel()} {user?.assigned_ward && `• ${user.assigned_ward} Ward`}
                     </p>
                   </div>
                 )}
@@ -288,7 +345,7 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
                   <p className="text-sm font-medium text-white">
                     {user?.first_name} {user?.last_name}
                   </p>
-                  <p className="text-xs text-blue-100">{user?.role}</p>
+                  <p className="text-xs text-blue-100">{getRoleLabel()}</p>
                 </div>
               </div>
               {/* Close button for mobile */}

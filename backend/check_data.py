@@ -176,8 +176,6 @@ if all_complaints.exists():
         print(f"  Status: {complaint.status}")
         print(f"  Priority: {complaint.priority}")
         print(f"  Category: {complaint.category}")
-        print(f"  AI Category: {complaint.ai_category if complaint.ai_category else 'N/A'}")
-        print(f"  AI Confidence: {complaint.ai_confidence_score if complaint.ai_confidence_score else 'N/A'}")
         print(f"  Ward: {complaint.ward}")
         print(f"  Address: {complaint.address}")
         print(f"  City: {complaint.city}")

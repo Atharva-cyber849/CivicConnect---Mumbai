@@ -10,7 +10,8 @@ import {
   MapPinIcon,
   BellIcon,
   UserIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  BuildingOffice2Icon
 } from '@heroicons/react/24/outline'
 
 const Sidebar = ({ userType }) => {
@@ -18,6 +19,7 @@ const Sidebar = ({ userType }) => {
     { to: '/dashboard', icon: HomeIcon, label: 'Dashboard', end: true },
     { to: '/dashboard/report', icon: PlusCircleIcon, label: 'Report Issue' },
     { to: '/dashboard/complaints', icon: ListBulletIcon, label: 'My Complaints' },
+    { to: '/dashboard/mumbai-ward-services', icon: BuildingOffice2Icon, label: 'BMC Ward Services' },
     { to: '/dashboard/map', icon: MapPinIcon, label: 'Map View' },
     { to: '/dashboard/notifications', icon: BellIcon, label: 'Notifications' },
     { to: '/dashboard/profile', icon: UserIcon, label: 'Profile' },
@@ -28,6 +30,9 @@ const Sidebar = ({ userType }) => {
     { to: '/admin/dashboard', icon: HomeIcon, label: 'Dashboard' },
     { to: '/admin/complaints', icon: DocumentTextIcon, label: 'All Complaints' },
     { to: '/admin/map', icon: MapPinIcon, label: 'Map View' },
+    { to: '/admin/officer-map', icon: MapPinIcon, label: 'Officer Map' },
+    { to: '/admin/analytics', icon: ChartBarIcon, label: 'Analytics' },
+    { to: '/admin/sla-dashboard', icon: ChartBarIcon, label: 'SLA Dashboard' },
     { to: '/admin/reports', icon: ChartBarIcon, label: 'Reports' },
     { to: '/admin/officers', icon: UsersIcon, label: 'Officers' },
     { to: '/admin/settings', icon: CogIcon, label: 'Settings' },

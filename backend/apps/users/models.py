@@ -142,6 +142,38 @@ class User(AbstractUser):
     @property
     def is_department_staff(self):
         return self.role == 'DEPARTMENT_STAFF'
+    
+    @property
+    def is_super_admin(self):
+        """Check if user is a Super Admin (ADMIN role + is_superuser)"""
+        return self.role == 'ADMIN' and self.is_superuser
+    
+    @property
+    def is_department_admin(self):
+        """Check if user is a Department Admin (ADMIN role without is_superuser)"""
+        return self.role == 'ADMIN' and not self.is_superuser
+    
+    @property
+    def is_bmc_officer(self):
+        """Check if user is a BMC Officer (DEPARTMENT_STAFF role)"""
+        return self.role == 'DEPARTMENT_STAFF'
+    
+    @property
+    def admin_tier(self):
+        """
+        Return the admin tier:
+        - 'super_admin': Full system access
+        - 'department_admin': Department-level access
+        - 'bmc_officer': Ward-level access
+        - 'citizen': Personal access only
+        """
+        if self.is_super_admin:
+            return 'super_admin'
+        elif self.is_department_admin:
+            return 'department_admin'
+        elif self.is_bmc_officer:
+            return 'bmc_officer'
+        return 'citizen'
 
 
 class Officer(models.Model):

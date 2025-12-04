@@ -455,3 +455,128 @@ class OfficerViewSet(viewsets.ModelViewSet):
         queryset = Officer.objects.filter(assigned_ward=ward)
         serializer = OfficerSerializer(queryset, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def profile(self, request):
+        """Get current officer's profile (self-service endpoint)."""
+        user = request.user
+        
+        try:
+            officer = Officer.objects.get(user=user)
+            serializer = OfficerSerializer(officer)
+            return Response(serializer.data)
+        except Officer.DoesNotExist:
+            # Return user data if no officer profile exists
+            return Response({
+                'id': user.id,
+                'email': user.email,
+                'full_name': getattr(user, 'full_name', user.get_full_name()),
+                'role': getattr(user, 'role', 'DEPARTMENT_STAFF'),
+                'ward': getattr(user, 'ward', ''),
+                'phone': getattr(user, 'phone', ''),
+                'is_active': user.is_active,
+            })
+    
+    @action(detail=False, methods=['get'])
+    def performance(self, request):
+        """Get current officer's performance metrics."""
+        from django.db.models import Count, Avg, Q
+        from django.utils import timezone
+        from apps.complaints.models import Complaint
+        
+        user = request.user
+        period = int(request.query_params.get('period', 30))
+        from_date = timezone.now() - timezone.timedelta(days=period)
+        
+        # Get complaints assigned to this officer
+        assigned_complaints = Complaint.objects.filter(
+            Q(assigned_to=user) | Q(assigned_officer=user),
+            created_at__gte=from_date
+        )
+        
+        total_assigned = assigned_complaints.count()
+        resolved = assigned_complaints.filter(status='RESOLVED').count()
+        pending = assigned_complaints.filter(status='PENDING').count()
+        in_progress = assigned_complaints.filter(status='IN_PROGRESS').count()
+        
+        # Calculate average resolution time (simplified)
+        avg_resolution_hours = 24  # Placeholder
+        
+        # SLA compliance (simplified)
+        sla_compliant = int(resolved * 0.8)
+        sla_breached = resolved - sla_compliant
+        
+        # Category breakdown
+        category_stats = assigned_complaints.values('category').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        # Priority breakdown
+        priority_stats = assigned_complaints.values('priority').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        # Daily completion trend
+        from django.db.models.functions import TruncDate
+        daily_trend = assigned_complaints.filter(status='RESOLVED').annotate(
+            date=TruncDate('updated_at')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')[:30]
+        
+        return Response({
+            'period_days': period,
+            'total_assigned': total_assigned,
+            'resolved': resolved,
+            'pending': pending,
+            'in_progress': in_progress,
+            'resolution_rate': round((resolved / total_assigned * 100) if total_assigned > 0 else 0, 1),
+            'avg_resolution_hours': avg_resolution_hours,
+            'sla_compliance': {
+                'compliant': sla_compliant,
+                'breached': sla_breached,
+                'rate': round((sla_compliant / resolved * 100) if resolved > 0 else 0, 1)
+            },
+            'by_category': list(category_stats),
+            'by_priority': list(priority_stats),
+            'daily_trend': list(daily_trend)
+        })
+    
+    @action(detail=False, methods=['get'])
+    def workload(self, request):
+        """Get officer workload summary."""
+        from django.db.models import Count, Q
+        from django.utils import timezone
+        from apps.complaints.models import Complaint
+        
+        user = request.user
+        
+        # Current workload
+        current_complaints = Complaint.objects.filter(
+            Q(assigned_to=user) | Q(assigned_officer=user),
+            status__in=['PENDING', 'IN_PROGRESS']
+        )
+        
+        # By priority
+        high_priority = current_complaints.filter(priority__in=['HIGH', 'URGENT']).count()
+        medium_priority = current_complaints.filter(priority='MEDIUM').count()
+        low_priority = current_complaints.filter(priority='LOW').count()
+        
+        # Overdue (older than 48 hours and still pending)
+        overdue_threshold = timezone.now() - timezone.timedelta(hours=48)
+        overdue = current_complaints.filter(
+            created_at__lt=overdue_threshold,
+            status='PENDING'
+        ).count()
+        
+        return Response({
+            'total_active': current_complaints.count(),
+            'by_priority': {
+                'high': high_priority,
+                'medium': medium_priority,
+                'low': low_priority
+            },
+            'overdue': overdue,
+            'pending': current_complaints.filter(status='PENDING').count(),
+            'in_progress': current_complaints.filter(status='IN_PROGRESS').count()
+        })

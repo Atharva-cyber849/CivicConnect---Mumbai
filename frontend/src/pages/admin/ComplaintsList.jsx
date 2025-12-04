@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
+import { isSuperAdmin, isDepartmentAdmin, isOfficer } from '../../utils/roleBasedAccess';
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -21,9 +21,9 @@ const ComplaintsList = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Role-based access control
+  // Role-based access control - 3-tier admin hierarchy
   const userIsSuperAdmin = isSuperAdmin(user);
-  const userIsAdmin = isAdmin(user);
+  const userIsDepartmentAdmin = isDepartmentAdmin(user);
   const userIsOfficer = isOfficer(user);
   
   const [filters, setFilters] = useState({
@@ -48,13 +48,13 @@ const ComplaintsList = () => {
       baseFilters.ward = user.assigned_ward;
     }
     
-    // Admins can only see complaints from their department
-    if (userIsAdmin && user?.department) {
+    // Department Admins can only see complaints from their department
+    if (userIsDepartmentAdmin && user?.department) {
       baseFilters.department = user.department;
     }
     
     return baseFilters;
-  }, [filters, userIsOfficer, userIsAdmin, user?.assigned_ward, user?.department]);
+  }, [filters, userIsOfficer, userIsDepartmentAdmin, user?.assigned_ward, user?.department]);
 
   // Fetch complaints with filters
   const { data, isLoading, error } = useQuery({
@@ -65,7 +65,7 @@ const ComplaintsList = () => {
       limit: pagination.limit
     }),
     keepPreviousData: true,
-    enabled: userIsSuperAdmin || userIsAdmin || userIsOfficer
+    enabled: userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer
   });
 
   // Update complaint status mutation

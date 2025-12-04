@@ -38,33 +38,51 @@ const AdminPortal = () => {
     {
       id: 'super-admin',
       title: 'Super Administrator',
-      description: 'Complete system access and administrative control',
+      description: 'Full system access with city-wide administrative control over all departments and wards',
       icon: Shield,
       color: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-700',
-      responsibilities: ['System administration', 'Department & ward management', 'User approvals'],
+      responsibilities: [
+        'City-wide complaint overview & analytics',
+        'Create & manage Department Admins',
+        'Zone & ward management across Mumbai',
+        'System settings & configuration',
+        'Approve registration requests'
+      ],
       loginPath: '/admin/auth/login?role=super-admin',
       superAdminOnly: true
     },
     {
-      id: 'officer',
-      title: 'Ward Officer',
-      description: 'Manage complaints within your ward boundaries',
-      icon: MapPin,
-      color: 'bg-blue-500',
-      hoverColor: 'hover:bg-blue-600',
-      responsibilities: ['Ward-level complaint resolution', 'Field verification', 'Status updates'],
-      loginPath: '/admin/auth/login?role=officer'
-    },
-    {
       id: 'admin',
       title: 'Department Admin',
-      description: 'Oversee departmental operations and officer management',
+      description: 'Manage your department operations, officers, and department-specific complaints',
       icon: Building,
       color: 'bg-green-500',
       hoverColor: 'hover:bg-green-600',
-      responsibilities: ['Department oversight', 'Officer supervision', 'Resource allocation'],
+      responsibilities: [
+        'Department complaint management',
+        'Supervise department BMC officers',
+        'Department-level analytics & reports',
+        'Assign complaints to officers',
+        'Monitor department performance'
+      ],
       loginPath: '/admin/auth/login?role=admin'
+    },
+    {
+      id: 'officer',
+      title: 'BMC Officer',
+      description: 'Handle and resolve complaints within your assigned ward boundaries',
+      icon: MapPin,
+      color: 'bg-blue-500',
+      hoverColor: 'hover:bg-blue-600',
+      responsibilities: [
+        'View assigned ward complaints',
+        'Update complaint status & resolution',
+        'Field verification & documentation',
+        'Upload resolution photos',
+        'Track personal performance'
+      ],
+      loginPath: '/admin/auth/login?role=officer'
     }
   ];
 
@@ -178,20 +196,20 @@ const AdminPortal = () => {
               </div>
               <div className="ml-3">
                 <h4 className="text-lg font-medium text-blue-900 mb-2">
-                  Admin Registration Process
+                  Admin Hierarchy & Registration
                 </h4>
                 <div className="text-sm text-blue-800 space-y-2">
                   <p>
-                    • <strong>New registrations require approval</strong> by a Super Administrator
+                    • <strong>Super Admin:</strong> Full system access - can create Department Admins and manage all city-wide operations
                   </p>
                   <p>
-                    • You will receive email confirmation once your request is reviewed
+                    • <strong>Department Admin:</strong> Department-level access - can manage officers within their department only
                   </p>
                   <p>
-                    • Super Admin accounts can only be created by existing Super Administrators
+                    • <strong>BMC Officer:</strong> Ward-level access - can only view and resolve complaints in their assigned ward
                   </p>
-                  <p>
-                    • For urgent access requests, contact: admin@snapandreport.mumbai.gov.in
+                  <p className="pt-2 border-t border-blue-200 mt-2">
+                    📝 New registrations require Super Admin approval. For urgent access: admin@snapandreport.mumbai.gov.in
                   </p>
                 </div>
               </div>
@@ -278,13 +296,6 @@ const AdminPortal = () => {
             <h4 className="text-lg font-bold text-gray-900 mb-4">Quick Links</h4>
             <div className="space-y-3">
               <Link 
-                to="/track"
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Track Complaint Status (Public)
-              </Link>
-              <Link 
                 to="/admin/documentation"
                 className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
               >
@@ -329,9 +340,6 @@ const AdminPortal = () => {
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
               <Building className="h-6 w-6" />
               <span className="font-medium">Mumbai Municipal Corporation</span>
-            </div>
-            <div className="text-sm text-gray-400">
-              © 2024 BMC. All rights reserved. | Powered by Snap & Report
             </div>
           </div>
         </div>

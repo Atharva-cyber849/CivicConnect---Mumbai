@@ -43,13 +43,14 @@ const AdminLogin = () => {
       if (result.success) {
         const { user } = result
         // Additional role validation based on roleParam
+        // Backend returns 'role' field with values: 'ADMIN', 'DEPARTMENT_STAFF', 'CITIZEN'
         if (roleParam === 'super-admin' && !user.is_superuser) {
           throw new Error('Access Denied: You do not have Super Admin privileges')
         }
-        if (roleParam === 'admin' && !user.is_department_admin && !user.is_superuser) {
+        if (roleParam === 'admin' && user.role !== 'ADMIN' && !user.is_superuser) {
           throw new Error('Access Denied: You do not have Department Admin privileges')
         }
-        if (roleParam === 'officer' && !user.is_ward_officer && !user.is_superuser) {
+        if (roleParam === 'officer' && user.role !== 'DEPARTMENT_STAFF' && !user.is_superuser) {
           throw new Error('Access Denied: You do not have Ward Officer privileges')
         }
         toast.success('Login successful! Redirecting to admin dashboard...')
@@ -93,7 +94,7 @@ const AdminLogin = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="card w-full max-w-md bg-white shadow-lg rounded-lg p-8">
         {/* Header with role context */}
         <div className="text-center mb-8">

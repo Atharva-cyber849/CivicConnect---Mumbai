@@ -37,7 +37,7 @@ const AuthLayout = ({ children }) => {
       <footer className="bg-white border-t py-6">
         <div className="container mx-auto px-6 text-center">
           <p className="text-sm text-gray-500">
-            © 2025 Mumbai Municipal Corporation. All rights reserved.
+            Mumbai Municipal Corporation
           </p>
         </div>
       </footer>

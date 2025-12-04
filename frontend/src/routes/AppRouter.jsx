@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
-import ErrorBoundary from '../components/common/ErrorBoundary';
+import ErrorBoundary from '../components/Common/ErrorBoundary';
 import { useAuth } from '../context/AuthContext';
 import { USER_ROLES } from '../config/constants';
 
@@ -14,7 +14,6 @@ import CitizenLayout from '../components/Layout/CitizenLayout';
 import LandingPage from '../pages/citizen/LandingPage';
 import Login from '../pages/citizen/Login';
 import Register from '../pages/citizen/Register';
-import TrackComplaint from '../pages/citizen/TrackComplaint';
 
 // Citizen Dashboard Pages
 import CitizenDashboard from '../pages/citizen/Dashboard';
@@ -33,13 +32,23 @@ import AdminDashboard from '../pages/admin/Dashboard';
 import ComplaintsList from '../pages/admin/ComplaintsList';
 import ComplaintDetails from '../pages/admin/ComplaintDetails';
 import AdminMapView from '../pages/admin/MapView';
+import OfficerMapPage from '../pages/admin/OfficerMap';
+import MumbaiBMCAnalytics from '../pages/admin/MumbaiBMCAnalytics';
+import SLADashboard from '../pages/admin/SLADashboard';
 import Reports from '../pages/admin/Reports';
 import OfficerManagement from '../pages/admin/OfficerManagement';
 import OfficerDetails from '../pages/admin/OfficerDetails';
 import Settings from '../pages/admin/Settings';
+import AdminProfile from '../pages/admin/Profile';
 import AdminRegister from '../pages/admin/AdminRegister';
 import AdminRegistrationRequests from '../components/admin/AdminRegistrationRequests';
 import CreateSuperAdmin from '../components/admin/CreateSuperAdmin';
+
+// Mumbai BMC Specific Pages
+import BMCWardDashboard from '../pages/admin/BMCWardDashboard';
+import BMCZoneManagement from '../pages/admin/BMCZoneManagement';
+import MumbaiWardServices from '../pages/citizen/MumbaiWardServices';
+import BMCOfficerDashboard from '../pages/officer/BMCOfficerDashboard';
 
 // Role-based route protection component
 const RoleBasedRoute = ({ children, requiredRoles = [] }) => {
@@ -138,7 +147,6 @@ const AppRouter = () => {
         {/* ===== PUBLIC ROUTES ===== */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<LandingPage />} />
-          <Route path="track" element={<TrackComplaint />} />
         </Route>
 
         {/* ===== CITIZEN AUTH ROUTES ===== */}
@@ -166,14 +174,32 @@ const AppRouter = () => {
           <Route path="complaints" element={<ComplaintsList />} />
           <Route path="complaints/:id" element={<ComplaintDetails />} />
           <Route path="map" element={<AdminMapView />} />
+          <Route path="officer-map" element={<OfficerMapPage />} />
+          <Route path="analytics" element={<MumbaiBMCAnalytics />} />
+          <Route path="sla-dashboard" element={<SLADashboard />} />
           <Route path="reports" element={<Reports />} />
           <Route path="officers" element={<OfficerManagement />} />
           <Route path="officers/:id" element={<OfficerDetails />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<AdminProfile />} />
           <Route path="register" element={<AdminRegister />} />
+          <Route path="create-admin" element={<AdminRegister />} />
           <Route path="self-register" element={<AdminSelfRegister />} />
           <Route path="registration-requests" element={<AdminRegistrationRequests />} />
           <Route path="create-super-admin" element={<CreateSuperAdmin />} />
+          
+          {/* Mumbai BMC Specific Routes */}
+          <Route path="bmc-ward-dashboard" element={<BMCWardDashboard />} />
+          <Route path="bmc-zone-management" element={<BMCZoneManagement />} />
+        </Route>
+
+        {/* ===== PROTECTED OFFICER ROUTES ===== */}
+        <Route path="/officer" element={
+          <RoleBasedRoute requiredRoles={[USER_ROLES.DEPARTMENT_STAFF]}>
+            <AdminLayout />
+          </RoleBasedRoute>
+        }>
+          <Route path="dashboard" element={<BMCOfficerDashboard />} />
         </Route>
 
         {/* ===== PROTECTED CITIZEN ROUTES ===== */}
@@ -187,6 +213,9 @@ const AppRouter = () => {
           <Route path="map" element={<CitizenMapView />} />
           <Route path="notifications" element={<NotificationsCenter />} />
           <Route path="profile" element={<Profile />} />
+          
+          {/* Mumbai Ward Services for Citizens */}
+          <Route path="mumbai-ward-services" element={<MumbaiWardServices />} />
         </Route>
 
         {/* ===== ERROR PAGES ===== */}

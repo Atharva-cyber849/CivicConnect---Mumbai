@@ -33,22 +33,11 @@
       }
     </style>
     
-    <!-- PWA Meta Tags -->
+    <!-- Theme Color -->
     <meta name="theme-color" content="#1f2937" />
-    <meta name="background-color" content="#f9fafb" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="CivicConnect" />
-    <meta name="mobile-web-app-capable" content="yes" />
     
-    <!-- App Manifest -->
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-    <link rel="shortcut icon" href="/icons/icon-192x192.png" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     
     <!-- SEO Meta Tags -->
     <title>Snap & Report - Mumbai - BMC Complaint Management System</title>
@@ -79,20 +68,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    
-    <!-- Register Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
-              console.log('ServiceWorker registration successful');
-            })
-            .catch(function(error) {
-              console.log('ServiceWorker registration failed: ', error);
-            });
-        });
-      }
-    </script>
   </body>
 </html>

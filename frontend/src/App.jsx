@@ -3,25 +3,18 @@ import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 
-// Context Providers - Re-enabling all features
+// Context Providers
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { LanguageProvider } from './context/LanguageContext'
 
-// Services - Re-enabling PWA with dynamic manifest system
-import pwaService from './services/pwaService'
-import manifestManager from './services/manifestManager'
-
 // Route Components
 import AppRouter from './routes/AppRouter'
 import SessionTimeoutModal from './components/Auth/SessionTimeoutModal'
 
-// Components - Re-enabling PWA components
+// Components
 import LoadingSpinner from './components/Layout/LoadingSpinner'
-import PWAInstallPrompt from './components/Layout/PWAInstallPrompt'
-import PWAUpdateNotification from './components/Layout/PWAUpdateNotification'
-import OfflineIndicator from './components/Layout/OfflineIndicator'
 import BottomNavigation from './components/mobile/BottomNavigation'
 
 // Mobile hooks
@@ -52,10 +45,11 @@ function App() {
   const viewportHeight = useViewportHeight();
   const safeAreaInsets = useSafeAreaInsets();
 
+  console.log('===== APP RENDERING =====');
+  console.log('isMobile:', isMobile);
+  console.log('Auth context available');
+
   useEffect(() => {
-    // Temporarily disable manifest manager and PWA service to debug redirect loop
-    console.log('App.jsx loaded - PWA services temporarily disabled for debugging');
-    
     // Set mobile-specific CSS variables
     if (isMobile) {
       document.documentElement.style.setProperty('--mobile-vh', `${viewportHeight}px`);
@@ -75,13 +69,12 @@ function App() {
   )
 
   // Conditionally import React Query DevTools in development
-  const DevTools = process.env.NODE_ENV === 'development' ? 
-    React.lazy(() => import('@tanstack/react-query-devtools').then(module => ({ 
-      default: module.ReactQueryDevtools 
-    }))) : null
+  // Temporarily disabled for performance
+  const DevTools = null;
 
   // Create a wrapper component for auth providers
   const AppContent = () => {
+    console.log('===== APPCONTENT RENDERING =====');
     return (
       <div className={`app min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors ${
         isMobile ? 'mobile-app pb-20' : ''
@@ -90,16 +83,8 @@ function App() {
           <AppRouter />
           <SessionTimeoutModal />
           <Toaster position="top-right" />
-          <PWAInstallPrompt />
-          <PWAUpdateNotification />
-          <OfflineIndicator />
           {isMobile && <BottomNavigation />}
         </Suspense>
-        {process.env.NODE_ENV === 'development' && (
-          <Suspense fallback={null}>
-            <DevTools initialIsOpen={false} position="bottom-right" />
-          </Suspense>
-        )}
       </div>
     );
   };

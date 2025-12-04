@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext' // Re-enabled
-import { GENDER_CHOICES, WARD_CHOICES, LANGUAGE_CHOICES } from '../../config/constants'
+import { useAuth } from '../../context/AuthContext'
 
 const Register = () => {
   const navigate = useNavigate()
-  // Re-enable full authentication context
   const authContext = useAuth()
   const { register: registerUser, loading } = authContext || {}
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword2, setShowPassword2] = useState(false)
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -17,17 +17,9 @@ const Register = () => {
     phone: '',
     password: '',
     password2: '',
-    gender: '',
-    age: '',
-    ward: '',
-    address: '',
-    pincode: '',
-    language_preference: 'EN',
-    profile_picture: null,
-    has_accepted_terms: false,
-    latitude: null,
-    longitude: null,
   })
+
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false)
 
   // Field validation
   const validateField = (name, value) => {
@@ -35,7 +27,6 @@ const Register = () => {
       case 'full_name':
         if (!value.trim()) return 'Name is required'
         if (value.length < 2) return 'Name must be at least 2 characters'
-        if (!/^[a-zA-Z\s]+$/.test(value)) return 'Name should only contain letters'
         if (value.length > 50) return 'Name is too long'
         return ''
       
@@ -53,7 +44,7 @@ const Register = () => {
         if (!value) return 'Password is required'
         if (value.length < 8) return 'Password must be at least 8 characters'
         if (!/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)/.test(value)) {
-          return 'Password must contain number, uppercase, lowercase, and symbol'
+          return 'Must contain number, uppercase, lowercase & symbol'
         }
         return ''
       
@@ -62,63 +53,22 @@ const Register = () => {
         if (value !== formData.password) return 'Passwords do not match'
         return ''
       
-      case 'age':
-        if (value && (value < 18 || value > 120)) return 'Age must be between 18 and 120'
-        return ''
-      
-      case 'pincode':
-        if (value && !/^\d{6}$/.test(value)) return 'Enter valid 6-digit pincode'
-        if (value && !(400001 <= parseInt(value) && parseInt(value) <= 400107)) {
-          return 'Enter valid Mumbai pincode'
-        }
-        return ''
-      
-      case 'has_accepted_terms':
-        if (!value) return 'You must accept the terms and conditions'
-        return ''
-      
       default:
         return ''
     }
   }
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target
-    const newValue = type === 'checkbox' ? checked : 
-                    type === 'file' ? files[0] : value
+    const { name, value } = e.target
     
-    setFormData(prev => ({ ...prev, [name]: newValue }))
+    setFormData(prev => ({ ...prev, [name]: value }))
     
     // Validate field
-    const error = validateField(name, newValue)
+    const error = validateField(name, value)
     setErrors(prev => ({
       ...prev,
       [name]: error
     }))
-  }
-
-  // Location detection
-  const detectLocation = () => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
-          setFormData(prev => ({
-            ...prev,
-            latitude,
-            longitude
-          }))
-          // TODO: Add reverse geocoding to get ward and address
-        },
-        (error) => {
-          console.error('Error getting location:', error)
-          setErrors(prev => ({
-            ...prev,
-            location: 'Could not detect location. Please select your ward manually.'
-          }))
-        }
-      )
-    }
   }
 
   const handleSubmit = async (e) => {
@@ -134,13 +84,17 @@ const Register = () => {
         if (error) newErrors[key] = error
       })
       
+      // Check terms acceptance
+      if (!hasAcceptedTerms) {
+        newErrors.terms = 'You must accept the terms and conditions'
+      }
+      
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors)
         setIsSubmitting(false)
         return
       }
 
-      // Re-enable registration functionality
       if (!registerUser) {
         setErrors({ general: 'Registration service unavailable. Please try again later.' })
         setIsSubmitting(false)
@@ -164,279 +118,155 @@ const Register = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen py-12">
-      <div className="card w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold">🏙️ Join Snap & Report Mumbai</h2>
-          <p className="text-gray-600 mt-2">
-            Help us make Mumbai cleaner and smarter by reporting issues in your area.
+    <div className="flex items-center justify-center min-h-screen py-8">
+      <div className="card w-full max-w-md p-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">🏙️ Create Account</h2>
+          <p className="text-gray-600 mt-1 text-sm">
+            Join Snap & Report Mumbai to report civic issues
           </p>
         </div>
+
+        {errors.general && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {errors.general}
+          </div>
+        )}
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">👤 Personal Information</h3>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Full Name *</label>
-              <input
-                type="text"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                className={`input ${errors.full_name ? 'border-red-500' : ''}`}
-                placeholder="Enter your full name"
-                required
-              />
-              {errors.full_name && (
-                <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
-              )}
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Gender</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className="input"
-                >
-                  <option value="">Select gender</option>
-                  {GENDER_CHOICES.map(gender => (
-                    <option key={gender.value} value={gender.value}>
-                      {gender.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Age</label>
-                <input
-                  type="number"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleChange}
-                  className={`input ${errors.age ? 'border-red-500' : ''}`}
-                  placeholder="Enter your age"
-                  min="18"
-                  max="120"
-                />
-                {errors.age && (
-                  <p className="text-red-500 text-sm mt-1">{errors.age}</p>
-                )}
-              </div>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Full Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <input
+              type="text"
+              name="full_name"
+              value={formData.full_name}
+              onChange={handleChange}
+              className={`input w-full ${errors.full_name ? 'border-red-500' : ''}`}
+              placeholder="Enter your full name"
+              autoComplete="name"
+            />
+            {errors.full_name && (
+              <p className="text-red-500 text-xs mt-1">{errors.full_name}</p>
+            )}
           </div>
 
-          {/* Contact Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">📞 Contact Details</h3>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Email *</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`input ${errors.email ? 'border-red-500' : ''}`}
-                placeholder="your.email@example.com"
-                required
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Mobile Number *</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={`input ${errors.phone ? 'border-red-500' : ''}`}
-                placeholder="10-digit mobile number"
-                required
-              />
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
-            </div>
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`input w-full ${errors.email ? 'border-red-500' : ''}`}
+              placeholder="your.email@example.com"
+              autoComplete="email"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
-          {/* Account Security */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">🔒 Account Security</h3>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Password *</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`input ${errors.password ? 'border-red-500' : ''}`}
-                  placeholder="Min. 8 characters"
-                  required
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Confirm Password *</label>
-                <input
-                  type="password"
-                  name="password2"
-                  value={formData.password2}
-                  onChange={handleChange}
-                  className={`input ${errors.password2 ? 'border-red-500' : ''}`}
-                  placeholder="Re-enter password"
-                  required
-                />
-                {errors.password2 && (
-                  <p className="text-red-500 text-sm mt-1">{errors.password2}</p>
-                )}
-              </div>
-            </div>
+          {/* Phone */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={`input w-full ${errors.phone ? 'border-red-500' : ''}`}
+              placeholder="10-digit mobile number"
+              autoComplete="tel"
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            )}
           </div>
 
-          {/* Location Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">📍 Location Details</h3>
-            
-            <div className="flex items-center gap-4 mb-4">
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`input w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                placeholder="Min. 8 characters"
+                autoComplete="new-password"
+              />
               <button
                 type="button"
-                onClick={detectLocation}
-                className="btn btn-secondary"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
-                📍 Detect My Location
+                {showPassword ? '🙈' : '👁️'}
               </button>
-              {errors.location && (
-                <p className="text-red-500 text-sm">{errors.location}</p>
-              )}
             </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Ward</label>
-                <select
-                  name="ward"
-                  value={formData.ward}
-                  onChange={handleChange}
-                  className="input"
-                >
-                  <option value="">Select your ward</option>
-                  {WARD_CHOICES.map(ward => (
-                    <option key={ward.value} value={ward.value}>
-                      {ward.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Pincode</label>
-                <input
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleChange}
-                  className={`input ${errors.pincode ? 'border-red-500' : ''}`}
-                  placeholder="Mumbai pincode"
-                />
-                {errors.pincode && (
-                  <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Address</label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="input min-h-[80px]"
-                placeholder="Enter your detailed address"
-              />
-            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
           </div>
 
-          {/* Preferences */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">⚙️ Preferences</h3>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Preferred Language</label>
-                <select
-                  name="language_preference"
-                  value={formData.language_preference}
-                  onChange={handleChange}
-                  className="input"
-                >
-                  {LANGUAGE_CHOICES.map(language => (
-                    <option key={language.value} value={language.value}>
-                      {language.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Profile Picture</label>
-                <input
-                  type="file"
-                  name="profile_picture"
-                  onChange={handleChange}
-                  className="input py-1"
-                  accept="image/*"
-                />
-              </div>
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <div className="relative">
+              <input
+                type={showPassword2 ? 'text' : 'password'}
+                name="password2"
+                value={formData.password2}
+                onChange={handleChange}
+                className={`input w-full pr-10 ${errors.password2 ? 'border-red-500' : ''}`}
+                placeholder="Re-enter password"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword2(!showPassword2)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword2 ? '🙈' : '👁️'}
+              </button>
             </div>
+            {errors.password2 && (
+              <p className="text-red-500 text-xs mt-1">{errors.password2}</p>
+            )}
           </div>
 
           {/* Terms & Conditions */}
-          <div className="space-y-4">
-            <div className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                name="has_accepted_terms"
-                checked={formData.has_accepted_terms}
-                onChange={handleChange}
-                className="mt-1"
-              />
-              <label className="text-sm">
-                I agree to the Terms of Service and Privacy Policy. I understand that my data
-                will be used to improve city services.
-              </label>
-            </div>
-            {errors.has_accepted_terms && (
-              <p className="text-red-500 text-sm">{errors.has_accepted_terms}</p>
-            )}
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={hasAcceptedTerms}
+              onChange={(e) => setHasAcceptedTerms(e.target.checked)}
+              className="mt-1"
+            />
+            <label htmlFor="terms" className="text-sm text-gray-600">
+              I agree to the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+            </label>
           </div>
+          {errors.terms && (
+            <p className="text-red-500 text-xs">{errors.terms}</p>
+          )}
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn btn-primary w-full py-3"
+            className="btn btn-primary w-full py-3 mt-2"
           >
-            {isSubmitting ? 'Creating your account...' : '🚀 Create Account'}
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
-        <p className="text-center mt-6 text-gray-600">
+        <p className="text-center mt-6 text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/auth/login" className="text-primary-600 font-medium">
-            Login here
+          <Link to="/auth/login" className="text-blue-600 font-medium hover:underline">
+            Sign in
           </Link>
         </p>
       </div>

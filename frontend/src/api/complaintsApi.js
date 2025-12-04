@@ -77,12 +77,6 @@ export const complaintsApi = {
     return response.data;
   },
 
-  // Get complaints by ward
-  getComplaintsByWard: async (wardId) => {
-    const response = await axiosPrivate.get(`/complaints/ward/${wardId}/`);
-    return response.data;
-  },
-
   // Get complaints by location (for map view)
   getComplaintsByLocation: async (bounds) => {
     const response = await axiosPrivate.get('/complaints/map/', { params: bounds });
@@ -103,8 +97,24 @@ export const complaintsApi = {
 
   // Analytics endpoints (admin only)
   getAnalytics: {
-    dashboard: async () => {
-      const response = await axiosPrivate.get('/complaints/analytics/dashboard/');
+    dashboard: async (days = 30) => {
+      const response = await axiosPrivate.get('/complaints/analytics/dashboard-summary/', { params: { days } });
+      return response.data;
+    },
+    wardHeatmap: async (days = 30) => {
+      const response = await axiosPrivate.get('/complaints/analytics/ward-heatmap/', { params: { days } });
+      return response.data;
+    },
+    responseTimes: async (days = 30) => {
+      const response = await axiosPrivate.get('/complaints/analytics/response-times/', { params: { days } });
+      return response.data;
+    },
+    departmentComparison: async (days = 30) => {
+      const response = await axiosPrivate.get('/complaints/analytics/department-comparison/', { params: { days } });
+      return response.data;
+    },
+    complaintTrends: async (days = 30) => {
+      const response = await axiosPrivate.get('/complaints/analytics/complaint-trends/', { params: { days } });
       return response.data;
     },
     departments: async () => {
@@ -198,6 +208,54 @@ export const complaintsApi = {
   // Refer complaint to another department
   referToDepartment: async (id, departmentData) => {
     const response = await axiosPrivate.patch(`/complaints/${id}/refer/`, departmentData);
+    return response.data;
+  },
+
+  // ===== Mumbai BMC Ward-specific API Endpoints =====
+  
+  // Get complaints for a specific ward (citizen-facing)
+  getComplaintsByWard: async (wardCode, filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/', {
+      params: {
+        ward: wardCode,
+        limit: 50,
+        ...filters
+      }
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get ward service statistics
+  getWardServiceStats: async (wardCode) => {
+    const response = await axiosPrivate.get('/complaints/analytics/', {
+      params: { ward: wardCode }
+    });
+    return response.data;
+  },
+
+  // Get complaints by zone
+  getComplaintsByZone: async (zone, filters = {}) => {
+    const response = await axiosPrivate.get('/complaints/', {
+      params: {
+        zone,
+        limit: 100,
+        ...filters
+      }
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get ward-wise complaint counts
+  getWardComplaintCounts: async () => {
+    const response = await axiosPrivate.get('/complaints/analytics/ward-stats/');
+    return response.data;
+  },
+
+  // Get SLA performance for ward
+  getWardSLAPerformance: async (wardCode, period = '30') => {
+    const response = await axiosPrivate.get('/complaints/analytics/sla/', {
+      params: { ward: wardCode, period }
+    });
     return response.data;
   }
 };

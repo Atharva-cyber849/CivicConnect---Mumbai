@@ -12,7 +12,7 @@ class ComplaintAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'category', 'status', 'priority', 'user', 'department', 'created_at')
     list_filter = ('status', 'category', 'priority', 'department', 'created_at')
     search_fields = ('title', 'description', 'address', 'user__email')
-    readonly_fields = ('created_at', 'updated_at', 'resolved_at', 'ai_category', 'ai_confidence_score')
+    readonly_fields = ('created_at', 'updated_at', 'resolved_at')
     
     fieldsets = (
         ('Basic Information', {
@@ -26,9 +26,6 @@ class ComplaintAdmin(admin.ModelAdmin):
         }),
         ('Location', {
             'fields': ('address', 'city', 'state', 'zip_code', 'latitude', 'longitude')
-        }),
-        ('AI Classification', {
-            'fields': ('ai_category', 'ai_confidence_score')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at', 'resolved_at')

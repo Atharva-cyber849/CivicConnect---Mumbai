@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import { 
   MapPinIcon,
   FunnelIcon,
@@ -19,7 +19,7 @@ import wardsData from '../../config/wardsData.json';
 import { adminApi } from '../../api/adminApi';
 import { COMPLAINT_CATEGORIES, DEPARTMENTS } from '../../config/constants';
 import { useAuth } from '../../context/AuthContext';
-import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
+import { isSuperAdmin, isDepartmentAdmin, isOfficer } from '../../utils/roleBasedAccess';
 
 // Fix for Leaflet icons in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -69,10 +69,15 @@ const createCustomIcon = (status) => {
 
 const MapView = () => {
   const { user } = useAuth();
+  const [isClient, setIsClient] = useState(false);
   
-  // Role-based access control
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // Role-based access control - 3-tier admin hierarchy
   const userIsSuperAdmin = isSuperAdmin(user);
-  const userIsAdmin = isAdmin(user);
+  const userIsDepartmentAdmin = isDepartmentAdmin(user);
   const userIsOfficer = isOfficer(user);
   
   // Map state
@@ -97,20 +102,20 @@ const MapView = () => {
       baseFilters.ward = user.assigned_ward;
     }
     
-    // Admins can only see complaints from their department
-    if (userIsAdmin && user?.department) {
+    // Department Admins can only see complaints from their department
+    if (userIsDepartmentAdmin && user?.department) {
       baseFilters.department = user.department;
     }
     
     return baseFilters;
-  }, [mapFilters, userIsOfficer, userIsAdmin, user?.assigned_ward, user?.department]);
+  }, [mapFilters, userIsOfficer, userIsDepartmentAdmin, user?.assigned_ward, user?.department]);
 
   // Fetch complaints for map
   const { data: mapComplaints = [], isLoading } = useQuery({
     queryKey: ['map-complaints', roleBasedFilters],
     queryFn: () => adminApi.getComplaintsForMap ? adminApi.getComplaintsForMap(roleBasedFilters) : Promise.resolve([]),
     refetchInterval: 60000, // Refresh every minute
-    enabled: userIsSuperAdmin || userIsAdmin || userIsOfficer
+    enabled: userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer
   });
 
   // Mock data for development
@@ -355,13 +360,13 @@ const MapView = () => {
       {/* Map Container */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="h-[600px] w-full">
-          {isLoading ? (
+          {!isClient || isLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0078D7]"></div>
             </div>
-          ) : (
+          ) : mapCenter && mapCenter.length === 2 ? (
             <MapContainer
-              center={mapCenter}
+              center={[mapCenter[0], mapCenter[1]]}
               zoom={mapZoom}
               style={{ height: '100%', width: '100%' }}
               className="rounded-lg"
@@ -372,7 +377,7 @@ const MapView = () => {
               />
               
               {/* Ward Boundaries */}
-              {showWardBoundaries && (
+              {showWardBoundaries && wardsData && wardsData.features && (
                 <GeoJSON
                   data={wardsData}
                   style={wardStyle}
@@ -388,72 +393,85 @@ const MapView = () => {
               )}
 
               {/* Complaint Markers */}
-              {filteredComplaints.map((complaint) => (
-                <Marker
-                  key={complaint.id}
-                  position={[complaint.latitude, complaint.longitude]}
-                  icon={createCustomIcon(complaint.status)}
-                >
-                  <Popup className="custom-popup">
-                    <div className="p-2 min-w-[280px]">
-                      {/* Header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-bold text-gray-900 text-sm">
-                          Complaint #{complaint.id}
-                        </h3>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
-                          {complaint.status}
-                        </span>
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-700">Title:</span>
-                          <p className="text-gray-900">{complaint.title}</p>
+              {filteredComplaints.map((complaint) => {
+                // Validate latitude and longitude exist
+                if (!complaint.latitude || !complaint.longitude) {
+                  return null;
+                }
+                return (
+                  <Marker
+                    key={complaint.id}
+                    position={[complaint.latitude, complaint.longitude]}
+                    icon={createCustomIcon(complaint.status)}
+                  >
+                    <Popup className="custom-popup">
+                      <div className="p-2 min-w-[280px]">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-bold text-gray-900 text-sm">
+                            Complaint #{complaint.id}
+                          </h3>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
+                            {complaint.status}
+                          </span>
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-2">
+
+                        {/* Details */}
+                        <div className="space-y-2 text-sm">
                           <div>
-                            <span className="font-medium text-gray-700">Category:</span>
-                            <p className="text-gray-900">{complaint.category}</p>
+                            <span className="font-medium text-gray-700">Title:</span>
+                            <p className="text-gray-900">{complaint.title}</p>
                           </div>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="font-medium text-gray-700">Category:</span>
+                              <p className="text-gray-900">{complaint.category}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Ward:</span>
+                              <p className="text-gray-900">{complaint.ward}</p>
+                            </div>
+                          </div>
+
                           <div>
-                            <span className="font-medium text-gray-700">Ward:</span>
-                            <p className="text-gray-900">{complaint.ward}</p>
+                            <span className="font-medium text-gray-700">Department:</span>
+                            <p className="text-gray-900">
+                              {DEPARTMENTS.find(d => d.id === complaint.department)?.name || complaint.department}
+                            </p>
+                          </div>
+
+                          <div>
+                            <span className="font-medium text-gray-700">Date:</span>
+                            <p className="text-gray-900">
+                              {new Date(complaint.created_at).toLocaleDateString('en-IN')}
+                            </p>
                           </div>
                         </div>
 
-                        <div>
-                          <span className="font-medium text-gray-700">Department:</span>
-                          <p className="text-gray-900">
-                            {DEPARTMENTS.find(d => d.id === complaint.department)?.name || complaint.department}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="font-medium text-gray-700">Date:</span>
-                          <p className="text-gray-900">
-                            {new Date(complaint.created_at).toLocaleDateString('en-IN')}
-                          </p>
+                        {/* Actions */}
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <button
+                            onClick={() => window.open(`/admin/complaints/${complaint.id}`, '_blank')}
+                            className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7]"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            View Details
+                          </button>
                         </div>
                       </div>
-
-                      {/* Actions */}
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <button
-                          onClick={() => window.open(`/admin/complaints/${complaint.id}`, '_blank')}
-                          className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7]"
-                        >
-                          <EyeIcon className="h-4 w-4 mr-1" />
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+                    </Popup>
+                  </Marker>
+                );
+              })}
             </MapContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-50">
+              <div className="text-center">
+                <MapPinIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">Map data is loading or unavailable</p>
+              </div>
+            </div>
           )}
         </div>
       </div>

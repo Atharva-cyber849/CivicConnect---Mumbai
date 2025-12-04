@@ -61,8 +61,8 @@ const Login = () => {
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="card w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="card w-full max-w-md bg-white shadow-lg rounded-lg p-8">
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold">Citizen Login</h2>

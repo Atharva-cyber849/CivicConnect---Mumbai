@@ -40,8 +40,8 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { useAuth } from '../../context/AuthContext';
 import { DEPARTMENTS, WARD_CHOICES, USER_ROLES } from '../../config/constants';
-import { isSuperAdmin, isAdmin, isOfficer, canExportReports } from '../../utils/roleBasedAccess';
-import { ExclamationIcon } from '@heroicons/react/24/solid';
+import { isSuperAdmin, isDepartmentAdmin, isOfficer, canExportReports } from '../../utils/roleBasedAccess';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 const Reports = () => {
   const { user } = useAuth();
@@ -49,13 +49,13 @@ const Reports = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedWard, setSelectedWard] = useState('');
 
-  // Role-based access control
+  // Role-based access control - 3-tier admin hierarchy
   const userIsOfficer = isOfficer(user);
-  const userIsAdmin = isAdmin(user);
+  const userIsDepartmentAdmin = isDepartmentAdmin(user);
   const userIsSuperAdmin = isSuperAdmin(user);
 
   // Check if user can access reports
-  const canAccessReports = userIsSuperAdmin || userIsAdmin || userIsOfficer;
+  const canAccessReports = userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer;
 
   // Apply role-based automatic filters
   useEffect(() => {
@@ -64,13 +64,13 @@ const Reports = () => {
       setSelectedWard(user.assigned_ward);
       setSelectedDepartment(''); // Clear department for officers
     }
-    // For admins: Auto-restrict to their department
-    else if (userIsAdmin && user?.department) {
+    // For department admins: Auto-restrict to their department
+    else if (userIsDepartmentAdmin && user?.department) {
       setSelectedDepartment(user.department);
-      setSelectedWard(''); // Clear ward for admins
+      setSelectedWard(''); // Clear ward for department admins
     }
     // Super admins can see everything - no pre-fill
-  }, [userIsOfficer, userIsAdmin, user?.assigned_ward, user?.department]);
+  }, [userIsOfficer, userIsDepartmentAdmin, user?.assigned_ward, user?.department]);
 
   // Fetch analytics data
   const { data: analyticsData, isLoading } = useQuery({
@@ -273,7 +273,7 @@ const Reports = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center max-w-md">
-          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-4">
             You don't have permission to access the Reports & Analytics page.
@@ -331,7 +331,7 @@ const Reports = () => {
           </div>
         </div>
         
-        <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-3' : userIsAdmin ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-3' : userIsDepartmentAdmin ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
             <select
@@ -346,17 +346,17 @@ const Reports = () => {
             </select>
           </div>
 
-          {/* Department filter - visible for Super Admin and Admin */}
-          {(userIsSuperAdmin || userIsAdmin) && (
+          {/* Department filter - visible for Super Admin and Department Admin (locked for Dept Admin) */}
+          {(userIsSuperAdmin || userIsDepartmentAdmin) && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                disabled={userIsAdmin && user?.department}
+                disabled={userIsDepartmentAdmin && user?.department}
                 className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                <option value="">{userIsAdmin && user?.department ? 'Department (Locked)' : 'All Departments'}</option>
+                <option value="">{userIsDepartmentAdmin && user?.department ? 'Department (Locked)' : 'All Departments'}</option>
                 {DEPARTMENTS.map(dept => (
                   <option key={dept.id} value={dept.id}>{dept.name}</option>
                 ))}

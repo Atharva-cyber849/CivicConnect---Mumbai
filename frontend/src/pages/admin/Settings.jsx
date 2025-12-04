@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme, THEMES } from '../../context/ThemeContext';
 import { useLanguage, LANGUAGES } from '../../context/LanguageContext';
-import { isSuperAdmin, isAdmin, isOfficer } from '../../utils/roleBasedAccess';
+import { isSuperAdmin, isDepartmentAdmin, isOfficer } from '../../utils/roleBasedAccess';
 import {
   Cog6ToothIcon,
   ExclamationTriangleIcon,
   BellIcon,
   ShieldCheckIcon,
+  ShieldExclamationIcon,
   BuildingOffice2Icon,
   UserGroupIcon,
   EnvelopeIcon,
@@ -17,9 +18,9 @@ import {
 const Settings = () => {
   const { user } = useAuth();
   
-  // Role-based access control
+  // Role-based access control - 3-tier admin hierarchy
   const userIsSuperAdmin = isSuperAdmin(user);
-  const userIsAdmin = isAdmin(user);
+  const userIsDepartmentAdmin = isDepartmentAdmin(user);
   const userIsOfficer = isOfficer(user);
   
   const { theme, setTheme } = useTheme();
@@ -73,16 +74,26 @@ const Settings = () => {
     }
   };
   
-  // Access denied for officers
-  if (userIsOfficer) {
+  // Access control - Only Super Admin can access system settings
+  // Department Admins and Officers should use Profile page
+  if (!userIsSuperAdmin) {
     return (
       <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
-          <h2 className="mt-4 text-lg font-medium text-gray-900">Access Denied</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Officers cannot access system settings.
+        <div className="text-center max-w-md">
+          <ShieldExclamationIcon className="mx-auto h-16 w-16 text-amber-500" />
+          <h2 className="mt-4 text-xl font-bold text-gray-900">System Settings</h2>
+          <p className="mt-2 text-gray-600">
+            System Settings are only accessible to Super Admins.
           </p>
+          <p className="mt-4 text-sm text-gray-500">
+            Use the <strong>My Profile</strong> page to manage your personal preferences and notifications.
+          </p>
+          <a 
+            href="/admin/profile" 
+            className="mt-6 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to My Profile
+          </a>
         </div>
       </div>
     );
@@ -137,12 +148,12 @@ const Settings = () => {
         </div>
       )}
 
-      {/* Department Admin Settings */}
-      {(userIsSuperAdmin || userIsAdmin) && (
+      {/* Department Settings - Super Admin Only (city-wide) */}
+      {userIsSuperAdmin && (
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center mb-6">
             <BuildingOffice2Icon className="h-6 w-6 text-blue-600 mr-3" />
-            <h2 className="text-xl font-semibold text-gray-900">Department Settings</h2>
+            <h2 className="text-xl font-semibold text-gray-900">All Departments Settings</h2>
           </div>
           
           <div className="space-y-4">
@@ -156,7 +167,7 @@ const Settings = () => {
                 />
                 <span className="ml-3 text-gray-700">Complaint Update Notifications</span>
               </label>
-              <p className="ml-7 text-sm text-gray-500 mt-1">Get notified of new complaints in your department</p>
+              <p className="ml-7 text-sm text-gray-500 mt-1">Get notified of new complaints across all departments</p>
             </div>
             
             <div className="border-t pt-4">
@@ -169,7 +180,7 @@ const Settings = () => {
                 />
                 <span className="ml-3 text-gray-700">SMS Alerts for High Priority Issues</span>
               </label>
-              <p className="ml-7 text-sm text-gray-500 mt-1">Receive SMS for urgent complaints</p>
+              <p className="ml-7 text-sm text-gray-500 mt-1">Receive SMS for urgent complaints city-wide</p>
             </div>
           </div>
         </div>

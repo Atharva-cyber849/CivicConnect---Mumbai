@@ -30,14 +30,6 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link 
-                  to="/track" 
-                  className={`text-sm ${themeClasses.textSecondary} hover:text-blue-600 transition-colors`}
-                >
-                  Track Complaint
-                </Link>
-              </li>
-              <li>
-                <Link 
                   to="/auth/register" 
                   className={`text-sm ${themeClasses.textSecondary} hover:text-blue-600 transition-colors`}
                 >
@@ -73,11 +65,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className={`border-t ${themeClasses.border} mt-8 pt-6 flex flex-col md:flex-row justify-between items-center`}>
-          <p className={`text-sm ${themeClasses.textMuted}`}>
-            © 2025 Municipal Corporation of Greater Mumbai. All rights reserved.
-          </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+        <div className={`border-t ${themeClasses.border} mt-8 pt-6 flex flex-col md:flex-row justify-center items-center`}>
+          <div className="flex space-x-6">
             <a 
               href="#" 
               className={`text-sm ${themeClasses.textMuted} hover:text-blue-600 transition-colors`}

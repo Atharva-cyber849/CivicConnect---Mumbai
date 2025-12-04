@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import ErrorBoundary from '../../components/common/ErrorBoundary';
+import ErrorBoundary from '../../components/Common/ErrorBoundary';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   UserPlusIcon,
@@ -24,7 +24,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { officersApi } from '../../api';
 import { USER_ROLES, DEPARTMENTS } from '../../config/constants';
-import { isSuperAdmin, isAdmin, canManageOfficers } from '../../utils/roleBasedAccess';
+import { isSuperAdmin, isDepartmentAdmin, canManageOfficers } from '../../utils/roleBasedAccess';
 import wardsData from '../../config/wardsData.json';
 
 const OfficerManagement = () => {
@@ -32,10 +32,10 @@ const OfficerManagement = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Role-based access control
+  // Role-based access control - 3-tier admin hierarchy
   const userCanManageOfficers = canManageOfficers(user);
   const userIsSuperAdmin = isSuperAdmin(user);
-  const userIsAdmin = isAdmin(user);
+  const userIsDepartmentAdmin = isDepartmentAdmin(user);
   
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,16 +50,6 @@ const OfficerManagement = () => {
     name: feature.properties.name,
     fullName: feature.properties.full_name
   })).sort((a, b) => a.code.localeCompare(b.code));
-
-  // Determine which officers user can see based on role
-  const getVisibleOfficers = useMemo(() => {
-    if (!officers || !Array.isArray(officers)) return [];
-    
-    if (userIsSuperAdmin) return officers; // Super admin sees all officers
-    if (userIsAdmin) return officers.filter(o => o.department === user?.department); // Admin sees only their department officers
-    
-    return []; // Officers cannot manage officers
-  }, [officers, userIsSuperAdmin, userIsAdmin, user?.department]);
 
   // Fetch officers data with proper error handling
   const { data: officersData, isLoading, isError, error, refetch } = useQuery({
@@ -87,6 +77,16 @@ const OfficerManagement = () => {
     if (!officersData) return [];
     return Array.isArray(officersData) ? officersData : [];
   }, [officersData]);
+
+  // Determine which officers user can see based on role
+  const getVisibleOfficers = useMemo(() => {
+    if (!officers || !Array.isArray(officers)) return [];
+    
+    if (userIsSuperAdmin) return officers; // Super admin sees all officers
+    if (userIsDepartmentAdmin) return officers.filter(o => o.department === user?.department); // Department Admin sees only their department officers
+    
+    return []; // BMC Officers cannot manage officers
+  }, [officers, userIsSuperAdmin, userIsDepartmentAdmin, user?.department]);
 
   // Delete officer mutation
   const deleteOfficerMutation = useMutation({
@@ -264,9 +264,9 @@ const OfficerManagement = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             <UserIcon className="h-8 w-8 mr-3 text-blue-600" />
-            Officer Management
+            BMC Officer Management
           </h1>
-          <p className="text-gray-600">Manage BMC officers and administrators</p>
+          <p className="text-gray-600">Manage BMC ward officers and department administrators across Mumbai</p>
         </div>
         
         {userIsSuperAdmin && (
@@ -275,7 +275,7 @@ const OfficerManagement = () => {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
           >
             <UserPlusIcon className="h-4 w-4 mr-2" />
-            Register New Officer
+            Register BMC Officer
           </Link>
         )}
       </div>
@@ -315,10 +315,10 @@ const OfficerManagement = () => {
             onChange={(e) => setSelectedWard(e.target.value)}
             className="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Wards</option>
+            <option value="">All Mumbai Wards</option>
             {mumbaiWards.map((ward) => (
               <option key={ward.code} value={ward.code}>
-                {ward.code} Ward
+                {ward.code} - {ward.name}
               </option>
             ))}
           </select>
@@ -340,18 +340,18 @@ const OfficerManagement = () => {
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">
-            Officers ({filteredOfficers.length})
+            BMC Officers ({filteredOfficers.length})
           </h3>
         </div>
 
         {filteredOfficers.length === 0 ? (
           <div className="p-8 text-center">
             <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No officers found</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No BMC officers found</h3>
             <p className="mt-1 text-sm text-gray-500">
               {searchTerm || selectedDepartment || selectedWard || selectedStatus
                 ? 'Try adjusting your search criteria'
-                : 'Get started by registering a new officer'}
+                : 'Get started by registering a new BMC officer'}
             </p>
           </div>
         ) : (
@@ -366,7 +366,7 @@ const OfficerManagement = () => {
                     Department
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-40">
-                    Ward
+                    Mumbai Ward
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Role

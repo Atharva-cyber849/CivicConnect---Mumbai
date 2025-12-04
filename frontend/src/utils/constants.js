@@ -85,7 +85,8 @@ export const PRIORITY_LEVELS = [
   { value: 'URGENT', label: 'Urgent', color: 'red' },
 ]
 
-export const USER_ROLES = [
+// User roles as array for dropdown menus
+export const USER_ROLES_OPTIONS = [
   { value: 'CITIZEN', label: 'Citizen' },
   { value: 'DEPARTMENT_STAFF', label: 'Department Staff' },
   { value: 'ADMIN', label: 'Administrator' },
@@ -111,6 +112,276 @@ export const MUMBAI_MAP_CONFIG = {
     max_lng: 72.9919
   }
 }
+
+// BMC Ward Office Details (Mumbai-specific)
+export const BMC_WARD_OFFICES = {
+  'A': {
+    name: 'A Ward Office (Colaba)',
+    address: 'Shahid Bhagat Singh Road, Colaba, Mumbai - 400001',
+    phone: '022-22694725',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Gateway of India', 'Taj Hotel', 'Regal Cinema', 'NCPA'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-22694730' }
+  },
+  'B': {
+    name: 'B Ward Office (Dockyard Road)',
+    address: 'P. D\'Mello Road, Mumbai - 400001',
+    phone: '022-22615678',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Victoria Dock', 'GPO', 'St. George Hospital'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-22615680' }
+  },
+  'C': {
+    name: 'C Ward Office (Kalbadevi)',
+    address: 'Lokmanya Tilak Marg, Kalbadevi, Mumbai - 400002',
+    phone: '022-22016789',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Crawford Market', 'Jama Masjid', 'Mumbadevi Temple'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-22016790' }
+  },
+  'D': {
+    name: 'D Ward Office (Girgaon)',
+    address: 'B.J. Road, Girgaon, Mumbai - 400004',
+    phone: '022-23801234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Chowpatty Beach', 'Wilson College', 'Khotachi Wadi'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-23801235' }
+  },
+  'E': {
+    name: 'E Ward Office (Byculla)',
+    address: 'Dr. Babasaheb Ambedkar Road, Byculla, Mumbai - 400027',
+    phone: '022-23712345',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Byculla Zoo', 'Bhau Daji Lad Museum', 'Gloria Church'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-23712346' }
+  },
+  'F/N': {
+    name: 'F/N Ward Office (Matunga)',
+    address: 'Dr. Babasaheb Ambedkar Road, Matunga, Mumbai - 400019',
+    phone: '022-24141234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Matunga Market', 'Ruia College', 'Five Gardens'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-24141235' }
+  },
+  'F/S': {
+    name: 'F/S Ward Office (Sewri)',
+    address: 'Sewri Road, Mumbai - 400015',
+    phone: '022-24141567',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Sewri Fort', 'Flamingo Point', 'Cotton Green'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-24141568' }
+  },
+  'G/N': {
+    name: 'G/N Ward Office (Dadar)',
+    address: 'Shivaji Park, Dadar, Mumbai - 400028',
+    phone: '022-24221234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Shivaji Park', 'Siddhivinayak Temple', 'Plaza Cinema'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-24221235' }
+  },
+  'G/S': {
+    name: 'G/S Ward Office (Parel)',
+    address: 'Dr. E. Moses Road, Parel, Mumbai - 400012',
+    phone: '022-24221567',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['KEM Hospital', 'Lower Parel', 'Phoenix Mills'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-24221568' }
+  },
+  'H/E': {
+    name: 'H/E Ward Office (Bandra East)',
+    address: 'Bandra-Kurla Complex Road, Mumbai - 400051',
+    phone: '022-26591234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['BKC', 'MMRDA Grounds', 'Kalanagar'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-26591235' }
+  },
+  'H/W': {
+    name: 'H/W Ward Office (Bandra West)',
+    address: 'Hill Road, Bandra West, Mumbai - 400050',
+    phone: '022-26401234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Bandstand', 'Mount Mary Church', 'Carter Road'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-26401235' }
+  },
+  'K/E': {
+    name: 'K/E Ward Office (Andheri East)',
+    address: 'J.B. Nagar, Andheri East, Mumbai - 400059',
+    phone: '022-26851234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['MIDC', 'SEEPZ', 'Andheri Railway Station'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-26851235' }
+  },
+  'K/W': {
+    name: 'K/W Ward Office (Andheri West)',
+    address: 'Juhu Lane, Andheri West, Mumbai - 400058',
+    phone: '022-26701234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Juhu Beach', 'Film City Road', 'DN Nagar Metro'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-26701235' }
+  },
+  'L': {
+    name: 'L Ward Office (Kurla)',
+    address: 'LBS Marg, Kurla, Mumbai - 400070',
+    phone: '022-25221234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Phoenix Market City', 'Kurla Terminus', 'Nehru Nagar'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-25221235' }
+  },
+  'M/E': {
+    name: 'M/E Ward Office (Chembur)',
+    address: 'RCF Road, Chembur, Mumbai - 400074',
+    phone: '022-25241234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['RCF Colony', 'Diamond Garden', 'Chembur Station'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-25241235' }
+  },
+  'M/W': {
+    name: 'M/W Ward Office (Ghatkopar)',
+    address: 'Ghatkopar West, Mumbai - 400086',
+    phone: '022-25121234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['R-City Mall', 'Ghatkopar Station', 'LBS Marg'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-25121235' }
+  },
+  'N': {
+    name: 'N Ward Office (Ghatkopar North)',
+    address: 'Tilak Road, Ghatkopar, Mumbai - 400077',
+    phone: '022-25011234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Ghatkopar Railway Station', 'Vikhroli Link Road'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-25011235' }
+  },
+  'P/N': {
+    name: 'P/N Ward Office (Malad)',
+    address: 'S.V. Road, Malad West, Mumbai - 400064',
+    phone: '022-28811234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Inorbit Mall', 'Malad Station', 'Link Road'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-28811235' }
+  },
+  'P/S': {
+    name: 'P/S Ward Office (Goregaon)',
+    address: 'S.V. Road, Goregaon West, Mumbai - 400062',
+    phone: '022-28721234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Film City', 'Oberoi Mall', 'Aarey Colony'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-28721235' }
+  },
+  'R/N': {
+    name: 'R/N Ward Office (Borivali)',
+    address: 'S.V. Road, Borivali West, Mumbai - 400092',
+    phone: '022-28931234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Sanjay Gandhi National Park', 'Borivali Station', 'IC Colony'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-28931235' }
+  },
+  'R/C': {
+    name: 'R/C Ward Office (Dahisar)',
+    address: 'S.V. Road, Dahisar West, Mumbai - 400068',
+    phone: '022-28971234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Dahisar Check Naka', 'Dahisar Station', 'Gorai'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-28971235' }
+  },
+  'R/S': {
+    name: 'R/S Ward Office (Kandivali)',
+    address: 'S.V. Road, Kandivali West, Mumbai - 400067',
+    phone: '022-28051234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Raghuleela Mall', 'Kandivali Station', 'Mahavir Nagar'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-28051235' }
+  },
+  'S': {
+    name: 'S Ward Office (Vikhroli)',
+    address: 'LBS Marg, Vikhroli West, Mumbai - 400083',
+    phone: '022-25781234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Godrej Complex', 'Kanjurmarg Station', 'Powai'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-25781235' }
+  },
+  'T': {
+    name: 'T Ward Office (Mulund)',
+    address: 'LBS Marg, Mulund West, Mumbai - 400080',
+    phone: '022-25921234',
+    timing: '9:00 AM - 6:00 PM (Mon-Sat)',
+    officer: 'Ward Administrative Officer',
+    landmarks: ['Mulund Station', 'R-Mall', 'Mulund Check Naka'],
+    emergencyContacts: { fire: '101', police: '100', ambulance: '108', disaster: '022-25921235' }
+  }
+};
+
+// BMC Zone Details
+export const BMC_ZONES = [
+  { 
+    name: 'South', 
+    wards: ['A', 'B', 'C', 'D', 'E'],
+    color: '#EF4444',
+    description: 'Historic Mumbai - Colaba to Byculla',
+    headquarters: 'Municipal Corporation Building, Fort',
+    population: '~500,000'
+  },
+  { 
+    name: 'Central', 
+    wards: ['F/N', 'F/S', 'G/N', 'G/S'],
+    color: '#F59E0B', 
+    description: 'Central Business District - Matunga to Parel',
+    headquarters: 'Dadar Municipal Office',
+    population: '~750,000'
+  },
+  { 
+    name: 'Western', 
+    wards: ['H/E', 'H/W', 'K/E', 'K/W', 'P/N', 'P/S', 'R/N', 'R/C', 'R/S'],
+    color: '#10B981',
+    description: 'Western Suburbs - Bandra to Dahisar',
+    headquarters: 'Andheri Municipal Office',
+    population: '~3,500,000'
+  },
+  { 
+    name: 'Eastern', 
+    wards: ['L', 'M/E', 'M/W', 'N', 'S', 'T'],
+    color: '#3B82F6',
+    description: 'Eastern Suburbs - Kurla to Mulund',
+    headquarters: 'Ghatkopar Municipal Office',
+    population: '~2,500,000'
+  }
+];
+
+// BMC SLA Timelines (in hours)
+export const BMC_SLA_TIMELINES = {
+  POTHOLE: { response: 4, resolution: 48, priority: 'HIGH' },
+  STREETLIGHT: { response: 6, resolution: 72, priority: 'MEDIUM' },
+  GARBAGE: { response: 2, resolution: 24, priority: 'HIGH' },
+  WATER: { response: 4, resolution: 24, priority: 'URGENT' },
+  SEWAGE: { response: 4, resolution: 24, priority: 'URGENT' },
+  ROAD_DAMAGE: { response: 6, resolution: 168, priority: 'MEDIUM' },
+  TRAFFIC_SIGNAL: { response: 2, resolution: 24, priority: 'HIGH' },
+  PARK: { response: 24, resolution: 168, priority: 'LOW' },
+  NOISE: { response: 12, resolution: 72, priority: 'MEDIUM' },
+  OTHER: { response: 24, resolution: 168, priority: 'LOW' }
+};
 
 // API Rate Limits
 export const API_RATE_LIMITS = {

@@ -1,5 +1,22 @@
 // Application-wide constants
 
+// Re-export Mumbai-specific constants from utils/constants.js
+export {
+  MUMBAI_WARDS,
+  BMC_DEPARTMENTS,
+  BMC_WARD_OFFICES,
+  BMC_ZONES,
+  BMC_SLA_TIMELINES,
+  COMPLAINT_CATEGORIES as COMPLAINT_CATEGORIES_RICH,
+  COMPLAINT_CATEGORY_CHOICES,
+  COMPLAINT_STATUS as COMPLAINT_STATUS_ARRAY,
+  PRIORITY_LEVELS as PRIORITY_LEVELS_ARRAY,
+  MUMBAI_MAP_CONFIG,
+  FILE_UPLOAD_CONSTRAINTS,
+  LANGUAGES,
+  departments
+} from '../utils/constants';
+
 // User roles - Matching backend model exactly
 export const USER_ROLES = {
   CITIZEN: 'CITIZEN',

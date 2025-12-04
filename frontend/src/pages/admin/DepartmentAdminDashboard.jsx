@@ -10,7 +10,9 @@ import {
   ExclamationTriangleIcon,
   BuildingOffice2Icon,
   FunnelIcon,
-  ArrowTrendingUpIcon
+  ArrowTrendingUpIcon,
+  PhotoIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 import {
   BarChart,
@@ -22,21 +24,44 @@ import {
   Legend,
   ResponsiveContainer,
   LineChart,
-  Line
+  Line,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
 import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../api/adminApi';
-import { isAdmin } from '../../utils/roleBasedAccess';
-import { ExclamationIcon } from '@heroicons/react/24/solid';
+import { isAdmin, isSuperAdmin } from '../../utils/roleBasedAccess';
+import { BMC_DEPARTMENTS } from '../../utils/constants';
 
+/**
+ * Department Admin Dashboard
+ * 
+ * Role: Admin for a specific BMC department (Roads, Water, Electricity, Garbage, Drainage, etc.)
+ * 
+ * Access Level:
+ * ✔ Can see only complaints of their department
+ * ✔ Can manage complaints of their department (assign, update status, add remarks)
+ * ✔ Can upload proof of work completion (images, remarks)
+ * ✔ Can track departmental workload and performance
+ * ✔ Can view statistics for their own department only
+ * ✘ Cannot access other department data
+ * ✘ Cannot create other admins
+ */
 const DepartmentAdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState('7');
 
-  // Role-based access verification
-  const isValidDepartmentAdmin = isAdmin(user) && user?.department;
+  // Role-based access verification - must be admin but NOT super admin
+  const isValidDepartmentAdmin = isAdmin(user) && !isSuperAdmin(user) && user?.department;
+  
+  // Get department info
+  const departmentInfo = BMC_DEPARTMENTS?.find(d => d.value === user?.department) || {
+    label: user?.department || 'Unknown Department',
+    value: user?.department
+  };
 
   // Fetch dashboard statistics
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -226,31 +251,14 @@ const DepartmentAdminDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center max-w-md">
-          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-4">
-            Only Department Administrators can access this dashboard.
+            Only BMC Department Administrators can access this dashboard.
           </p>
           <p className="text-sm text-gray-500">
-            Please contact your system administrator if you believe this is an error.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Access denial check
-  if (!isValidDepartmentAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="text-center max-w-md">
-          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-4">
-            Only Department Administrators can access this dashboard.
-          </p>
-          <p className="text-sm text-gray-500">
-            Please contact your system administrator if you believe this is an error.
+            You need to be assigned to a specific department to view this page.
+            Please contact a Super Admin if you believe this is an error.
           </p>
         </div>
       </div>
@@ -265,13 +273,21 @@ const DepartmentAdminDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold flex items-center">
               <BuildingOffice2Icon className="h-8 w-8 mr-3" />
-              Department Dashboard
+              {departmentInfo.label} Department
             </h1>
-            <p className="text-blue-100 mt-2">{user?.department || 'Municipal'} Department - Administrative View</p>
+            <p className="text-blue-100 mt-2">BMC Department Admin Dashboard</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                Department-level Access
+              </span>
+              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                Complaint Management
+              </span>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-4xl font-bold">{(dashboardStats?.total_complaints || 0).toLocaleString()}</div>
-            <div className="text-blue-100">Total Complaints</div>
+            <div className="text-blue-100">Department Complaints</div>
           </div>
         </div>
       </div>
@@ -370,24 +386,33 @@ const DepartmentAdminDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Quick Actions - Department Admin Specific */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <button
           onClick={() => navigate('/admin/complaints')}
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
         >
           <DocumentTextIcon className="h-8 w-8 text-blue-600 mb-2" />
           <h3 className="font-semibold text-gray-900">View Complaints</h3>
-          <p className="text-sm text-gray-600 mt-1">{dashboardStats?.total_complaints || 0} complaints</p>
+          <p className="text-sm text-gray-600 mt-1">Manage {departmentInfo.label} complaints</p>
         </button>
 
         <button
-          onClick={() => navigate('/admin/officers')}
+          onClick={() => navigate('/admin/complaints?status=PENDING')}
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
         >
-          <UserGroupIcon className="h-8 w-8 text-green-600 mb-2" />
-          <h3 className="font-semibold text-gray-900">Manage Officers</h3>
-          <p className="text-sm text-gray-600 mt-1">View department officers</p>
+          <ClockIcon className="h-8 w-8 text-orange-600 mb-2" />
+          <h3 className="font-semibold text-gray-900">Pending Cases</h3>
+          <p className="text-sm text-gray-600 mt-1">{dashboardStats?.pending_complaints || 0} awaiting action</p>
+        </button>
+
+        <button
+          onClick={() => navigate('/admin/map')}
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+        >
+          <MapPinIcon className="h-8 w-8 text-green-600 mb-2" />
+          <h3 className="font-semibold text-gray-900">Map View</h3>
+          <p className="text-sm text-gray-600 mt-1">View complaints on map</p>
         </button>
 
         <button
@@ -395,9 +420,44 @@ const DepartmentAdminDashboard = () => {
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
         >
           <ChartBarIcon className="h-8 w-8 text-purple-600 mb-2" />
-          <h3 className="font-semibold text-gray-900">View Reports</h3>
-          <p className="text-sm text-gray-600 mt-1">Department analytics</p>
+          <h3 className="font-semibold text-gray-900">Department Reports</h3>
+          <p className="text-sm text-gray-600 mt-1">Performance analytics</p>
         </button>
+      </div>
+
+      {/* Department Admin Responsibilities Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-blue-900 mb-3">Your Responsibilities as Department Admin</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+          <ul className="space-y-2">
+            <li className="flex items-center gap-2">
+              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+              Receive complaints based on {departmentInfo.label} category
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+              Assign complaints to field staff or contractors
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+              Update complaint status (In Progress, Resolved, Rejected)
+            </li>
+          </ul>
+          <ul className="space-y-2">
+            <li className="flex items-center gap-2">
+              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+              Upload proof of work completion (images, remarks)
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+              Track departmental workload and performance
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircleIcon className="h-4 w-4 text-blue-600" />
+              View statistics for your department only
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

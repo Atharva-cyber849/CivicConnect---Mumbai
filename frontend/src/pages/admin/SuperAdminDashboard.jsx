@@ -34,7 +34,6 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../api/adminApi';
 import { isSuperAdmin } from '../../utils/roleBasedAccess';
-import { ExclamationIcon } from '@heroicons/react/24/solid';
 
 const SuperAdminDashboard = () => {
   const { user } = useAuth();
@@ -226,7 +225,7 @@ const SuperAdminDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center max-w-md">
-          <ExclamationIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-4">
             Only Super Administrators can access this dashboard.
@@ -352,14 +351,14 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Quick Actions - Super Admin Specific */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <button
           onClick={() => navigate('/admin/register')}
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
         >
           <UserGroupIcon className="h-8 w-8 text-blue-600 mb-2" />
-          <h3 className="font-semibold text-gray-900">Create Officer/Admin</h3>
+          <h3 className="font-semibold text-gray-900">Create Admin/Officer</h3>
           <p className="text-sm text-gray-600 mt-1">Register new BMC staff</p>
         </button>
 
@@ -368,18 +367,61 @@ const SuperAdminDashboard = () => {
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
         >
           <UserGroupIcon className="h-8 w-8 text-green-600 mb-2" />
-          <h3 className="font-semibold text-gray-900">Manage Officers</h3>
-          <p className="text-sm text-gray-600 mt-1">View and manage all officers</p>
+          <h3 className="font-semibold text-gray-900">Manage All Officers</h3>
+          <p className="text-sm text-gray-600 mt-1">{dashboardStats?.officers_count || 0} officers across city</p>
         </button>
 
         <button
-          onClick={() => navigate('/admin/reports')}
+          onClick={() => navigate('/admin/complaints')}
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+        >
+          <DocumentTextIcon className="h-8 w-8 text-orange-600 mb-2" />
+          <h3 className="font-semibold text-gray-900">All Complaints</h3>
+          <p className="text-sm text-gray-600 mt-1">View complaints city-wide</p>
+        </button>
+
+        <button
+          onClick={() => navigate('/admin/analytics')}
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
         >
           <ChartBarIcon className="h-8 w-8 text-purple-600 mb-2" />
-          <h3 className="font-semibold text-gray-900">View Reports</h3>
-          <p className="text-sm text-gray-600 mt-1">System analytics and insights</p>
+          <h3 className="font-semibold text-gray-900">Full Analytics</h3>
+          <p className="text-sm text-gray-600 mt-1">System-wide insights</p>
         </button>
+      </div>
+
+      {/* Super Admin Capabilities Info */}
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center gap-2">
+          <ShieldCheckIcon className="h-5 w-5" />
+          Super Admin Capabilities
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-purple-800">
+          <div>
+            <h4 className="font-semibold mb-2">User Management</h4>
+            <ul className="space-y-1">
+              <li>• Create/Edit Department Admins</li>
+              <li>• Create/Edit Ward Officers</li>
+              <li>• Disable/Enable any account</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2">System Control</h4>
+            <ul className="space-y-1">
+              <li>• Manage categories & departments</li>
+              <li>• Configure wards & zones</li>
+              <li>• Access security & audit logs</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2">Analytics & Oversight</h4>
+            <ul className="space-y-1">
+              <li>• View all complaints city-wide</li>
+              <li>• Full performance metrics</li>
+              <li>• Reassign cases if needed</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

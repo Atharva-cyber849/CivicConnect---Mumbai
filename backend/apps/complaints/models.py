@@ -4,7 +4,6 @@ Complaint models for issue reporting and tracking.
 from typing import Optional
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 User = get_user_model()
@@ -57,14 +56,6 @@ class Complaint(models.Model):
     # Status & Priority
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='MEDIUM')
-    
-    # AI Classification
-    ai_category = models.CharField(max_length=50, blank=True, null=True)
-    ai_confidence_score = models.FloatField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(0.0), MaxValueValidator(1.0)]
-    )
     
     # Location
     address = models.TextField()
@@ -283,3 +274,169 @@ class OfficerNotes(models.Model):
     
     def __str__(self) -> str:
         return f"Notes by {self.officer.email if self.officer else 'Unknown'} on {self.complaint.title}"
+
+
+class ComplaintAssignment(models.Model):
+    """
+    Track complaint assignments to officers with SLA tracking.
+    """
+    complaint = models.OneToOneField(Complaint, on_delete=models.CASCADE, related_name='assignment')
+    assigned_to = models.ForeignKey(User, on_delete=models.PROTECT, related_name='complaint_assignments')
+    department = models.ForeignKey('departments.Department', on_delete=models.PROTECT, related_name='complaint_assignments')
+    
+    # Assignment Details
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    sla_target_days = models.IntegerField(default=7)
+    
+    class Meta:
+        db_table = 'complaint_assignments'
+        ordering = ['-assigned_at']
+        indexes = [
+            models.Index(fields=['assigned_to', '-assigned_at']),
+            models.Index(fields=['complaint', 'assigned_at']),
+        ]
+    
+    @property
+    def sla_deadline(self):
+        """Calculate SLA deadline based on assignment time and target days."""
+        from datetime import timedelta
+        return self.assigned_at + timedelta(days=self.sla_target_days)
+    
+    def __str__(self) -> str:
+        return f"Assignment: {self.complaint.title} → {self.assigned_to.email}"
+
+
+class ComplaintReassignment(models.Model):
+    """
+    Track complaint reassignments for audit trail.
+    """
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='reassignments')
+    previously_assigned_to = models.ForeignKey(User, on_delete=models.PROTECT, related_name='reassigned_from')
+    reason = models.CharField(max_length=255)
+    reassigned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'complaint_reassignments'
+        ordering = ['-reassigned_at']
+        indexes = [
+            models.Index(fields=['complaint', '-reassigned_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"Reassignment of {self.complaint.title} from {self.previously_assigned_to.email}"
+
+
+class OfficerRating(models.Model):
+    """
+    Store citizen ratings for officers after complaint resolution.
+    """
+    RATING_CHOICES = [
+        (1, '1 Star - Very Poor'),
+        (2, '2 Stars - Poor'),
+        (3, '3 Stars - Average'),
+        (4, '4 Stars - Good'),
+        (5, '5 Stars - Excellent'),
+    ]
+    
+    complaint = models.OneToOneField(Complaint, on_delete=models.CASCADE, related_name='officer_rating')
+    officer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_ratings')
+    citizen = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submitted_ratings')
+    
+    # Rating
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    comment = models.TextField(blank=True, help_text="Optional feedback from citizen")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'officer_ratings'
+        ordering = ['-created_at']
+        unique_together = ('complaint', 'officer', 'citizen')
+        indexes = [
+            models.Index(fields=['officer', '-created_at']),
+            models.Index(fields=['complaint']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.get_rating_display()} for {self.officer.email} on {self.complaint.title}"
+
+
+class OfficerPerformance(models.Model):
+    """
+    Aggregated performance metrics for officers.
+    Updated daily or on-demand.
+    """
+    officer = models.OneToOneField(User, on_delete=models.CASCADE, related_name='performance_metrics')
+    
+    # Complaint Statistics
+    total_assigned = models.IntegerField(default=0)
+    total_resolved = models.IntegerField(default=0)
+    total_pending = models.IntegerField(default=0)
+    total_rejected = models.IntegerField(default=0)
+    
+    # SLA Performance
+    sla_compliant_count = models.IntegerField(default=0)
+    sla_breached_count = models.IntegerField(default=0)
+    sla_compliance_rate = models.FloatField(default=0.0)  # Percentage
+    
+    # Time Metrics
+    avg_resolution_time_hours = models.FloatField(default=0.0)
+    avg_resolution_time_days = models.FloatField(default=0.0)
+    
+    # Rating Metrics
+    total_ratings = models.IntegerField(default=0)
+    avg_rating = models.FloatField(default=0.0)  # 1.0 to 5.0
+    five_star_count = models.IntegerField(default=0)
+    four_star_count = models.IntegerField(default=0)
+    three_star_count = models.IntegerField(default=0)
+    two_star_count = models.IntegerField(default=0)
+    one_star_count = models.IntegerField(default=0)
+    
+    # Department Comparison
+    department_avg_rating = models.FloatField(default=0.0)
+    department_avg_resolution_time = models.FloatField(default=0.0)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_calculated = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'officer_performance'
+        verbose_name_plural = 'Officer Performance'
+    
+    def __str__(self) -> str:
+        return f"Performance: {self.officer.email} - ⭐ {self.avg_rating}/5.0"
+
+
+class PerformanceAuditLog(models.Model):
+    """
+    Track performance metric changes for audit trail.
+    """
+    officer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='performance_audit_logs')
+    
+    # Metrics at time of log
+    total_assigned = models.IntegerField()
+    total_resolved = models.IntegerField()
+    sla_compliance_rate = models.FloatField()
+    avg_resolution_time_hours = models.FloatField()
+    avg_rating = models.FloatField()
+    
+    # Change details
+    reason = models.CharField(max_length=255, help_text="Why these metrics were calculated")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'performance_audit_logs'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['officer', '-created_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"Performance audit for {self.officer.email} on {self.created_at.date()}"
+

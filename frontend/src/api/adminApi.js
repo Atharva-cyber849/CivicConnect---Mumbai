@@ -165,5 +165,102 @@ export const adminApi = {
       ...updateData
     });
     return response.data;
+  },
+
+  // ===== Mumbai BMC Ward-specific API Endpoints =====
+  
+  // Get complaints by ward
+  getComplaintsByWard: async (wardCode, period = '30') => {
+    const response = await axiosPrivate.get('/complaints/', {
+      params: {
+        ward: wardCode,
+        period,
+        limit: 100
+      }
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get ward analytics
+  getWardAnalytics: async (wardCode, period = '30') => {
+    const response = await axiosPrivate.get('/complaints/analytics/', {
+      params: {
+        ward: wardCode,
+        period
+      }
+    });
+    return response.data;
+  },
+
+  // Get officers by ward
+  getOfficersByWard: async (wardCode) => {
+    const response = await axiosPrivate.get('/admin/officers/', {
+      params: { ward: wardCode }
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get complaints by zone
+  getComplaintsByZone: async (zone, period = '30') => {
+    const response = await axiosPrivate.get('/complaints/', {
+      params: {
+        zone,
+        period,
+        limit: 500
+      }
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get zone analytics
+  getZoneAnalytics: async (zone, period = '30') => {
+    const response = await axiosPrivate.get('/complaints/analytics/', {
+      params: {
+        zone,
+        period
+      }
+    });
+    return response.data;
+  },
+
+  // Get officers by zone
+  getOfficersByZone: async (zone) => {
+    const response = await axiosPrivate.get('/admin/officers/', {
+      params: { zone }
+    });
+    return response.data.results || response.data;
+  },
+
+  // Get comprehensive Mumbai BMC analytics
+  getMumbaiBMCAnalytics: async ({ period = '30', zone = 'All' } = {}) => {
+    const response = await axiosPrivate.get('/complaints/analytics/', {
+      params: {
+        period,
+        zone: zone !== 'All' ? zone : undefined,
+        include_zones: true,
+        include_departments: true,
+        include_trends: true
+      }
+    });
+    return response.data;
+  },
+
+  // Get ward heatmap data
+  getWardHeatmapData: async (period = '30') => {
+    const response = await axiosPrivate.get('/complaints/analytics/heatmap/', {
+      params: { period }
+    });
+    return response.data;
+  },
+
+  // Get SLA metrics by ward
+  getSLAMetricsByWard: async (wardCode, period = '30') => {
+    const response = await axiosPrivate.get('/complaints/sla-metrics/', {
+      params: {
+        ward: wardCode,
+        period
+      }
+    });
+    return response.data;
   }
 };
