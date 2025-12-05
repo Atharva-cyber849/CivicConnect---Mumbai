@@ -26,18 +26,75 @@ export const MUMBAI_WARDS = [
   { value: 'T', label: 'T - Mulund', zone: 'Eastern' },
 ]
 
-// BMC Departments
+// BMC Departments - Comprehensive List
 export const BMC_DEPARTMENTS = [
-  { value: 'ROADS', label: 'Roads & Traffic Department', icon: '🛣️' },
-  { value: 'SOLID_WASTE', label: 'Solid Waste Management', icon: '🗑️' },
-  { value: 'WATER_SUPPLY', label: 'Water Supply', icon: '💧' },
-  { value: 'SEWAGE', label: 'Sewage & Drainage', icon: '🚰' },
-  { value: 'STREETLIGHTS', label: 'Street Lighting', icon: '💡' },
-  { value: 'GARDENS', label: 'Gardens & Parks', icon: '🌳' },
-  { value: 'ENCROACHMENT', label: 'Encroachment Removal', icon: '🚧' },
-  { value: 'HEALTH', label: 'Public Health', icon: '🏥' },
-  { value: 'BUILDING', label: 'Building & Development', icon: '🏗️' },
-  { value: 'OTHER', label: 'Other Services', icon: '📋' },
+  // 1. Roads & Traffic
+  { value: 'ROADS_MAINTENANCE', label: 'Roads & Maintenance Department', icon: '🛣️', category: 'Roads & Traffic' },
+  { value: 'BRIDGES', label: 'Bridges Department', icon: '🌉', category: 'Roads & Traffic' },
+  { value: 'TRAFFIC', label: 'Traffic Department', icon: '🚦', category: 'Roads & Traffic' },
+  
+  // 2. Solid Waste & Sanitation
+  { value: 'SOLID_WASTE', label: 'Solid Waste Management (SWM)', icon: '🗑️', category: 'Solid Waste & Sanitation' },
+  { value: 'SANITATION', label: 'Sanitation Department', icon: '🧹', category: 'Solid Waste & Sanitation' },
+  { value: 'DEBRIS_REMOVAL', label: 'Debris Removal Unit', icon: '🚛', category: 'Solid Waste & Sanitation' },
+  
+  // 3. Water & Sewerage
+  { value: 'WATER_SUPPLY', label: 'Hydraulic Engineer (Water Supply) Department', icon: '💧', category: 'Water & Sewerage' },
+  { value: 'SEWERAGE', label: 'Sewerage Operations Department', icon: '🚰', category: 'Water & Sewerage' },
+  { value: 'STORM_WATER', label: 'Storm Water Drains (SWD) Department', icon: '🌊', category: 'Water & Sewerage' },
+  
+  // 4. Public Health
+  { value: 'PUBLIC_HEALTH', label: 'Public Health Department', icon: '🏥', category: 'Public Health' },
+  { value: 'MEDICAL_OFFICER', label: 'Medical Officer of Health (MOH)', icon: '⚕️', category: 'Public Health' },
+  { value: 'MOSQUITO_CONTROL', label: 'Insecticide Department (Mosquito Control)', icon: '🦟', category: 'Public Health' },
+  { value: 'HOSPITALS', label: 'Hospitals & Dispensaries Department', icon: '🏨', category: 'Public Health' },
+  
+  // 5. Building & Infrastructure
+  { value: 'BUILDING_FACTORY', label: 'Building & Factory Department (B&F)', icon: '🏗️', category: 'Building & Infrastructure' },
+  { value: 'DEVELOPMENT_PLAN', label: 'Development Plan (DP) Department', icon: '📐', category: 'Building & Infrastructure' },
+  { value: 'ESTATE', label: 'Estate Department', icon: '🏢', category: 'Building & Infrastructure' },
+  { value: 'ARCHITECTURE', label: 'Architecture Department', icon: '🏛️', category: 'Building & Infrastructure' },
+  
+  // 6. Licenses & Regulation
+  { value: 'LICENSE', label: 'License Department', icon: '📜', category: 'Licenses & Regulation' },
+  { value: 'SHOPS_ESTABLISHMENT', label: 'Shops & Establishment Department', icon: '🏪', category: 'Licenses & Regulation' },
+  { value: 'ENCROACHMENT', label: 'Encroachment Removal Department', icon: '🚧', category: 'Licenses & Regulation' },
+  
+  // 7. Environment & Sustainability
+  { value: 'ENVIRONMENT', label: 'Environment Department', icon: '🌍', category: 'Environment & Sustainability' },
+  { value: 'POLLUTION_CONTROL', label: 'Pollution Control Cell', icon: '💨', category: 'Environment & Sustainability' },
+  { value: 'GARDENS', label: 'Tree Authority / Gardens Department', icon: '🌳', category: 'Environment & Sustainability' },
+  
+  // 8. Fire & Emergency Services
+  { value: 'FIRE_BRIGADE', label: 'Mumbai Fire Brigade', icon: '🚒', category: 'Fire & Emergency Services' },
+  { value: 'DISASTER_MANAGEMENT', label: 'Disaster Management Department', icon: '⚠️', category: 'Fire & Emergency Services' },
+  
+  // 9. Education & Social Development
+  { value: 'EDUCATION', label: 'Education Department (Municipal Schools)', icon: '🎓', category: 'Education & Social Development' },
+  { value: 'SOCIAL_WELFARE', label: 'Social Welfare Department', icon: '🤝', category: 'Education & Social Development' },
+  
+  // 10. Finance & Administration
+  { value: 'ACCOUNTS_FINANCE', label: 'Accounts & Finance Department', icon: '💰', category: 'Finance & Administration' },
+  { value: 'AUDIT', label: 'Audit Department', icon: '📊', category: 'Finance & Administration' },
+  { value: 'GENERAL_ADMINISTRATION', label: 'General Administration Department', icon: '📋', category: 'Finance & Administration' },
+  { value: 'IT_DEPARTMENT', label: 'Information Technology (IT) Department', icon: '💻', category: 'Finance & Administration' },
+  { value: 'LEGAL', label: 'Legal Department', icon: '⚖️', category: 'Finance & Administration' },
+  { value: 'HUMAN_RESOURCES', label: 'Human Resources (Personnel Department)', icon: '👥', category: 'Finance & Administration' },
+  
+  // 11. Additional Key Departments
+  { value: 'MARKET', label: 'Market Department', icon: '🛒', category: 'Additional Services' },
+  { value: 'VETERINARY', label: 'Veterinary Health Department', icon: '🐾', category: 'Additional Services' },
+  { value: 'SECURITY', label: 'Security Department', icon: '🔒', category: 'Additional Services' },
+  { value: 'ESTATE_SURVEY', label: 'Estate Survey Department', icon: '📍', category: 'Additional Services' },
+  { value: 'BEST_TRANSPORT', label: 'BEST (Transport)', icon: '🚌', category: 'Additional Services' },
+  { value: 'PUBLIC_RELATIONS', label: 'Public Relations Department', icon: '📢', category: 'Additional Services' },
+  { value: 'ELECTIONS', label: 'Election Department', icon: '🗳️', category: 'Additional Services' },
+  
+  // Legacy support
+  { value: 'STREETLIGHTS', label: 'Street Lighting', icon: '💡', category: 'Roads & Traffic' },
+  { value: 'HEALTH', label: 'Public Health', icon: '🏥', category: 'Public Health' },
+  { value: 'BUILDING', label: 'Building & Development', icon: '🏗️', category: 'Building & Infrastructure' },
+  { value: 'OTHER', label: 'Other Services', icon: '📋', category: 'Additional Services' },
 ]
 
 // Export as departments for convenience
