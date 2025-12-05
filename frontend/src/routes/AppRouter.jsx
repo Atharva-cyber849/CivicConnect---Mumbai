@@ -149,6 +149,9 @@ const AppRouter = () => {
           <Route index element={<LandingPage />} />
         </Route>
 
+        {/* ===== PUBLIC WARD SERVICES ===== */}
+        <Route path="/ward-services" element={<PublicLayout><MumbaiWardServices /></PublicLayout>} />
+
         {/* ===== CITIZEN AUTH ROUTES ===== */}
         <Route path="/auth/login" element={<AuthLayout><Login /></AuthLayout>} />
         <Route path="/auth/register" element={<AuthLayout><Register /></AuthLayout>} />

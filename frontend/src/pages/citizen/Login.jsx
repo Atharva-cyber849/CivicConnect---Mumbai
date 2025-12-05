@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { USER_ROLES } from '../../config/constants'
 import toast from 'react-hot-toast'
 
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login, loading } = useAuth()
   
   const [formData, setFormData] = useState({
@@ -42,7 +43,15 @@ const Login = () => {
         }
         
         toast.success('Welcome back!')
-        navigate(result.redirectTo || '/dashboard')
+        
+        // Check if we have report data from ward services redirect
+        const reportData = location.state?.reportData
+        if (reportData) {
+          // Redirect to report issue with pre-filled data
+          navigate('/dashboard/report', { state: reportData })
+        } else {
+          navigate(result.redirectTo || '/dashboard')
+        }
       } else {
         console.log('Citizen Login - Login failed:', result.error)
         const errorMessage = result.error || 'Login failed'

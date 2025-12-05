@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { complaintsApi } from '../../api/complaintsApi'
 import { toast } from 'react-toastify'
@@ -48,17 +48,20 @@ const LocationMarker = ({ onChange }) => {
 
 const ReportIssue = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const wardGeo = useWardBoundaries()
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [autoDetectedWard, setAutoDetectedWard] = useState('')
   const [markerPosition, setMarkerPosition] = useState(null)
   const mapRef = useRef(null)
   
+  // Initialize form with prefilled data from location state
+  const prefillData = location.state || {}
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
-    ward: '',
+    category: prefillData.category || '',
+    ward: prefillData.ward || '',
     address: '',
     city: 'Mumbai',
     state: 'Maharashtra',

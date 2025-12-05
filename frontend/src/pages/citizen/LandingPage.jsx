@@ -181,6 +181,76 @@ const LandingPage = () => {
       </section>
 
 
+      {/* Mumbai Ward Services Section */}
+      <section className="container mx-auto px-6 py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            🏛️ BMC <span className="text-civic-blue-600">Ward Services</span>
+          </h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            Access ward-specific information, contact details, and services
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200 shadow-lg">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Left Side - Description */}
+            <div className="flex flex-col justify-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Find Your Ward Information
+              </h3>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-start gap-3">
+                  <span className="text-civic-blue-600 text-xl font-bold">✓</span>
+                  <span className="text-gray-700"><strong>Contact Details:</strong> Direct phone numbers and office timings for your BMC ward</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-civic-blue-600 text-xl font-bold">✓</span>
+                  <span className="text-gray-700"><strong>Available Services:</strong> Water supply, roads, waste management, street lighting, sewage, and parks</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-civic-blue-600 text-xl font-bold">✓</span>
+                  <span className="text-gray-700"><strong>Key Landmarks:</strong> Important locations and amenities in your ward</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-civic-blue-600 text-xl font-bold">✓</span>
+                  <span className="text-gray-700"><strong>Emergency Contacts:</strong> Quick access to emergency services and helplines</span>
+                </li>
+              </ul>
+              <Link 
+                to="/ward-services" 
+                className="inline-block bg-civic-blue-600 hover:bg-civic-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 w-fit"
+              >
+                Explore Ward Services →
+              </Link>
+            </div>
+
+            {/* Right Side - Visual Preview */}
+            <div className="bg-white rounded-xl p-6 shadow-md">
+              <h4 className="text-lg font-bold text-gray-900 mb-4">Mumbai's 4 Administrative Zones</h4>
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg border-l-4 border-red-500 bg-red-50">
+                  <div className="font-bold text-red-700">Eastern Zone (E-Ward)</div>
+                  <div className="text-sm text-gray-600 mt-1">Wards E, F, G, H, K, L, M, N</div>
+                </div>
+                <div className="p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50">
+                  <div className="font-bold text-blue-700">Western Zone (W-Ward)</div>
+                  <div className="text-sm text-gray-600 mt-1">Wards P, Q, R, S, T</div>
+                </div>
+                <div className="p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+                  <div className="font-bold text-green-700">South-Central Zone (S-Ward)</div>
+                  <div className="text-sm text-gray-600 mt-1">Wards A, B, C</div>
+                </div>
+                <div className="p-4 rounded-lg border-l-4 border-purple-500 bg-purple-50">
+                  <div className="font-bold text-purple-700">South Zone (D-Ward)</div>
+                  <div className="text-sm text-gray-600 mt-1">Wards D</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Statistics Section */}
       <section className="bg-civic-blue-600 text-white py-16">
         <div className="container mx-auto px-6">

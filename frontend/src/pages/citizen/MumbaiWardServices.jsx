@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { complaintsApi } from '../../api/complaintsApi';
+import { useAuth } from '../../context/AuthContext';
 import { MUMBAI_WARDS, BMC_DEPARTMENTS, COMPLAINT_CATEGORIES, BMC_WARD_OFFICES, BMC_ZONES } from '../../utils/constants';
 import WardMap from '../../components/Common/WardMap';
 import {
@@ -15,6 +16,7 @@ import {
 
 const MumbaiWardServices = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedWard, setSelectedWard] = useState(searchParams.get('ward') || null);
   const [selectedService, setSelectedService] = useState(searchParams.get('service') || '');
@@ -73,6 +75,21 @@ const MumbaiWardServices = () => {
   };
 
   const handleReportIssue = (department) => {
+    if (!isAuthenticated) {
+      // Redirect to login and store the report details for after login
+      navigate('/auth/login', { 
+        state: { 
+          from: '/ward-services',
+          reportData: {
+            ward: selectedWard,
+            department,
+            category: COMPLAINT_CATEGORIES.find(c => c.department === department)?.value
+          }
+        }
+      });
+      return;
+    }
+    
     navigate('/dashboard/report', { 
       state: { 
         ward: selectedWard,
