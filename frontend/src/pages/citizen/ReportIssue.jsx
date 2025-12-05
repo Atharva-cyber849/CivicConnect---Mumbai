@@ -11,7 +11,8 @@ import {
   standardizeWardData,
   FILE_CONSTRAINTS
 } from '../../utils/validation'
-import { COMPLAINT_CATEGORIES, MUMBAI_WARDS } from '../../utils/constants'
+import { COMPLAINT_CATEGORIES, MUMBAI_WARDS, CIVIC_ISSUE_CATEGORIES } from '../../utils/constants'
+import { getAssignedDepartment } from '../../utils/helpers'
 import { MUMBAI_CENTER, DEFAULT_ZOOM, createCustomIcon, reverseGeocode, getCurrentLocation, isWithinMumbai } from '../../utils/mapUtils'
 import { MapContainer, TileLayer, Marker, useMapEvents, GeoJSON } from 'react-leaflet'
 import L from 'leaflet'
@@ -53,6 +54,7 @@ const ReportIssue = () => {
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [autoDetectedWard, setAutoDetectedWard] = useState('')
   const [markerPosition, setMarkerPosition] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null)
   const mapRef = useRef(null)
   
   // Initialize form with prefilled data from location state
@@ -513,22 +515,68 @@ const ReportIssue = () => {
 
           <div>
             <label className="block text-sm font-medium mb-2">Category *</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className={`input ${formErrors.category ? 'border-red-500' : ''}`}
-              required
-            >
-              <option value="">Select a category</option>
-              {COMPLAINT_CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.emoji} {cat.label}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3">
+              {/* Category Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(CIVIC_ISSUE_CATEGORIES).map(([key, category]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(key)
+                      setFormData(prev => ({ ...prev, category: '' })) // Reset issue selection
+                    }}
+                    className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
+                      selectedCategory === key
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    <span className="text-xl">{category.icon}</span>
+                    <span className="text-sm font-medium text-left">{category.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Issues for selected category */}
+              {selectedCategory && (
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-medium mb-2">Specific Issue *</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-72 overflow-y-auto">
+                    {CIVIC_ISSUE_CATEGORIES[selectedCategory].issues.map((issue) => (
+                      <button
+                        key={issue.value}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, category: issue.value }))
+                        }}
+                        className={`p-3 rounded-lg border-2 transition-all text-left flex items-center gap-3 ${
+                          formData.category === issue.value
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <span className="text-lg">{issue.icon}</span>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{issue.label}</div>
+                          <div className="text-xs text-gray-500">→ {issue.department}</div>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          issue.priority === 'URGENT' ? 'bg-red-100 text-red-700' :
+                          issue.priority === 'HIGH' ? 'bg-orange-100 text-orange-700' :
+                          issue.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {issue.priority}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             {formErrors.category && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.category}</p>
+              <p className="mt-2 text-sm text-red-600">{formErrors.category}</p>
             )}
           </div>
 
