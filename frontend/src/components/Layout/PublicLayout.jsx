@@ -39,6 +39,15 @@ const PublicLayout = () => {
             </Link>
             
             <nav className="flex items-center space-x-4">
+              {/* Ward Services Link */}
+              <Link
+                to="/ward-services"
+                className="flex items-center space-x-2 text-gray-600 hover:text-civic-blue-600 font-medium transition-colors"
+              >
+                <span>🏢</span>
+                <span>Ward Services</span>
+              </Link>
+              
               {/* BMC Officer Portal - Professional styling */}
               <Link
                 to="/admin"
