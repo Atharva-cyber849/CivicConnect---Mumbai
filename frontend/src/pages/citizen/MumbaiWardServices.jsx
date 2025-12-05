@@ -47,7 +47,7 @@ const MumbaiWardServices = () => {
     };
   };
 
-  // Fetch ward-specific data
+  // Fetch ward-specific data only if authenticated
   const { data: wardData, isLoading } = useQuery({
     queryKey: ['mumbai-ward-services', selectedWard],
     queryFn: async () => {
@@ -60,7 +60,7 @@ const MumbaiWardServices = () => {
       
       return { complaints, analytics };
     },
-    enabled: !!selectedWard,
+    enabled: !!selectedWard && isAuthenticated,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -192,24 +192,34 @@ const MumbaiWardServices = () => {
             
             {wardInfo && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white/10 rounded-lg p-3">
-                  <div className="text-2xl font-bold">{complaints.length}</div>
-                  <div className="text-sm text-blue-100">Active Complaints</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-3">
-                  <div className="text-2xl font-bold">{wardInfo.services.length}</div>
-                  <div className="text-sm text-blue-100">Available Services</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-3">
-                  <div className="text-2xl font-bold">
-                    {Math.round(((analytics.resolved || 0) / Math.max(complaints.length, 1)) * 100)}%
+                {isAuthenticated ? (
+                  <>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-2xl font-bold">{complaints.length}</div>
+                      <div className="text-sm text-blue-100">Active Complaints</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-2xl font-bold">{wardInfo.services.length}</div>
+                      <div className="text-sm text-blue-100">Available Services</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-2xl font-bold">
+                        {Math.round(((analytics.resolved || 0) / Math.max(complaints.length, 1)) * 100)}%
+                      </div>
+                      <div className="text-sm text-blue-100">Resolution Rate</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-2xl font-bold">{analytics.avgResponseTime || 24}h</div>
+                      <div className="text-sm text-blue-100">Avg Response Time</div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-white/10 rounded-lg p-3 col-span-full">
+                    <div className="text-2xl font-bold">{wardInfo.services.length}</div>
+                    <div className="text-sm text-blue-100">Available Services</div>
+                    <p className="text-blue-100 text-xs mt-2">Login to view statistics and complaints</p>
                   </div>
-                  <div className="text-sm text-blue-100">Resolution Rate</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-3">
-                  <div className="text-2xl font-bold">{analytics.avgResponseTime || 24}h</div>
-                  <div className="text-sm text-blue-100">Avg Response Time</div>
-                </div>
+                )}
               </div>
             )}
           </div>
@@ -310,59 +320,77 @@ const MumbaiWardServices = () => {
           )}
 
           {/* Recent Complaints in Ward */}
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <ExclamationCircleIcon className="h-5 w-5 text-orange-600" />
-              Recent Complaints in {currentWard.label}
-            </h3>
-            
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-gray-600">Loading complaints...</p>
-              </div>
-            ) : complaints.length > 0 ? (
-              <div className="space-y-3">
-                {complaints.slice(0, 5).map((complaint) => (
-                  <div key={complaint.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{complaint.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{complaint.category}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(complaint.created_at).toLocaleDateString()}
-                        </p>
+          {isAuthenticated ? (
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <ExclamationCircleIcon className="h-5 w-5 text-orange-600" />
+                Recent Complaints in {currentWard.label}
+              </h3>
+              
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-gray-600">Loading complaints...</p>
+                </div>
+              ) : complaints.length > 0 ? (
+                <div className="space-y-3">
+                  {complaints.slice(0, 5).map((complaint) => (
+                    <div key={complaint.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{complaint.title}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{complaint.category}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(complaint.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          complaint.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
+                          complaint.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                          complaint.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {complaint.status}
+                        </span>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        complaint.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
-                        complaint.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
-                        complaint.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {complaint.status}
-                      </span>
                     </div>
-                  </div>
-                ))}
-                
-                {complaints.length > 5 && (
-                  <div className="text-center pt-4">
-                    <button
-                      onClick={() => navigate('/dashboard/complaints', { state: { ward: selectedWard } })}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      View all {complaints.length} complaints
-                    </button>
-                  </div>
-                )}
+                  ))}
+                  
+                  {complaints.length > 5 && (
+                    <div className="text-center pt-4">
+                      <button
+                        onClick={() => navigate('/dashboard/complaints', { state: { ward: selectedWard } })}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        View all {complaints.length} complaints
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <InformationCircleIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <p>No recent complaints in this ward</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+              <div className="flex items-start gap-3">
+                <InformationCircleIcon className="h-6 w-6 text-blue-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-blue-900 mb-1">Login to view complaints</h3>
+                  <p className="text-sm text-blue-700 mb-4">Login to see recent complaints and their status for this ward</p>
+                  <button
+                    onClick={() => navigate('/auth/login', { state: { from: '/ward-services', ward: selectedWard } })}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    Login to View
+                  </button>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <InformationCircleIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                <p>No recent complaints in this ward</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Ward Map */}
           <div className="bg-white p-6 rounded-lg shadow-sm">
