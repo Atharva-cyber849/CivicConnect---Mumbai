@@ -1,5 +1,6 @@
 import { format, formatDistance } from 'date-fns'
 import clsx from 'clsx'
+import { CIVIC_ISSUE_CATEGORIES, DEPARTMENT_ISSUE_MAPPING } from './constants'
 
 // Format date
 export const formatDate = (date, formatStr = 'PPP') => {
@@ -78,3 +79,134 @@ export const formatFileSize = (bytes) => {
 export const getInitials = (firstName, lastName) => {
   return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase()
 }
+
+// ============================================================================
+// COMPLAINT CLASSIFICATION & DEPARTMENT ASSIGNMENT UTILITIES
+// ============================================================================
+
+/**
+ * Get the assigned department for a given issue type
+ * Used for automatic complaint routing to the correct department
+ * @param {string} issueType - The issue type (e.g., 'POTHOLE', 'GARBAGE_NOT_COLLECTED')
+ * @returns {string|null} - Department value/ID or null if not found
+ */
+export const getAssignedDepartment = (issueType) => {
+  if (!issueType) return null
+  
+  // Search through all departments for matching issue
+  for (const [deptValue, deptData] of Object.entries(DEPARTMENT_ISSUE_MAPPING)) {
+    if (deptData.issues.includes(issueType)) {
+      return deptValue
+    }
+  }
+  
+  // Fallback to OTHER if no match found
+  return null
+}
+
+/**
+ * Get the department details (label, icon, SLA) for a given issue type
+ * @param {string} issueType - The issue type
+ * @returns {object|null} - Department details or null if not found
+ */
+export const getDepartmentDetailsForIssue = (issueType) => {
+  const deptValue = getAssignedDepartment(issueType)
+  if (!deptValue || !DEPARTMENT_ISSUE_MAPPING[deptValue]) {
+    return null
+  }
+  
+  const deptData = DEPARTMENT_ISSUE_MAPPING[deptValue]
+  return {
+    value: deptValue,
+    label: deptData.label,
+    icon: deptData.icon,
+    sla: deptData.sla
+  }
+}
+
+/**
+ * Get all issues for a specific category
+ * @param {string} categoryKey - The category key (e.g., 'ROADS_TRANSPORT')
+ * @returns {array} - Array of issues in the category
+ */
+export const getIssuesByCategory = (categoryKey) => {
+  const category = CIVIC_ISSUE_CATEGORIES[categoryKey]
+  return category ? category.issues : []
+}
+
+/**
+ * Get issue details by issue type
+ * @param {string} issueType - The issue type
+ * @returns {object|null} - Issue details or null if not found
+ */
+export const getIssueDetails = (issueType) => {
+  for (const category of Object.values(CIVIC_ISSUE_CATEGORIES)) {
+    const issue = category.issues.find(i => i.value === issueType)
+    if (issue) {
+      return issue
+    }
+  }
+  return null
+}
+
+/**
+ * Get all issue categories with their details
+ * @returns {array} - Array of categories with their properties
+ */
+export const getAllIssueCategories = () => {
+  return Object.entries(CIVIC_ISSUE_CATEGORIES).map(([key, category]) => ({
+    key,
+    label: category.label,
+    icon: category.icon,
+    color: category.color,
+    issueCount: category.issues.length
+  }))
+}
+
+/**
+ * Get SLA (Service Level Agreement) for a given issue type
+ * @param {string} issueType - The issue type
+ * @returns {object|null} - SLA details (response, resolution times and priority)
+ */
+export const getSLAForIssue = (issueType) => {
+  const deptDetails = getDepartmentDetailsForIssue(issueType)
+  return deptDetails ? deptDetails.sla : null
+}
+
+/**
+ * Get the priority level for a given issue type
+ * @param {string} issueType - The issue type
+ * @returns {string|null} - Priority level ('LOW', 'MEDIUM', 'HIGH', 'URGENT')
+ */
+export const getPriorityForIssue = (issueType) => {
+  const issue = getIssueDetails(issueType)
+  return issue ? issue.priority : null
+}
+
+/**
+ * Validate that an issue belongs to a specific department
+ * @param {string} issueType - The issue type
+ * @param {string} departmentValue - The department value to check
+ * @returns {boolean} - True if the issue belongs to the department
+ */
+export const isIssueBelongsToDepartment = (issueType, departmentValue) => {
+  const dept = DEPARTMENT_ISSUE_MAPPING[departmentValue]
+  return dept ? dept.issues.includes(issueType) : false
+}
+
+/**
+ * Get all departments that handle a specific issue type
+ * (In most cases there's only one, but this is useful for edge cases)
+ * @param {string} issueType - The issue type
+ * @returns {array} - Array of department values that handle this issue
+ */
+export const getDepartmentsThatHandleIssue = (issueType) => {
+  const departments = []
+  for (const [deptValue, deptData] of Object.entries(DEPARTMENT_ISSUE_MAPPING)) {
+    if (deptData.issues.includes(issueType)) {
+      departments.push(deptValue)
+    }
+  }
+  return departments
+}
+

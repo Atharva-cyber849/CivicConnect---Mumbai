@@ -128,6 +128,260 @@ export const COMPLAINT_CATEGORIES = [
   { value: 'OTHER', label: 'Other', department: 'OTHER', icon: '📋' }
 ]
 
+// Category-Wise Civic Issues - 8 Main Categories with Subcategories
+export const CIVIC_ISSUE_CATEGORIES = {
+  ROADS_TRANSPORT: {
+    label: 'Roads & Transport',
+    icon: '🛣️',
+    color: '#8B4513',
+    issues: [
+      { value: 'POTHOLE', label: 'Potholes', icon: '🕳️', department: 'ROADS_MAINTENANCE', priority: 'HIGH' },
+      { value: 'DAMAGED_ROADS', label: 'Damaged roads', icon: '🚧', department: 'ROADS_MAINTENANCE', priority: 'MEDIUM' },
+      { value: 'MISSING_MANHOLE', label: 'Missing manhole covers', icon: '⚠️', department: 'ROADS_MAINTENANCE', priority: 'HIGH' },
+      { value: 'BROKEN_FOOTPATH', label: 'Broken footpaths', icon: '🚶', department: 'ROADS_MAINTENANCE', priority: 'MEDIUM' },
+      { value: 'STREETLIGHT', label: 'Streetlight not working', icon: '💡', department: 'ROADS_MAINTENANCE', priority: 'MEDIUM' },
+      { value: 'DAMAGED_SIGNS', label: 'Damaged road signs', icon: '⛔', department: 'ROADS_MAINTENANCE', priority: 'LOW' },
+      { value: 'ILLEGAL_PARKING', label: 'Illegal parking', icon: '🚗', department: 'TRAFFIC', priority: 'LOW' },
+      { value: 'CONSTRUCTION_DEBRIS', label: 'Construction debris on road', icon: '🚛', department: 'ROADS_MAINTENANCE', priority: 'MEDIUM' },
+    ]
+  },
+  WASTE_MANAGEMENT: {
+    label: 'Waste Management',
+    icon: '🗑️',
+    color: '#228B22',
+    issues: [
+      { value: 'GARBAGE_NOT_COLLECTED', label: 'Garbage not collected', icon: '🗑️', department: 'SOLID_WASTE', priority: 'HIGH' },
+      { value: 'OVERFLOWING_BINS', label: 'Overflowing garbage bins', icon: '🚫', department: 'SOLID_WASTE', priority: 'HIGH' },
+      { value: 'ILLEGAL_DUMPING', label: 'Illegal dumping', icon: '⛔', department: 'SOLID_WASTE', priority: 'MEDIUM' },
+      { value: 'DEAD_ANIMAL', label: 'Dead animal removal', icon: '🦴', department: 'SOLID_WASTE', priority: 'URGENT' },
+      { value: 'DEBRIS_DUMPING', label: 'Debris dumping', icon: '🚛', department: 'DEBRIS_REMOVAL', priority: 'MEDIUM' },
+      { value: 'LACK_DUSTBINS', label: 'Lack of community dustbins', icon: '🛠️', department: 'SOLID_WASTE', priority: 'LOW' },
+    ]
+  },
+  WATER_DRAINAGE: {
+    label: 'Water Supply & Drainage',
+    icon: '💧',
+    color: '#4169E1',
+    issues: [
+      { value: 'WATER_LEAKAGE', label: 'Water leakage', icon: '💧', department: 'WATER_SUPPLY', priority: 'MEDIUM' },
+      { value: 'NO_WATER_SUPPLY', label: 'No water supply', icon: '⚠️', department: 'WATER_SUPPLY', priority: 'URGENT' },
+      { value: 'CONTAMINATED_WATER', label: 'Contaminated water', icon: '☢️', department: 'WATER_SUPPLY', priority: 'URGENT' },
+      { value: 'SEWER_BLOCKAGE', label: 'Sewer blockage', icon: '🌊', department: 'SEWERAGE', priority: 'HIGH' },
+      { value: 'STORMWATER_CHOKED', label: 'Stormwater drain choked', icon: '🌊', department: 'STORM_WATER', priority: 'HIGH' },
+      { value: 'FLOODING', label: 'Flooding in locality', icon: '🌊', department: 'STORM_WATER', priority: 'URGENT' },
+    ]
+  },
+  PUBLIC_HEALTH: {
+    label: 'Public Health & Sanitation',
+    icon: '🏥',
+    color: '#DC143C',
+    issues: [
+      { value: 'MOSQUITO_BREEDING', label: 'Mosquito breeding spots', icon: '🦟', department: 'MOSQUITO_CONTROL', priority: 'HIGH' },
+      { value: 'OPEN_SEWAGE', label: 'Open sewage', icon: '⚠️', department: 'SEWERAGE', priority: 'URGENT' },
+      { value: 'TOILET_ISSUES', label: 'Public toilet issues', icon: '🚽', department: 'PUBLIC_HEALTH', priority: 'HIGH' },
+      { value: 'DIRTY_AREA', label: 'Dirty public areas', icon: '😷', department: 'SANITATION', priority: 'MEDIUM' },
+      { value: 'STRAY_ANIMALS', label: 'Stray animals', icon: '🐕', department: 'VETERINARY', priority: 'MEDIUM' },
+      { value: 'FOOD_SAFETY', label: 'Food safety issues (from shops)', icon: '🍔', department: 'LICENSE', priority: 'HIGH' },
+    ]
+  },
+  ENVIRONMENT_PARKS: {
+    label: 'Environment & Parks',
+    icon: '🌳',
+    color: '#228B22',
+    issues: [
+      { value: 'TREE_PRUNING', label: 'Tree pruning required', icon: '✂️', department: 'GARDENS', priority: 'MEDIUM' },
+      { value: 'FALLEN_TREES', label: 'Fallen trees', icon: '🌳', department: 'GARDENS', priority: 'HIGH' },
+      { value: 'ILLEGAL_TREE_CUTTING', label: 'Illegal cutting of trees', icon: '⛔', department: 'ENVIRONMENT', priority: 'HIGH' },
+      { value: 'PARK_MAINTENANCE', label: 'Park maintenance', icon: '🎪', department: 'GARDENS', priority: 'MEDIUM' },
+      { value: 'POLLUTION', label: 'Pollution complaints', icon: '💨', department: 'POLLUTION_CONTROL', priority: 'MEDIUM' },
+    ]
+  },
+  BUILDING_ENCROACHMENT: {
+    label: 'Building & Encroachment',
+    icon: '🏗️',
+    color: '#A9A9A9',
+    issues: [
+      { value: 'UNAUTHORIZED_CONSTRUCTION', label: 'Unauthorized construction', icon: '🏗️', department: 'BUILDING_FACTORY', priority: 'HIGH' },
+      { value: 'DANGEROUS_BUILDING', label: 'Dangerous/Broken building', icon: '⚠️', department: 'BUILDING_FACTORY', priority: 'URGENT' },
+      { value: 'ILLEGAL_ENCROACHMENT', label: 'Illegal encroachment', icon: '🚧', department: 'ENCROACHMENT', priority: 'MEDIUM' },
+      { value: 'BLOCKED_ROADS', label: 'Blocked access roads', icon: '🚫', department: 'ENCROACHMENT', priority: 'MEDIUM' },
+      { value: 'ILLEGAL_HAWKERS', label: 'Illegal hawkers', icon: '🏪', department: 'ENCROACHMENT', priority: 'LOW' },
+    ]
+  },
+  LICENSING_REGULATION: {
+    label: 'Licensing & Regulation',
+    icon: '📜',
+    color: '#DAA520',
+    issues: [
+      { value: 'ILLEGAL_SHOPS', label: 'Illegal shops', icon: '🏪', department: 'LICENSE', priority: 'MEDIUM' },
+      { value: 'NO_LICENSE_DISPLAY', label: 'No license display', icon: '⛔', department: 'SHOPS_ESTABLISHMENT', priority: 'LOW' },
+      { value: 'NOISE_POLLUTION', label: 'Noise complaints', icon: '🔊', department: 'LICENSE', priority: 'MEDIUM' },
+      { value: 'UNAUTHORIZED_VENDORS', label: 'Unauthorized street vendors', icon: '🏪', department: 'ENCROACHMENT', priority: 'LOW' },
+    ]
+  },
+  FIRE_EMERGENCY: {
+    label: 'Fire & Emergency',
+    icon: '🚒',
+    color: '#FF4500',
+    issues: [
+      { value: 'FIRE_HAZARD', label: 'Fire hazards', icon: '🚒', department: 'FIRE_BRIGADE', priority: 'URGENT' },
+      { value: 'HAZARDOUS_STORAGE', label: 'Hazardous chemical storage', icon: '⚠️', department: 'FIRE_BRIGADE', priority: 'URGENT' },
+      { value: 'BLOCKED_FIRE_EXITS', label: 'Blocked fire exits', icon: '⚠️', department: 'FIRE_BRIGADE', priority: 'URGENT' },
+      { value: 'UNSAFE_SITUATION', label: 'Emergency unsafe situations', icon: '🚨', department: 'DISASTER_MANAGEMENT', priority: 'URGENT' },
+    ]
+  },
+}
+
+// Department → Issue Mapping (ML Classification Matrix)
+// This matrix is used to automatically assign complaints to the correct department based on issue type
+export const DEPARTMENT_ISSUE_MAPPING = {
+  ROADS_MAINTENANCE: {
+    label: 'Roads & Maintenance Department',
+    icon: '🛣️',
+    issues: [
+      'POTHOLE', 'DAMAGED_ROADS', 'MISSING_MANHOLE', 'BROKEN_FOOTPATH', 
+      'DAMAGED_SIGNS', 'CONSTRUCTION_DEBRIS'
+    ],
+    sla: { response: 4, resolution: 48, priority: 'HIGH' }
+  },
+  TRAFFIC: {
+    label: 'Traffic Department',
+    icon: '🚦',
+    issues: ['ILLEGAL_PARKING', 'TRAFFIC_SIGNAL_BROKEN'],
+    sla: { response: 2, resolution: 24, priority: 'HIGH' }
+  },
+  SOLID_WASTE: {
+    label: 'Solid Waste Management (SWM)',
+    icon: '🗑️',
+    issues: [
+      'GARBAGE_NOT_COLLECTED', 'OVERFLOWING_BINS', 'ILLEGAL_DUMPING',
+      'DEAD_ANIMAL', 'LACK_DUSTBINS', 'DIRTY_AREA'
+    ],
+    sla: { response: 2, resolution: 24, priority: 'HIGH' }
+  },
+  DEBRIS_REMOVAL: {
+    label: 'Debris Removal Unit',
+    icon: '🚛',
+    issues: ['DEBRIS_DUMPING', 'CONSTRUCTION_DEBRIS'],
+    sla: { response: 6, resolution: 72, priority: 'MEDIUM' }
+  },
+  STORM_WATER: {
+    label: 'Storm Water Drains (SWD) Department',
+    icon: '🌊',
+    issues: [
+      'STORMWATER_CHOKED', 'FLOODING'
+    ],
+    sla: { response: 4, resolution: 48, priority: 'HIGH' }
+  },
+  WATER_SUPPLY: {
+    label: 'Hydraulic Engineer (Water Supply) Department',
+    icon: '💧',
+    issues: [
+      'WATER_LEAKAGE', 'NO_WATER_SUPPLY', 'CONTAMINATED_WATER'
+    ],
+    sla: { response: 4, resolution: 24, priority: 'URGENT' }
+  },
+  SEWERAGE: {
+    label: 'Sewerage Operations Department',
+    icon: '🚰',
+    issues: [
+      'SEWER_BLOCKAGE', 'OPEN_SEWAGE'
+    ],
+    sla: { response: 4, resolution: 24, priority: 'URGENT' }
+  },
+  PUBLIC_HEALTH: {
+    label: 'Public Health Department',
+    icon: '🏥',
+    issues: ['TOILET_ISSUES'],
+    sla: { response: 6, resolution: 72, priority: 'MEDIUM' }
+  },
+  MOSQUITO_CONTROL: {
+    label: 'Insecticide Department (Mosquito Control)',
+    icon: '🦟',
+    issues: ['MOSQUITO_BREEDING'],
+    sla: { response: 12, resolution: 72, priority: 'HIGH' }
+  },
+  SANITATION: {
+    label: 'Sanitation Department',
+    icon: '🧹',
+    issues: ['DIRTY_AREA'],
+    sla: { response: 6, resolution: 48, priority: 'MEDIUM' }
+  },
+  GARDENS: {
+    label: 'Tree Authority / Gardens Department',
+    icon: '🌳',
+    issues: [
+      'TREE_PRUNING', 'FALLEN_TREES', 'PARK_MAINTENANCE'
+    ],
+    sla: { response: 24, resolution: 168, priority: 'MEDIUM' }
+  },
+  ENVIRONMENT: {
+    label: 'Environment Department',
+    icon: '🌍',
+    issues: [
+      'ILLEGAL_TREE_CUTTING'
+    ],
+    sla: { response: 12, resolution: 96, priority: 'MEDIUM' }
+  },
+  POLLUTION_CONTROL: {
+    label: 'Pollution Control Cell',
+    icon: '💨',
+    issues: ['POLLUTION'],
+    sla: { response: 24, resolution: 168, priority: 'LOW' }
+  },
+  BUILDING_FACTORY: {
+    label: 'Building & Factory Department (B&F)',
+    icon: '🏗️',
+    issues: [
+      'UNAUTHORIZED_CONSTRUCTION', 'DANGEROUS_BUILDING'
+    ],
+    sla: { response: 12, resolution: 168, priority: 'HIGH' }
+  },
+  ENCROACHMENT: {
+    label: 'Encroachment Removal Department',
+    icon: '🚧',
+    issues: [
+      'ILLEGAL_ENCROACHMENT', 'BLOCKED_ROADS', 'ILLEGAL_HAWKERS',
+      'UNAUTHORIZED_VENDORS'
+    ],
+    sla: { response: 24, resolution: 96, priority: 'MEDIUM' }
+  },
+  LICENSE: {
+    label: 'License Department',
+    icon: '📜',
+    issues: [
+      'ILLEGAL_SHOPS', 'NOISE_POLLUTION', 'FOOD_SAFETY'
+    ],
+    sla: { response: 24, resolution: 168, priority: 'MEDIUM' }
+  },
+  SHOPS_ESTABLISHMENT: {
+    label: 'Shops & Establishment Department',
+    icon: '🏪',
+    issues: ['NO_LICENSE_DISPLAY'],
+    sla: { response: 24, resolution: 96, priority: 'LOW' }
+  },
+  FIRE_BRIGADE: {
+    label: 'Mumbai Fire Brigade',
+    icon: '🚒',
+    issues: [
+      'FIRE_HAZARD', 'HAZARDOUS_STORAGE', 'BLOCKED_FIRE_EXITS'
+    ],
+    sla: { response: 1, resolution: 4, priority: 'URGENT' }
+  },
+  DISASTER_MANAGEMENT: {
+    label: 'Disaster Management Department',
+    icon: '⚠️',
+    issues: ['UNSAFE_SITUATION'],
+    sla: { response: 2, resolution: 12, priority: 'URGENT' }
+  },
+  VETERINARY: {
+    label: 'Veterinary Health Department',
+    icon: '🐾',
+    issues: ['STRAY_ANIMALS'],
+    sla: { response: 12, resolution: 72, priority: 'MEDIUM' }
+  },
+}
+
 export const COMPLAINT_STATUS = [
   { value: 'PENDING', label: 'Pending', color: 'yellow' },
   { value: 'IN_PROGRESS', label: 'In Progress', color: 'blue' },
