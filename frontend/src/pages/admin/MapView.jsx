@@ -90,6 +90,8 @@ const MapView = () => {
   });
   
   const [showWardBoundaries, setShowWardBoundaries] = useState(true);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [mapCenter] = useState([19.0760, 72.8777]); // Mumbai center
   const [mapZoom] = useState(11);
 
@@ -249,14 +251,52 @@ const MapView = () => {
             </h1>
             <p className="text-gray-600 mt-1">
               Geographic visualization of complaints across Mumbai wards
+              {userIsOfficer && user?.assigned_ward && ` • Ward: ${user.assigned_ward}`}
+              {userIsDepartmentAdmin && user?.department && ` • Department: ${user.department}`}
             </p>
           </div>
-          
-          <div className="text-right">
-            <div className="text-2xl font-bold text-[#0078D7]">
-              {filteredComplaints.length}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending</p>
+              <p className="text-2xl font-bold text-gray-900">{filteredComplaints.filter(c => c.status === 'PENDING').length}</p>
             </div>
-            <div className="text-sm text-gray-600">Complaints Shown</div>
+            <div className="text-4xl text-yellow-500 opacity-20">⚠️</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-[#0078D7]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">In Progress</p>
+              <p className="text-2xl font-bold text-gray-900">{filteredComplaints.filter(c => c.status === 'IN_PROGRESS').length}</p>
+            </div>
+            <div className="text-4xl text-[#0078D7] opacity-20">⚙️</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Resolved</p>
+              <p className="text-2xl font-bold text-gray-900">{filteredComplaints.filter(c => c.status === 'RESOLVED').length}</p>
+            </div>
+            <div className="text-4xl text-green-500 opacity-20">✅</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Shown</p>
+              <p className="text-2xl font-bold text-gray-900">{filteredComplaints.length}</p>
+            </div>
+            <div className="text-4xl text-red-500 opacity-20">📍</div>
           </div>
         </div>
       </div>
@@ -266,14 +306,26 @@ const MapView = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
-            <h3 className="text-lg font-medium text-gray-900">Map Filters</h3>
+            <h3 className="text-lg font-medium text-gray-900">Map Filters & Options</h3>
           </div>
-          <button
-            onClick={clearFilters}
-            className="text-sm text-[#0078D7] hover:text-blue-800 font-medium"
-          >
-            Clear All
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                showHeatmap
+                  ? 'bg-[#0078D7] text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              🔥 Heatmap View
+            </button>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-[#0078D7] hover:text-blue-800 font-medium"
+            >
+              Clear All
+            </button>
+          </div>
         </div>
         
         <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-6' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-5'}`}>
@@ -357,9 +409,9 @@ const MapView = () => {
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="h-[600px] w-full">
+      {/* Map Container with Sidebar */}
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden flex">
+        <div className="flex-1 h-[600px] w-full">
           {!isClient || isLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0078D7]"></div>
@@ -450,14 +502,31 @@ const MapView = () => {
                         </div>
 
                         {/* Actions */}
-                        <div className="mt-4 pt-3 border-t border-gray-200">
+                        <div className="mt-4 pt-3 border-t border-gray-200 space-y-2">
                           <button
                             onClick={() => window.open(`/admin/complaints/${complaint.id}`, '_blank')}
                             className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-[#0078D7] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0078D7]"
                           >
                             <EyeIcon className="h-4 w-4 mr-1" />
-                            View Details
+                            View Full Details
                           </button>
+                          
+                          {/* Role-based action buttons */}
+                          {(userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer) && complaint.status === 'PENDING' && (
+                            <button
+                              className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                            >
+                              ✓ Mark In Progress
+                            </button>
+                          )}
+                          
+                          {(userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer) && complaint.status === 'IN_PROGRESS' && (
+                            <button
+                              className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                            >
+                              ✓ Mark Resolved
+                            </button>
+                          )}
                         </div>
                       </div>
                     </Popup>
@@ -470,6 +539,60 @@ const MapView = () => {
               <div className="text-center">
                 <MapPinIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600">Map data is loading or unavailable</p>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Right Sidebar - Complaint Details */}
+        <div className="w-80 border-l border-gray-200 overflow-y-auto bg-gray-50">
+          {filteredComplaints.length > 0 ? (
+            <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900">Complaints List</h3>
+                <span className="text-xs bg-[#0078D7] text-white px-2 py-1 rounded-full">{filteredComplaints.length}</span>
+              </div>
+              
+              {filteredComplaints.slice(0, 10).map((complaint) => (
+                <div
+                  key={complaint.id}
+                  onClick={() => setSelectedComplaint(complaint)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    selectedComplaint?.id === complaint.id
+                      ? 'border-[#0078D7] bg-blue-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-gray-900 truncate flex-1">#{complaint.id}</h4>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap ml-2 ${
+                      complaint.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      complaint.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                      complaint.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {complaint.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">{complaint.title}</p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">📍 {complaint.ward}</span>
+                    <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">{complaint.category}</span>
+                  </div>
+                </div>
+              ))}
+              
+              {filteredComplaints.length > 10 && (
+                <div className="text-center text-xs text-gray-500 pt-2">
+                  +{filteredComplaints.length - 10} more complaints
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full p-4">
+              <div className="text-center">
+                <MapPinIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">No complaints to display</p>
               </div>
             </div>
           )}
