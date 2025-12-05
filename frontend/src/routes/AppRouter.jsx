@@ -147,10 +147,8 @@ const AppRouter = () => {
         {/* ===== PUBLIC ROUTES ===== */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<LandingPage />} />
+          <Route path="ward-services" element={<MumbaiWardServices />} />
         </Route>
-
-        {/* ===== PUBLIC WARD SERVICES ===== */}
-        <Route path="/ward-services" element={<PublicLayout><MumbaiWardServices /></PublicLayout>} />
 
         {/* ===== CITIZEN AUTH ROUTES ===== */}
         <Route path="/auth/login" element={<AuthLayout><Login /></AuthLayout>} />
