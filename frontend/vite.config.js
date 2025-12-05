@@ -26,6 +26,9 @@ export default defineConfig({
     middlewareMode: false,
     fs: {
       allow: ['..']
+    },
+    watch: {
+      ignored: ['**/node_modules/**', '**/.git/**']
     }
   },
   build: {
