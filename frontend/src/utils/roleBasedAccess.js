@@ -1,5 +1,11 @@
 // Role-based access control utilities
 import { USER_ROLES } from '../config/constants';
+import { 
+  CITIZEN_MODULE, 
+  WARD_ADMIN_MODULE, 
+  DEPARTMENT_ADMIN_MODULE, 
+  SUPER_ADMIN_MODULE 
+} from './constants';
 
 /**
  * Check if user is a super admin (ADMIN role + is_superuser flag)
@@ -177,3 +183,164 @@ export const getPageAccess = (user) => {
 
   return baseAccess;
 };
+
+// ============================================================================
+// MODULE ACCESS CONTROL
+// ============================================================================
+
+/**
+ * Get available modules for a user based on their role and assignment level
+ * @param {Object} user - User object with role, is_superuser, assigned_ward, department, etc.
+ * @returns {Array} - Array of module objects available to the user
+ */
+export const getAvailableModules = (user) => {
+  if (!user) return [];
+
+  const modules = [];
+
+  // All authenticated users have access to citizen features
+  if (user?.role === USER_ROLES.CITIZEN || user?.role === 'CITIZEN') {
+    modules.push(CITIZEN_MODULE);
+  }
+
+  // Ward-level admin (ADMIN role with assigned_ward)
+  if (isAdmin(user) && user?.assigned_ward && !isSuperAdmin(user)) {
+    modules.push(WARD_ADMIN_MODULE);
+  }
+
+  // Department-level admin (ADMIN role with department)
+  if (isDepartmentAdmin(user) && user?.department) {
+    modules.push(DEPARTMENT_ADMIN_MODULE);
+  }
+
+  // Super admin gets all modules
+  if (isSuperAdmin(user)) {
+    modules.push(CITIZEN_MODULE, WARD_ADMIN_MODULE, DEPARTMENT_ADMIN_MODULE, SUPER_ADMIN_MODULE);
+  }
+
+  return modules;
+};
+
+/**
+ * Check if user has access to a specific module
+ * @param {Object} user - User object
+ * @param {String} moduleId - Module ID to check (e.g., 'CITIZEN', 'WARD_ADMIN')
+ * @returns {Boolean} - True if user has access to the module
+ */
+export const hasModuleAccess = (user, moduleId) => {
+  const availableModules = getAvailableModules(user);
+  return availableModules.some(module => module.id === moduleId);
+};
+
+/**
+ * Get user's primary module (main dashboard module)
+ * Priority: SUPER_ADMIN > DEPARTMENT_ADMIN > WARD_ADMIN > CITIZEN
+ * @param {Object} user - User object
+ * @returns {Object|null} - Primary module object or null
+ */
+export const getPrimaryModule = (user) => {
+  if (isSuperAdmin(user)) return SUPER_ADMIN_MODULE;
+  if (isDepartmentAdmin(user)) return DEPARTMENT_ADMIN_MODULE;
+  if (isAdmin(user) && user?.assigned_ward) return WARD_ADMIN_MODULE;
+  if (isCitizen(user)) return CITIZEN_MODULE;
+  return null;
+};
+
+/**
+ * Get all features of a module
+ * @param {String} moduleId - Module ID
+ * @returns {Array} - Array of feature objects
+ */
+export const getModuleFeatures = (moduleId) => {
+  const moduleMap = {
+    CITIZEN: CITIZEN_MODULE,
+    WARD_ADMIN: WARD_ADMIN_MODULE,
+    DEPARTMENT_ADMIN: DEPARTMENT_ADMIN_MODULE,
+    SUPER_ADMIN: SUPER_ADMIN_MODULE
+  };
+
+  const module = moduleMap[moduleId];
+  if (!module) return [];
+
+  return Object.values(module.features || {});
+};
+
+/**
+ * Get all subfeatures of a specific feature
+ * @param {String} moduleId - Module ID
+ * @param {String} featureId - Feature ID
+ * @returns {Array} - Array of subfeature objects
+ */
+export const getFeatureSubfeatures = (moduleId, featureId) => {
+  const features = getModuleFeatures(moduleId);
+  const feature = features.find(f => f.id === featureId);
+  return feature?.subFeatures || [];
+};
+
+/**
+ * Get feature completion percentage for a module
+ * @param {String} moduleId - Module ID
+ * @returns {Number} - Percentage (0-100)
+ */
+export const getModuleCompletionPercentage = (moduleId) => {
+  const moduleMap = {
+    CITIZEN: CITIZEN_MODULE,
+    WARD_ADMIN: WARD_ADMIN_MODULE,
+    DEPARTMENT_ADMIN: DEPARTMENT_ADMIN_MODULE,
+    SUPER_ADMIN: SUPER_ADMIN_MODULE
+  };
+
+  const module = moduleMap[moduleId];
+  if (!module) return 0;
+
+  const features = Object.values(module.features || {});
+  if (features.length === 0) return 0;
+
+  const completedCount = features.reduce((count, feature) => {
+    const subfeatures = feature.subFeatures || [];
+    const completedSubfeatures = subfeatures.filter(sf => sf.status === 'completed').length;
+    return count + (completedSubfeatures > 0 ? 1 : 0);
+  }, 0);
+
+  return Math.round((completedCount / features.length) * 100);
+};
+
+/**
+ * Get all features with their completion status for a module
+ * @param {String} moduleId - Module ID
+ * @returns {Array} - Array of features with completion metrics
+ */
+export const getModuleFeatureStatus = (moduleId) => {
+  const features = getModuleFeatures(moduleId);
+  
+  return features.map(feature => {
+    const subfeatures = feature.subFeatures || [];
+    const completed = subfeatures.filter(sf => sf.status === 'completed').length;
+    const total = subfeatures.length;
+    
+    return {
+      ...feature,
+      completionPercentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+      completedCount: completed,
+      totalCount: total
+    };
+  });
+};
+
+/**
+ * Check if user can access a specific feature
+ * @param {Object} user - User object
+ * @param {String} moduleId - Module ID
+ * @param {String} featureId - Feature ID
+ * @returns {Boolean} - True if user has access to the feature
+ */
+export const hasFeatureAccess = (user, moduleId, featureId) => {
+  const hasAccess = hasModuleAccess(user, moduleId);
+  if (!hasAccess) return false;
+
+  const features = getModuleFeatures(moduleId);
+  const featureExists = features.some(f => f.id === featureId);
+  
+  return featureExists;
+};
+

@@ -717,3 +717,460 @@ export const LANGUAGES = [
   { value: 'en', label: 'English', flag: '🇬🇧' },
   { value: 'mr', label: 'मराठी', flag: '🇮🇳' },
 ]
+
+// ============================================================================
+// MODULE STRUCTURE & FEATURES (Non-AI Based for Aavishkar Submission)
+// ============================================================================
+
+/**
+ * CITIZEN MODULE - Public issue reporting and tracking
+ * Target: General public, citizens of Mumbai
+ * Key Features: Registration, complaint submission, tracking, feedback
+ */
+export const CITIZEN_MODULE = {
+  id: 'CITIZEN',
+  name: 'Citizen Module',
+  icon: '👤',
+  description: 'Public issue reporting and complaint tracking',
+  requiredRole: 'CITIZEN',
+  features: {
+    REGISTRATION: {
+      id: 'registration',
+      name: 'User Registration & Login',
+      icon: '📝',
+      description: 'OTP login via mobile/email with multi-language support',
+      subFeatures: [
+        { name: 'OTP Login (SMS/Email)', icon: '📱', status: 'completed' },
+        { name: 'Profile Creation', icon: '👤', status: 'completed' },
+        { name: 'Multi-language Support (EN/HI/MR)', icon: '🌐', status: 'in-progress' },
+      ]
+    },
+    COMPLAINT_SUBMISSION: {
+      id: 'complaint_submission',
+      name: 'Complaint Submission',
+      icon: '📋',
+      description: 'Report issues with location, images, and category',
+      subFeatures: [
+        { name: 'Capture Image', icon: '📷', status: 'completed' },
+        { name: 'Auto-fetch Location (GPS)', icon: '🗺️', status: 'completed' },
+        { name: 'Auto-detect Ward (Polygon Mapping)', icon: '📍', status: 'completed' },
+        { name: 'Select Category & Subcategory', icon: '📂', status: 'completed' },
+        { name: 'Add Description', icon: '✍️', status: 'completed' },
+        { name: 'Upload Multiple Images', icon: '🖼️', status: 'in-progress' },
+      ]
+    },
+    COMPLAINT_TRACKING: {
+      id: 'complaint_tracking',
+      name: 'Complaint Tracking',
+      icon: '📊',
+      description: 'Real-time status updates with timeline visualization',
+      subFeatures: [
+        { name: 'Real-time Status Updates', icon: '⏱️', status: 'in-progress' },
+        { name: 'Timeline Visualization', icon: '📈', status: 'in-progress' },
+        { name: 'Officer Assignment View', icon: '👨‍💼', status: 'in-progress' },
+        { name: 'Work Completion Proof (Photos)', icon: '✅', status: 'in-progress' },
+      ]
+    },
+    NOTIFICATIONS: {
+      id: 'notifications',
+      name: 'Notifications',
+      icon: '🔔',
+      description: 'SMS/Email/Push alerts for complaint status',
+      subFeatures: [
+        { name: 'SMS / Email / Push Notifications', icon: '📬', status: 'completed' },
+        { name: 'Status Change Alerts', icon: '⚡', status: 'in-progress' },
+        { name: 'Escalation Alerts', icon: '🚨', status: 'in-progress' },
+      ]
+    },
+    COMPLAINT_HISTORY: {
+      id: 'complaint_history',
+      name: 'Complaint History',
+      icon: '📜',
+      description: 'View and download complaint reports',
+      subFeatures: [
+        { name: 'View Resolved Cases', icon: '✅', status: 'completed' },
+        { name: 'View Pending Cases', icon: '⏳', status: 'completed' },
+        { name: 'View Escalated Cases', icon: '⬆️', status: 'in-progress' },
+        { name: 'Downloadable Report', icon: '📥', status: 'in-progress' },
+      ]
+    },
+    FEEDBACK_SYSTEM: {
+      id: 'feedback_system',
+      name: 'Feedback System',
+      icon: '⭐',
+      description: 'Rate resolution and provide comments',
+      subFeatures: [
+        { name: 'Rate Resolution (1-5 stars)', icon: '⭐', status: 'in-progress' },
+        { name: 'Provide Comments', icon: '💬', status: 'in-progress' },
+        { name: 'Reopen Issue if Not Fixed', icon: '🔄', status: 'in-progress' },
+      ]
+    },
+    PUBLIC_DASHBOARD: {
+      id: 'public_dashboard',
+      name: 'Public Transparency Dashboard',
+      icon: '📊',
+      description: 'Ward-wise analytics and hotspot visualization',
+      subFeatures: [
+        { name: 'Ward-wise Complaint Stats', icon: '📍', status: 'completed' },
+        { name: 'Hotspot Visualization', icon: '🔥', status: 'in-progress' },
+        { name: 'Resolution Time Analytics', icon: '⏱️', status: 'in-progress' },
+      ]
+    },
+  }
+}
+
+/**
+ * WARD ADMIN MODULE - Ward-level complaint management
+ * Target: Ward-level municipal officers (Aval Adhikari)
+ * Key Features: Complaint assignment, SLA monitoring, officer management, verification
+ */
+export const WARD_ADMIN_MODULE = {
+  id: 'WARD_ADMIN',
+  name: 'Ward Admin Module',
+  icon: '🏢',
+  description: 'Ward-level complaint management and officer coordination',
+  requiredRole: 'ADMIN',
+  assignedLevel: 'WARD',
+  features: {
+    COMPLAINT_ASSIGNMENT: {
+      id: 'complaint_assignment',
+      name: 'Complaint Assignment',
+      icon: '📤',
+      description: 'Assign complaints to field officers',
+      subFeatures: [
+        { name: 'View Ward Complaints', icon: '📋', status: 'completed' },
+        { name: 'Filter by Category/Urgency/Date', icon: '🔍', status: 'completed' },
+        { name: 'Assign to Specific Officer', icon: '👨‍💼', status: 'in-progress' },
+        { name: 'Reassign if Necessary', icon: '🔄', status: 'in-progress' },
+      ]
+    },
+    SLA_MONITORING: {
+      id: 'sla_monitoring',
+      name: 'SLA Monitoring',
+      icon: '⏰',
+      description: 'Track SLA compliance and escalations',
+      subFeatures: [
+        { name: 'Highlight Overdue Complaints', icon: '⚠️', status: 'in-progress' },
+        { name: 'Auto-escalated Cases List', icon: '🚀', status: 'in-progress' },
+        { name: 'Ward Performance Analytics', icon: '📊', status: 'in-progress' },
+      ]
+    },
+    OFFICER_MANAGEMENT: {
+      id: 'officer_management',
+      name: 'Field Officer Management',
+      icon: '👥',
+      description: 'Manage ward field officers',
+      subFeatures: [
+        { name: 'Add/Remove Officers', icon: '➕', status: 'completed' },
+        { name: 'Assign Territory/Route', icon: '🗺️', status: 'in-progress' },
+        { name: 'Track On-duty Status', icon: '📍', status: 'in-progress' },
+      ]
+    },
+    VERIFICATION_CLOSURE: {
+      id: 'verification_closure',
+      name: 'Verification & Closure',
+      icon: '✅',
+      description: 'Review and approve resolution evidence',
+      subFeatures: [
+        { name: 'Review Officer Evidence', icon: '📸', status: 'in-progress' },
+        { name: 'Accept/Reject Closure', icon: '✓/✗', status: 'in-progress' },
+        { name: 'Add Remarks', icon: '💬', status: 'in-progress' },
+      ]
+    },
+    WARD_REPORTS: {
+      id: 'ward_reports',
+      name: 'Reports & Analytics',
+      icon: '📈',
+      description: 'Daily, weekly, monthly ward performance',
+      subFeatures: [
+        { name: 'Daily Ward Performance', icon: '📅', status: 'in-progress' },
+        { name: 'Weekly/Monthly Reports', icon: '📊', status: 'in-progress' },
+        { name: 'Department-wise Metrics', icon: '🏛️', status: 'in-progress' },
+        { name: 'Peak Issue Types Analysis', icon: '📈', status: 'in-progress' },
+      ]
+    },
+  }
+}
+
+/**
+ * DEPARTMENT ADMIN MODULE - Department-level complaint management
+ * Target: Department heads (e.g., SWM Commissioner, Water Engineer, Roads Commissioner)
+ * Key Features: Department dashboard, resource planning, SLA tracking, analytics
+ */
+export const DEPARTMENT_ADMIN_MODULE = {
+  id: 'DEPARTMENT_ADMIN',
+  name: 'Department Admin Module',
+  icon: '🏛️',
+  description: 'Department-level complaint management and resource planning',
+  requiredRole: 'ADMIN',
+  assignedLevel: 'DEPARTMENT',
+  features: {
+    DEPARTMENT_DASHBOARD: {
+      id: 'dept_dashboard',
+      name: 'Department Dashboard',
+      icon: '📊',
+      description: 'City-wide department complaint overview',
+      subFeatures: [
+        { name: 'City-wide Complaints', icon: '🗺️', status: 'completed' },
+        { name: 'Category-wise Load Distribution', icon: '📊', status: 'completed' },
+        { name: 'Ward-wise Distribution', icon: '📍', status: 'in-progress' },
+      ]
+    },
+    COMPLAINT_CONTROL: {
+      id: 'complaint_control',
+      name: 'Complaint Control',
+      icon: '🎛️',
+      description: 'Oversee department complaints citywide',
+      subFeatures: [
+        { name: 'View All Department Complaints', icon: '📋', status: 'completed' },
+        { name: 'Reallocate Officers', icon: '🔄', status: 'in-progress' },
+        { name: 'Approve Closure Requests', icon: '✅', status: 'in-progress' },
+      ]
+    },
+    RESOURCE_PLANNING: {
+      id: 'resource_planning',
+      name: 'Resource Planning',
+      icon: '🚚',
+      description: 'Allocate and monitor resources',
+      subFeatures: [
+        { name: 'Allocate Trucks/Staff/Tools', icon: '🛠️', status: 'in-progress' },
+        { name: 'Monitor Field Workload', icon: '📊', status: 'in-progress' },
+        { name: 'Identify Hotspots', icon: '🔥', status: 'in-progress' },
+      ]
+    },
+    DEPARTMENT_ANALYTICS: {
+      id: 'dept_analytics',
+      name: 'Reports & Analytics',
+      icon: '📈',
+      description: 'SLA adherence and performance metrics',
+      subFeatures: [
+        { name: 'SLA Adherence Tracking', icon: '⏰', status: 'in-progress' },
+        { name: 'Monthly Performance Report', icon: '📊', status: 'in-progress' },
+        { name: 'Category Breakdown', icon: '📂', status: 'in-progress' },
+        { name: 'Ward Patterns & Recurring Issues', icon: '📈', status: 'in-progress' },
+      ]
+    },
+  }
+}
+
+/**
+ * SUPER ADMIN MODULE - System-wide BMC control
+ * Target: BMC Commissioner and top-level administrators
+ * Key Features: System control, monitoring, governance, escalation, audit
+ */
+export const SUPER_ADMIN_MODULE = {
+  id: 'SUPER_ADMIN',
+  name: 'Super Admin Module',
+  icon: '👑',
+  description: 'BMC system-wide control and governance',
+  requiredRole: 'ADMIN',
+  assignedLevel: 'SYSTEM',
+  features: {
+    SYSTEM_CONTROL: {
+      id: 'system_control',
+      name: 'Full System Control',
+      icon: '⚙️',
+      description: 'Manage users, wards, departments, categories',
+      subFeatures: [
+        { name: 'User Verification & Management', icon: '👤', status: 'completed' },
+        { name: 'Add/Edit/Delete Wards', icon: '📍', status: 'in-progress' },
+        { name: 'Manage Departments', icon: '🏛️', status: 'completed' },
+        { name: 'Manage Categories & Mappings', icon: '📂', status: 'completed' },
+      ]
+    },
+    CITY_MONITORING: {
+      id: 'city_monitoring',
+      name: 'City-wide Monitoring',
+      icon: '🌍',
+      description: 'Real-time system monitoring and visualization',
+      subFeatures: [
+        { name: 'City-wide Complaint Grid', icon: '📊', status: 'completed' },
+        { name: 'Real-time Heatmaps', icon: '🔥', status: 'in-progress' },
+        { name: 'SLA Violations Summary', icon: '⚠️', status: 'in-progress' },
+      ]
+    },
+    GOVERNANCE_REPORTS: {
+      id: 'governance',
+      name: 'Governance Reports',
+      icon: '📋',
+      description: 'Cross-department comparisons and analysis',
+      subFeatures: [
+        { name: 'Cross-department Comparisons', icon: '🔀', status: 'in-progress' },
+        { name: 'Ward Performance Rankings', icon: '🏆', status: 'in-progress' },
+        { name: 'Policy-level Overview', icon: '📊', status: 'in-progress' },
+      ]
+    },
+    ESCALATION_HANDLING: {
+      id: 'escalation',
+      name: 'Escalation Handling',
+      icon: '🚨',
+      description: 'Intervention in critical cases',
+      subFeatures: [
+        { name: 'High-Priority Case Intervention', icon: '🆘', status: 'in-progress' },
+        { name: 'Override Permissions', icon: '🔓', status: 'in-progress' },
+        { name: 'Compliance Tracking', icon: '✓', status: 'in-progress' },
+      ]
+    },
+    AUDIT_LOGS: {
+      id: 'audit_logs',
+      name: 'Audit & Logs',
+      icon: '📝',
+      description: 'Transaction logs and security audits',
+      subFeatures: [
+        { name: 'Transaction Logs', icon: '📋', status: 'in-progress' },
+        { name: 'Communication Trails', icon: '💬', status: 'in-progress' },
+        { name: 'Security Audits', icon: '🔐', status: 'in-progress' },
+      ]
+    },
+  }
+}
+
+/**
+ * UI/UX FLOW TEMPLATES
+ * Describes the workflow and screen progression for each module
+ */
+export const MODULE_UI_FLOWS = {
+  CITIZEN_HOME: {
+    name: 'Citizen Home Screen',
+    screens: ['Report Issue', 'Track Complaint', 'My Complaints', 'Language Selector'],
+    actions: ['Report', 'Track', 'View History', 'Change Language']
+  },
+  CITIZEN_REPORTING: {
+    name: 'Citizen Complaint Reporting Flow',
+    steps: [
+      'Open Report Issue',
+      'Capture Image',
+      'Location Auto-Detected',
+      'Select Category/Subcategory',
+      'Add Description',
+      'Submit'
+    ],
+    confirmation: 'Your complaint has been registered - Complaint ID: XXXX'
+  },
+  CITIZEN_TRACKING: {
+    name: 'Citizen Complaint Tracking',
+    statuses: ['Filed', 'Assigned', 'In Progress', 'Resolved', 'Verified'],
+    elements: ['Timeline', 'Status Badges', 'Officer Details', 'Photos']
+  },
+  WARD_ADMIN_DASHBOARD: {
+    name: 'Ward Admin Dashboard',
+    widgets: ['Pending Complaints', 'SLA Alerts', 'Officer Availability', 'Daily Workload']
+  },
+  WARD_ASSIGNMENT: {
+    name: 'Ward Admin Assignment Flow',
+    steps: [
+      'Open Complaint',
+      'View Location & Images',
+      'Select Officer',
+      'Assign Task',
+      'Auto-notification to Officer'
+    ]
+  },
+  DEPT_ADMIN_DASHBOARD: {
+    name: 'Department Admin Dashboard',
+    views: ['City-wide Complaints', 'Ward-wise Distribution', 'Filter by Category & Date']
+  },
+  SUPER_ADMIN_DASHBOARD: {
+    name: 'Super Admin System Dashboard',
+    widgets: ['Total Complaints', 'Heatmaps', 'Ward Performance', 'Department Performance']
+  }
+}
+
+/**
+ * MODULE ROADMAP & IMPLEMENTATION STATUS
+ */
+export const MODULE_IMPLEMENTATION_STATUS = {
+  CITIZEN: {
+    name: 'Citizen Module',
+    completionPercentage: 65,
+    completedFeatures: [
+      'OTP Login',
+      'Profile Creation',
+      'Complaint Submission',
+      'Location Detection',
+      'Ward Auto-detection',
+      'Category Selection',
+      'Complaint View'
+    ],
+    inProgressFeatures: [
+      'Multi-language Support',
+      'Real-time Tracking',
+      'Timeline Visualization',
+      'Multiple Image Upload',
+      'Feedback System',
+      'Public Dashboard'
+    ],
+    nextSteps: [
+      'Implement SMS/Email notifications',
+      'Add timeline visualization',
+      'Enable feedback rating system',
+      'Create public transparency dashboard'
+    ]
+  },
+  WARD_ADMIN: {
+    name: 'Ward Admin Module',
+    completionPercentage: 30,
+    completedFeatures: [
+      'View Ward Complaints',
+      'Filter Complaints',
+      'Officer Management',
+      'Add/Remove Officers'
+    ],
+    inProgressFeatures: [
+      'Complaint Assignment',
+      'SLA Monitoring',
+      'Territory Management',
+      'Verification & Closure',
+      'Ward Reports'
+    ],
+    nextSteps: [
+      'Build assignment workflow',
+      'Implement SLA tracking',
+      'Create report generation',
+      'Add escalation handling'
+    ]
+  },
+  DEPARTMENT_ADMIN: {
+    name: 'Department Admin Module',
+    completionPercentage: 20,
+    completedFeatures: [
+      'View Department Complaints',
+      'Category-wise Filtering',
+      'Department Dashboard'
+    ],
+    inProgressFeatures: [
+      'Complaint Control',
+      'Resource Planning',
+      'Analytics & Reports'
+    ],
+    nextSteps: [
+      'Build resource allocation tool',
+      'Create analytics dashboards',
+      'Implement hotspot identification',
+      'Add SLA tracking'
+    ]
+  },
+  SUPER_ADMIN: {
+    name: 'Super Admin Module',
+    completionPercentage: 40,
+    completedFeatures: [
+      'User Management',
+      'Department Management',
+      'Category Management',
+      'City-wide Dashboard'
+    ],
+    inProgressFeatures: [
+      'Heatmap Visualization',
+      'Ward Management',
+      'Escalation Handling',
+      'Audit Logs'
+    ],
+    nextSteps: [
+      'Build heatmap system',
+      'Create ward editor',
+      'Implement escalation workflow',
+      'Add comprehensive audit logging'
+    ]
+  }
+}
+
