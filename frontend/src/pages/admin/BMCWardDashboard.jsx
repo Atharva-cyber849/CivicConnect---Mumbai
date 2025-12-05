@@ -118,15 +118,37 @@ const BMCWardDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <BuildingOffice2Icon className="h-8 w-8 text-blue-600" />
-          BMC Ward Dashboard
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Comprehensive view of Mumbai Municipal Corporation ward operations
-        </p>
+      {/* Header with Stats */}
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <BuildingOffice2Icon className="h-8 w-8 text-blue-600" />
+            BMC Ward Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Comprehensive view of Mumbai Municipal Corporation ward operations
+          </p>
+        </div>
+        
+        {/* Quick Stats for Selected Ward */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">{wardData?.complaints?.length || 0}</p>
+            <p className="text-sm text-gray-600">Total Complaints</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">{wardData?.analytics?.resolved || 0}</p>
+            <p className="text-sm text-gray-600">Resolved</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-yellow-600">{wardData?.complaints?.filter(c => c.status === 'PENDING').length || 0}</p>
+            <p className="text-sm text-gray-600">Pending</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">{wardData?.officers?.length || 0}</p>
+            <p className="text-sm text-gray-600">Officers</p>
+          </div>
+        </div>
       </div>
 
       {/* Zone and Ward Selector */}

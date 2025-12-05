@@ -258,27 +258,49 @@ const OfficerManagement = () => {
   // Return the main content with ErrorBoundary
   return (
     <ErrorBoundary>
-      <div className="w-full">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <UserIcon className="h-8 w-8 mr-3 text-blue-600" />
-            BMC Officer Management
-          </h1>
-          <p className="text-gray-600">Manage BMC ward officers and department administrators across Mumbai</p>
+      <div className="w-full space-y-6">
+        {/* Header with Stats */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                <UserIcon className="h-8 w-8 mr-3 text-blue-600" />
+                BMC Officer Management
+              </h1>
+              <p className="text-gray-600 mt-1">Manage BMC ward officers and department administrators across Mumbai</p>
+            </div>
+            
+            {userIsSuperAdmin && (
+              <Link
+                to="/admin/register"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <UserPlusIcon className="h-4 w-4 mr-2" />
+                Register Officer
+              </Link>
+            )}
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{officers.length}</p>
+              <p className="text-sm text-gray-600">Total Officers</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">{officers.filter(o => o.is_active).length}</p>
+              <p className="text-sm text-gray-600">Active</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-red-600">{officers.filter(o => !o.is_active).length}</p>
+              <p className="text-sm text-gray-600">Inactive</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600">{new Set(officers.map(o => o.department)).size}</p>
+              <p className="text-sm text-gray-600">Departments</p>
+            </div>
+          </div>
         </div>
-        
-        {userIsSuperAdmin && (
-          <Link
-            to="/admin/register"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-          >
-            <UserPlusIcon className="h-4 w-4 mr-2" />
-            Register BMC Officer
-          </Link>
-        )}
-      </div>
 
       {/* Filters */}
       <div className="bg-white shadow-sm rounded-lg p-6">

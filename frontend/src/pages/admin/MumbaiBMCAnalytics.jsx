@@ -90,15 +90,37 @@ const MumbaiBMCAnalytics = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <ChartBarIcon className="h-8 w-8 text-blue-600" />
-          Mumbai BMC Analytics Dashboard
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Comprehensive analytics and insights for Brihanmumbai Municipal Corporation
-        </p>
+      {/* Header with Stats */}
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <ChartBarIcon className="h-8 w-8 text-blue-600" />
+            Mumbai BMC Analytics Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Comprehensive analytics and insights for Brihanmumbai Municipal Corporation
+          </p>
+        </div>
+        
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">{summary.total_complaints || 0}</p>
+            <p className="text-sm text-gray-600">Total Complaints</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">{Math.round(summary.resolution_rate || 0)}%</p>
+            <p className="text-sm text-gray-600">Resolution Rate</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-orange-600">{summary.avg_resolution_time || 0}h</p>
+            <p className="text-sm text-gray-600">Avg Resolution</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">{Math.round(summary.satisfaction_score || 0)}%</p>
+            <p className="text-sm text-gray-600">Satisfaction</p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}

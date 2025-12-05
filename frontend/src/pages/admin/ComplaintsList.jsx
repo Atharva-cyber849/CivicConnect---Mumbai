@@ -139,10 +139,37 @@ const ComplaintsList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Complaints Management</h1>
-        <p className="text-gray-600">Manage and track all citizen complaints</p>
+      {/* Header with Stats */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <DocumentTextIcon className="h-8 w-8 text-blue-600 mr-3" />
+              Complaints Management
+            </h1>
+            <p className="text-gray-600 mt-1">Manage and track all citizen complaints</p>
+          </div>
+        </div>
+        
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">{data?.results?.length || totalComplaints || 0}</p>
+            <p className="text-sm text-gray-600">Total</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-yellow-600">{data?.results?.filter(c => c.status === 'PENDING').length || 0}</p>
+            <p className="text-sm text-gray-600">Pending</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">{data?.results?.filter(c => c.status === 'IN_PROGRESS').length || 0}</p>
+            <p className="text-sm text-gray-600">In Progress</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">{data?.results?.filter(c => c.status === 'RESOLVED').length || 0}</p>
+            <p className="text-sm text-gray-600">Resolved</p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
