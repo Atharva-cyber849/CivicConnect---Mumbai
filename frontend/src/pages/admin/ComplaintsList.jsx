@@ -104,7 +104,7 @@ const ComplaintsList = () => {
   };
 
   // Check access
-  if (!userIsSuperAdmin && !userIsAdmin && !userIsOfficer) {
+  if (!userIsSuperAdmin && !userIsDepartmentAdmin && !userIsOfficer) {
     return (
       <div className="min-h-96 flex items-center justify-center">
         <div className="text-center">
