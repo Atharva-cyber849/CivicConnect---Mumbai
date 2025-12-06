@@ -12,6 +12,7 @@ import {
   ArrowTrendingUpIcon,
   BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
+import { BarChart3, Map, Clock, Users, AlertTriangle, TrendingUp, Building2, CheckCircle, Target, Filter } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -52,9 +53,9 @@ const MumbaiBMCAnalytics = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-gray-600">Loading Mumbai BMC Analytics...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+          <p className="text-gray-600 font-medium">Loading Mumbai BMC Analytics...</p>
         </div>
       </div>
     );
@@ -91,49 +92,82 @@ const MumbaiBMCAnalytics = () => {
   return (
     <div className="space-y-6">
       {/* Header with Stats */}
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <ChartBarIcon className="h-8 w-8 text-blue-600" />
-            Mumbai BMC Analytics Dashboard
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Comprehensive analytics and insights for Brihanmumbai Municipal Corporation
-          </p>
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="analytics-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#analytics-grid)" />
+          </svg>
         </div>
-        
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{summary.total_complaints || 0}</p>
-            <p className="text-sm text-gray-600">Total Complaints</p>
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <BarChart3 className="h-9 w-9" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Mumbai BMC Analytics Dashboard</h1>
+              <p className="text-indigo-100 text-lg mt-1">
+                Comprehensive analytics and insights for Brihanmumbai Municipal Corporation
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{Math.round(summary.resolution_rate || 0)}%</p>
-            <p className="text-sm text-gray-600">Resolution Rate</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-orange-600">{summary.avg_resolution_time || 0}h</p>
-            <p className="text-sm text-gray-600">Avg Resolution</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">{Math.round(summary.satisfaction_score || 0)}%</p>
-            <p className="text-sm text-gray-600">Satisfaction</p>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <AlertTriangle className="h-6 w-6" />
+                <p className="text-3xl font-bold">{summary.total_complaints || 0}</p>
+              </div>
+              <p className="text-sm text-indigo-100">Total Complaints</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <CheckCircle className="h-6 w-6 text-green-300" />
+                <p className="text-3xl font-bold text-green-300">{Math.round(summary.resolution_rate || 0)}%</p>
+              </div>
+              <p className="text-sm text-indigo-100">Resolution Rate</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <Clock className="h-6 w-6 text-orange-300" />
+                <p className="text-3xl font-bold text-orange-300">{summary.avg_resolution_time || 0}h</p>
+              </div>
+              <p className="text-sm text-indigo-100">Avg Resolution</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <Target className="h-6 w-6 text-purple-300" />
+                <p className="text-3xl font-bold text-purple-300">{Math.round(summary.satisfaction_score || 0)}%</p>
+              </div>
+              <p className="text-sm text-indigo-100">Satisfaction</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+            <Filter className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Filter Analytics</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Time Period
             </label>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             >
               {periods.map(period => (
                 <option key={period.value} value={period.value}>
@@ -144,13 +178,13 @@ const MumbaiBMCAnalytics = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Zone Filter
             </label>
             <select
               value={selectedZone}
               onChange={(e) => setSelectedZone(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             >
               {zones.map(zone => (
                 <option key={zone} value={zone}>
@@ -161,13 +195,13 @@ const MumbaiBMCAnalytics = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Primary Metric
             </label>
             <select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             >
               {metrics.map(metric => (
                 <option key={metric.value} value={metric.value}>
@@ -181,23 +215,26 @@ const MumbaiBMCAnalytics = () => {
 
       {/* BMC Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-6 rounded-lg">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-6 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Complaints</p>
-              <p className="text-3xl font-bold">{summary.total_complaints || 0}</p>
-              <p className="text-blue-100 text-xs mt-1">
+              <p className="text-blue-100 text-sm font-medium">Total Complaints</p>
+              <p className="text-4xl font-bold">{summary.total_complaints || 0}</p>
+              <p className="text-blue-100 text-xs mt-2 flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
                 +{summary.complaints_growth || 0}% from last period
               </p>
             </div>
-            <ExclamationTriangleIcon className="h-12 w-12 text-blue-200" />
+            <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <AlertTriangle className="h-9 w-9" />
+            </div>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-6 rounded-lg">
+        <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-6 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Resolution Rate</p>
+              <p className="text-green-100 text-sm font-medium">Resolution Rate</p>
               <p className="text-3xl font-bold">{summary.resolution_rate || 0}%</p>
               <p className="text-green-100 text-xs mt-1">
                 Target: 85%

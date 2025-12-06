@@ -130,7 +130,7 @@ const MumbaiMap = ({
           }
         }
       } catch (error) {
-        console.error('Failed to load ward boundaries:', error)
+        // Error loading ward boundaries
       }
     }
     

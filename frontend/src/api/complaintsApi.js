@@ -9,9 +9,9 @@ export const complaintsApi = {
     });
     return response.data;
   },
-  // Get all complaints (for map and public view)
+  // Get all complaints (for map and public view) - requires authentication
   getAllComplaints: async (filters = {}) => {
-    const response = await axiosPublic.get('/complaints/map/', { params: filters });
+    const response = await axiosPrivate.get('/complaints/', { params: filters });
     return response.data;
   },
 

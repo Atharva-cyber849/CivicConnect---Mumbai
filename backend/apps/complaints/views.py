@@ -36,7 +36,15 @@ from .serializers import (
     OfficerPerformanceSerializer,
     OfficerPerformanceDetailSerializer
 )
-from apps.users.permissions import IsAdminOrDepartmentStaff
+from apps.users.permissions import (
+    IsAdminOrDepartmentStaff,
+    IsCitizen,
+    IsAdmin,
+    CanModifyComplaint,
+    CanAssignComplaint,
+    CanCloseComplaint,
+    CanViewAnalytics,
+)
 from .tasks import send_complaint_notification, send_status_update_notification
 from apps.notifications.utils import (
     notify_complaint_created,
@@ -148,6 +156,27 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         # Use V2 serializer for retrieve which includes nested images, attachments, etc
         return ComplaintDetailSerializerV2
     
+    def get_permissions(self):  # type: ignore
+        """Return different permissions based on action."""
+        if self.action == 'create':
+            # Only authenticated users (primarily citizens)
+            return [IsAuthenticated()]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            # Need permission to modify
+            return [IsAuthenticated(), CanModifyComplaint()]
+        elif self.action == 'assign_complaint':
+            # Only admins can assign
+            return [IsAuthenticated(), CanAssignComplaint()]
+        elif self.action == 'close_complaint':
+            # Only dept+ admins can close
+            return [IsAuthenticated(), CanCloseComplaint()]
+        elif self.action == 'analytics':
+            # Only non-citizens can view analytics
+            return [IsAuthenticated(), CanViewAnalytics()]
+        else:
+            # Default: authenticated only (list, retrieve, etc)
+            return [IsAuthenticated()]
+    
     def retrieve(self, request, *args, **kwargs):
         """
         Override retrieve to add role-based access control for 3-tier hierarchy.
@@ -243,6 +272,28 @@ class ComplaintViewSet(viewsets.ModelViewSet):
             logger.error(f"Error creating complaint: {str(e)}")
             raise serializers.ValidationError(str(e))
     
+    def perform_update(self, serializer):
+        """Update complaint with scope validation."""
+        obj = serializer.instance
+        user = self.request.user
+        
+        # Double-check permission before update (security layer 2)
+        # Citizens can only update their own complaints
+        if user.role == 'CITIZEN' and obj.user != user:
+            self.permission_denied(self.request)
+        
+        # Ward admin can only update ward complaints
+        if user.role == 'ADMIN' and not user.is_superuser:
+            try:
+                user_ward = user.officer_profile.assigned_ward if hasattr(user, 'officer_profile') else None
+                if user_ward and obj.ward != user_ward:
+                    self.permission_denied(self.request)
+            except:
+                pass
+        
+        # Save with updated_at timestamp
+        serializer.save(updated_at=timezone.now())
+    
     @action(detail=True, methods=['patch'], permission_classes=[IsAdminOrDepartmentStaff])
     def update_status(self, request, pk=None):
         """Update complaint status (admin/staff only)."""
@@ -277,6 +328,201 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         serializer.save(user=request.user, complaint=complaint)
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['post'])
+    def assign_complaint(self, request, pk=None):
+        """
+        Assign complaint to an officer.
+        Only admins can assign, and they can only assign within their scope.
+        """
+        complaint = self.get_object()
+        user = request.user
+        
+        # Check if user can assign
+        if user.role != 'ADMIN':
+            return Response(
+                {'error': 'Only administrators can assign complaints'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Validate scope access for non-super-admins
+        if not user.is_superuser:
+            if user.role == 'ADMIN' and not user.is_superuser:
+                try:
+                    user_ward = user.officer_profile.assigned_ward if hasattr(user, 'officer_profile') else None
+                    if user_ward and complaint.ward != user_ward:
+                        return Response(
+                            {'error': 'You cannot assign complaints outside your ward'},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+                except:
+                    pass
+        
+        officer_id = request.data.get('officer_id')
+        if not officer_id:
+            return Response(
+                {'error': 'officer_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            officer = User.objects.get(id=officer_id)
+            
+            complaint.assigned_to = officer
+            complaint.status = 'ASSIGNED'
+            complaint.updated_at = timezone.now()
+            complaint.save()
+            
+            # Notify officer
+            try:
+                notify_staff_assignment(complaint, officer)
+            except Exception as e:
+                logger.warning(f"Failed to notify officer: {str(e)}")
+            
+            return Response(
+                {
+                    'status': 'success',
+                    'message': 'Complaint assigned successfully',
+                    'assigned_to': officer.email
+                },
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Officer not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=True, methods=['post'])
+    def close_complaint(self, request, pk=None):
+        """
+        Close/resolve a complaint.
+        Only department+ admins can close, within their scope.
+        """
+        complaint = self.get_object()
+        user = request.user
+        
+        # Check if user can close (dept admin or super admin)
+        if user.role != 'ADMIN' or (not user.is_superuser and not getattr(user, 'is_department_admin', False)):
+            return Response(
+                {'error': 'Only department administrators can close complaints'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Validate department scope for dept admins
+        if not user.is_superuser:
+            try:
+                user_dept = user.officer_profile.department if hasattr(user, 'officer_profile') else None
+                if user_dept and complaint.department != user_dept:
+                    return Response(
+                        {'error': 'You cannot close complaints outside your department'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except:
+                pass
+        
+        resolution_comment = request.data.get('comment', 'Complaint resolved')
+        
+        complaint.status = 'RESOLVED'
+        complaint.resolved_at = timezone.now()
+        complaint.resolved_by = user
+        complaint.updated_at = timezone.now()
+        complaint.save()
+        
+        # Create resolution record
+        try:
+            ComplaintResolution.objects.create(
+                complaint=complaint,
+                resolved_by=user,
+                comment=resolution_comment
+            )
+        except Exception as e:
+            logger.warning(f"Failed to create resolution record: {str(e)}")
+        
+        # Notify citizen
+        try:
+            notify_status_change(complaint, 'ASSIGNED', 'RESOLVED')
+        except Exception as e:
+            logger.warning(f"Failed to notify citizen: {str(e)}")
+        
+        return Response(
+            {
+                'status': 'success',
+                'message': 'Complaint resolved successfully',
+                'resolved_at': complaint.resolved_at
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=False, methods=['get'])
+    def analytics(self, request):
+        """
+        Get complaint analytics filtered by user's scope.
+        Citizens see nothing, admins see complaints in their scope.
+        """
+        user = request.user
+        
+        # Determine scope-based queryset
+        if user.role == 'CITIZEN':
+            queryset = Complaint.objects.filter(filed_by=user)
+        elif user.is_superuser:
+            queryset = Complaint.objects.all()
+        else:
+            # Ward admin or department staff
+            try:
+                if hasattr(user, 'officer_profile'):
+                    officer_profile = user.officer_profile
+                    if officer_profile.department:
+                        queryset = Complaint.objects.filter(department=officer_profile.department)
+                    elif officer_profile.assigned_ward:
+                        queryset = Complaint.objects.filter(ward=officer_profile.assigned_ward)
+                    else:
+                        queryset = Complaint.objects.none()
+                else:
+                    queryset = Complaint.objects.none()
+            except:
+                queryset = Complaint.objects.none()
+        
+        # Calculate analytics
+        analytics_data = {
+            'summary': {
+                'total': queryset.count(),
+                'pending': queryset.filter(status='PENDING').count(),
+                'assigned': queryset.filter(status='ASSIGNED').count(),
+                'in_progress': queryset.filter(status='IN_PROGRESS').count(),
+                'resolved': queryset.filter(status='RESOLVED').count(),
+                'rejected': queryset.filter(status='REJECTED').count(),
+            },
+            'by_category': {},
+            'by_priority': {},
+            'resolution_time': {
+                'average_days': 0,
+                'median_days': 0,
+            }
+        }
+        
+        # Category breakdown
+        for category in ['POTHOLE', 'STREETLIGHT', 'DRAINAGE', 'WASTE', 'OTHER']:
+            analytics_data['by_category'][category] = queryset.filter(category=category).count()
+        
+        # Priority breakdown
+        for priority in ['LOW', 'MEDIUM', 'HIGH']:
+            analytics_data['by_priority'][priority] = queryset.filter(priority=priority).count()
+        
+        # Calculate average resolution time for resolved complaints
+        resolved_complaints = queryset.filter(status='RESOLVED', resolved_at__isnull=False)
+        if resolved_complaints.exists():
+            resolution_times = [
+                (c.resolved_at - c.created_at).days 
+                for c in resolved_complaints
+            ]
+            if resolution_times:
+                analytics_data['resolution_time']['average_days'] = sum(resolution_times) / len(resolution_times)
+                analytics_data['resolution_time']['median_days'] = sorted(resolution_times)[len(resolution_times) // 2]
+        
+        return Response(analytics_data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[IsAdminOrDepartmentStaff])
     def statistics(self, request):

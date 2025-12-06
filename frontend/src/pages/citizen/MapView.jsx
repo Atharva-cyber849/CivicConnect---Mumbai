@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { complaintsApi } from '../../api/complaintsApi'
@@ -12,6 +12,7 @@ import {
 import { createCustomIcon, getCurrentLocation, isWithinMumbai, calculateDistance } from '../../utils/mapUtils'
 import { format } from 'date-fns'
 import { FiFilter, FiMapPin, FiCrosshair, FiEye, FiRefreshCw, FiInfo } from 'react-icons/fi'
+import { Map, MapPin, Navigation, Filter, Eye, RefreshCw, Info, Layers } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import 'leaflet/dist/leaflet.css'
 
@@ -83,15 +84,17 @@ const CitizenMapView = () => {
     refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
   })
 
-  // Extract complaints from response
-  let allComplaints = []
-  if (response?.data?.results) {
-    allComplaints = response.data.results
-  } else if (Array.isArray(response?.data)) {
-    allComplaints = response.data
-  } else if (Array.isArray(response)) {
-    allComplaints = response
-  }
+  // Extract complaints from response - memoized to prevent infinite loops
+  const allComplaints = useMemo(() => {
+    if (response?.data?.results) {
+      return response.data.results
+    } else if (Array.isArray(response?.data)) {
+      return response.data
+    } else if (Array.isArray(response)) {
+      return response
+    }
+    return []
+  }, [response])
 
   // Apply comprehensive filtering
   useEffect(() => {

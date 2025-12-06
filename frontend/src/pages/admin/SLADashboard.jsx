@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { axiosPrivate } from '../../api/axiosConfig';
 import { format, isPast, differenceInDays } from 'date-fns';
+import { Target, Clock, AlertTriangle, CheckCircle, XCircle, Calendar, Users, TrendingUp, Filter } from 'lucide-react';
 
 /**
  * SLADashboard
  * Admin view for monitoring all complaint assignments and SLA compliance
  */
 const SLADashboard = () => {
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
   const [filterStatus, setFilterStatus] = useState('all'); // all, on_track, warning, overdue
 
   // Fetch SLA status
   const { data: slaData, isLoading, error } = useQuery({
     queryKey: ['slaStatus', filterStatus],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/complaints/assignments/sla_status/`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await axiosPrivate.get('/complaints/assignments/sla_status/');
       return response.data;
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -27,16 +23,27 @@ const SLADashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+          <p className="text-gray-600 font-medium">Loading SLA Data...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Failed to load SLA data</p>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Data</h2>
+            <p className="text-gray-600">Failed to load SLA data. Please try again later.</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -69,9 +76,27 @@ const SLADashboard = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900">SLA Compliance Dashboard</h1>
-        <p className="text-gray-600 mt-1">Monitor complaint assignment deadlines and officer performance</p>
+      <div className="bg-gradient-to-r from-orange-600 via-red-600 to-orange-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="sla-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#sla-grid)" />
+          </svg>
+        </div>
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+            <Target className="h-9 w-9" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold">SLA Compliance Dashboard</h1>
+            <p className="text-orange-100 text-lg mt-1">Monitor complaint assignment deadlines and officer performance</p>
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}

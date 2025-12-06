@@ -103,8 +103,7 @@ export const NotificationProvider = ({ children }) => {
     const initNotifications = async () => {
       // Only fetch notifications if user is authenticated
       const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.log('NotificationProvider - No auth token, skipping API calls');
+      if (!authToken) {
         return;
       }
       

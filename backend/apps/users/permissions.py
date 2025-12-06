@@ -138,3 +138,253 @@ class HasWardAccess(permissions.BasePermission):
         
         # Other users (citizens) can only see their own complaints
         return hasattr(obj, 'user') and obj.user == user
+
+
+# ============================================================================
+# ENHANCED PERMISSION CLASSES FOR COMPLEX OPERATIONS
+# ============================================================================
+
+class IsCitizen(permissions.BasePermission):
+    """Only authenticated citizens can access."""
+    message = "Only citizens can access this endpoint."
+    
+    def has_permission(self, request, view):
+        return (
+            request.user and 
+            request.user.is_authenticated and 
+            request.user.role == 'CITIZEN'
+        )
+
+
+class IsWardAdmin(permissions.BasePermission):
+    """
+    Only ward admins can access.
+    Ward admin = ADMIN role + has ward assigned + is NOT superuser
+    """
+    message = "Only ward administrators can access this endpoint."
+    
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        
+        return (
+            request.user.role == 'ADMIN' and
+            request.user.ward is not None and
+            not request.user.is_superuser
+        )
+
+
+class IsAdmin(permissions.BasePermission):
+    """Only authenticated admins (any tier) can access."""
+    message = "Only administrators can access this endpoint."
+    
+    def has_permission(self, request, view):
+        return (
+            request.user and 
+            request.user.is_authenticated and 
+            request.user.role == 'ADMIN'
+        )
+
+
+class IsOwnerOrAdmin(permissions.BasePermission):
+    """
+    Allow access if user is an admin OR is the object owner.
+    """
+    message = "You do not have permission to access this resource."
+    
+    def has_object_permission(self, request, view, obj):
+        # Admin users always have access
+        if request.user.role == 'ADMIN':
+            return True
+        
+        # Check if user is the owner
+        if hasattr(obj, 'filed_by'):
+            return obj.filed_by == request.user
+        
+        if hasattr(obj, 'user'):
+            return obj.user == request.user
+        
+        return False
+
+
+class CanModifyComplaint(permissions.BasePermission):
+    """
+    Check if user can modify a complaint based on their role.
+    """
+    message = "You do not have permission to modify this complaint."
+    
+    def has_object_permission(self, request, view, obj):
+        # Read methods always allowed
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        # Check if complaint is closed
+        if hasattr(obj, 'status') and obj.status in ['RESOLVED', 'CLOSED']:
+            return request.user.is_super_admin
+        
+        # Citizens can only modify their own complaints
+        if request.user.role == 'CITIZEN':
+            if hasattr(obj, 'filed_by'):
+                return obj.filed_by == request.user
+        
+        # Department/Ward admin can modify their scope
+        if request.user.role == 'ADMIN' and not request.user.is_superuser:
+            # Check department access
+            if request.user.department and hasattr(obj, 'department'):
+                return obj.department == request.user.department
+            # Check ward access
+            if request.user.ward and hasattr(obj, 'ward'):
+                return obj.ward == request.user.ward
+        
+        # Super admin can modify anything
+        if request.user.is_super_admin:
+            return True
+        
+        return False
+
+
+class CanAssignComplaint(permissions.BasePermission):
+    """Only admins can assign complaints to officers."""
+    message = "You do not have permission to assign complaints."
+    
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        return request.user.role == 'ADMIN'
+    
+    def has_object_permission(self, request, view, obj):
+        # Ward admin can assign in their ward
+        if request.user.is_ward_admin:
+            if hasattr(obj, 'ward'):
+                return obj.ward == request.user.ward
+        
+        # Department admin can assign in their department
+        if request.user.is_department_admin:
+            if hasattr(obj, 'department'):
+                return obj.department == request.user.department
+        
+        # Super admin can assign anything
+        if request.user.is_super_admin:
+            return True
+        
+        return False
+
+
+class CanCloseComplaint(permissions.BasePermission):
+    """Only department/super admin can close complaints."""
+    message = "Only department administrators can close complaints."
+    
+    def has_permission(self, request, view):
+        return (
+            request.user and 
+            request.user.is_authenticated and 
+            (request.user.is_department_admin or request.user.is_super_admin)
+        )
+    
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_department_admin:
+            if hasattr(obj, 'department'):
+                return obj.department == request.user.department
+        
+        if request.user.is_super_admin:
+            return True
+        
+        return False
+
+
+class CanCreateUser(permissions.BasePermission):
+    """Only super admin can create users/admins."""
+    message = "Only super administrators can create users."
+    
+    def has_permission(self, request, view):
+        return (
+            request.user and 
+            request.user.is_authenticated and 
+            request.user.is_super_admin
+        )
+
+
+class CanManageOfficers(permissions.BasePermission):
+    """
+    Admins can manage officers in their scope.
+    """
+    message = "You do not have permission to manage officers."
+    
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        return request.user.role == 'ADMIN'
+    
+    def has_object_permission(self, request, view, obj):
+        # Ward admin can manage officers in their ward
+        if request.user.is_ward_admin:
+            if hasattr(obj, 'assigned_ward'):
+                return obj.assigned_ward == request.user.ward.code if request.user.ward else False
+        
+        # Department admin can manage officers in their department
+        if request.user.is_department_admin:
+            if hasattr(obj, 'department'):
+                return obj.department == request.user.department
+        
+        # Super admin can manage all
+        if request.user.is_super_admin:
+            return True
+        
+        return False
+
+
+class CanViewAnalytics(permissions.BasePermission):
+    """Each role can view analytics for their scope."""
+    message = "You do not have permission to view analytics."
+    
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+    
+    def has_object_permission(self, request, view, obj):
+        # Citizens cannot view analytics
+        if request.user.role == 'CITIZEN':
+            return False
+        
+        # Ward analytics
+        if hasattr(obj, 'ward'):
+            return obj.ward == request.user.ward or request.user.is_super_admin
+        
+        # Department analytics
+        if hasattr(obj, 'department'):
+            return obj.department == request.user.department or request.user.is_super_admin
+        
+        # Super admin can view all
+        if request.user.is_super_admin:
+            return True
+        
+        return False
+
+
+class CanApproveClosure(permissions.BasePermission):
+    """Only super admin can approve complaint closures."""
+    message = "You do not have permission to approve this closure."
+    
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_super_admin
+
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def check_ward_access(user, ward):
+    """Helper to check if user has access to a specific ward."""
+    if user.is_super_admin:
+        return True
+    if user.is_ward_admin and user.ward == ward:
+        return True
+    return False
+
+
+def check_department_access(user, department):
+    """Helper to check if user has access to a specific department."""
+    if user.is_super_admin:
+        return True
+    if user.is_department_admin and user.department == department:
+        return True
+    return False

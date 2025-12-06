@@ -31,7 +31,6 @@ const AdminLayout = ({ children }) => {
         navigate('/admin/auth/login', { replace: true });
       }, 100);
     } catch (error) {
-      console.error('Logout error:', error);
       toast.error('Error logging out');
     }
   };

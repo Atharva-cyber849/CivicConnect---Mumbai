@@ -36,6 +36,7 @@ import {
   FiRefreshCw,
   FiTrendingUp
 } from 'react-icons/fi'
+import { FileText, AlertCircle as AlertCircleIcon } from 'lucide-react'
 
 const ComplaintDetail = () => {
   const { id } = useParams()
@@ -215,21 +216,23 @@ const ComplaintDetail = () => {
 
   if (error || !complaint) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium mb-6 transition-colors"
           >
-            <FiArrowLeft className="w-5 h-5 mr-2" />
+            <FiArrowLeft className="w-5 h-5" />
             Back
           </button>
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <FiXCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FiXCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Complaint Not Found
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 max-w-md mx-auto">
               The complaint you're looking for could not be found or you don't have permission to view it.
             </p>
           </div>
@@ -244,38 +247,45 @@ const ComplaintDetail = () => {
   const departmentInfo = getDepartmentInfo(complaint?.department?.name)
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-blue-600 hover:text-blue-800"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold transition-colors"
           >
-            <FiArrowLeft className="w-5 h-5 mr-2" />
+            <FiArrowLeft className="w-5 h-5" />
             Back to Complaints
           </button>
           
           <div className="flex items-center space-x-3">
-            <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg">
+            <button className="p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
               <FiShare2 className="w-5 h-5" />
             </button>
-            <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg">
+            <button className="p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
               <FiDownload className="w-5 h-5" />
             </button>
           </div>
+        </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Complaint Overview */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {complaint.title}
-                  </h1>
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-12 w-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                      <FileText className="h-7 w-7 text-white" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {complaint.title}
+                    </h1>
+                  </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
                     <span className="flex items-center">
                       <FiCalendar className="w-4 h-4 mr-1" />

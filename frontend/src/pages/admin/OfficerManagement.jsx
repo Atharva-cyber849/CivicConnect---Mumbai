@@ -20,9 +20,10 @@ import {
   BuildingOffice2Icon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
+import { Users, UserPlus, Search, Filter, Eye, Edit, Trash2, Key, Mail, Shield, Building2, MapPin, AlertTriangle, CheckCircle as CheckCircleIcon2, XCircle, TrendingUp } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
-import { officersApi } from '../../api';
+import { adminApi } from '../../api/adminApi';
 import { USER_ROLES, DEPARTMENTS } from '../../config/constants';
 import { isSuperAdmin, isDepartmentAdmin, canManageOfficers } from '../../utils/roleBasedAccess';
 import wardsData from '../../config/wardsData.json';
@@ -56,7 +57,7 @@ const OfficerManagement = () => {
     queryKey: ['officers'],
     queryFn: async () => {
       try {
-        const data = await officersApi.getAll();
+        const data = await adminApi.getOfficers();
         return Array.isArray(data) ? data : [];
       } catch (err) {
         console.error('Error in officers query:', err);
@@ -90,7 +91,7 @@ const OfficerManagement = () => {
 
   // Delete officer mutation
   const deleteOfficerMutation = useMutation({
-    mutationFn: (id) => officersApi.delete(id),
+    mutationFn: (id) => adminApi.deleteOfficer(id),
     onSuccess: () => {
       toast.success('Officer deleted successfully');
       queryClient.invalidateQueries(['officers']);
@@ -103,7 +104,7 @@ const OfficerManagement = () => {
 
   // Update officer status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => officersApi.updateOfficerStatus(id, { is_active: status }),
+    mutationFn: ({ id, status }) => adminApi.updateOfficerStatus(id, { is_active: status }),
     onSuccess: () => {
       toast.success('Officer status updated successfully');
       queryClient.invalidateQueries(['officers']);
@@ -115,7 +116,7 @@ const OfficerManagement = () => {
 
   // Reset password mutation
   const resetPasswordMutation = useMutation({
-    mutationFn: (id) => officersApi.resetOfficerPassword(id),
+    mutationFn: (id) => adminApi.resetOfficerPassword(id),
     onSuccess: () => {
       toast.success('Password reset email sent to officer');
     },
@@ -126,7 +127,7 @@ const OfficerManagement = () => {
 
   // Send invitation mutation
   const sendInvitationMutation = useMutation({
-    mutationFn: (id) => officersApi.sendOfficerInvitation(id),
+    mutationFn: (id) => adminApi.sendOfficerInvitation(id),
     onSuccess: () => {
       toast.success('Invitation email sent successfully');
     },
@@ -211,13 +212,17 @@ const OfficerManagement = () => {
   // Redirect if not authorized
   if (!userCanManageOfficers) {
     return (
-      <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
-          <h2 className="mt-4 text-lg font-medium text-gray-900">Access Denied</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            You don't have permission to manage officers.
-          </p>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h2>
+            <p className="text-gray-600">
+              You don't have permission to manage officers.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -226,29 +231,33 @@ const OfficerManagement = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+          <p className="text-sm text-gray-600 font-medium">Loading officers...</p>
+        </div>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+      <div className="bg-white rounded-2xl shadow-xl border border-red-200 p-8">
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="h-7 w-7 text-red-600" />
           </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">
-              Failed to load officers. {error?.message || 'Please try again later.'}
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="ml-2 text-sm font-medium text-red-700 underline hover:text-red-600 focus:outline-none"
-              >
-                Retry
-              </button>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Failed to load officers</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {error?.message || 'Please try again later.'}
             </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -260,60 +269,109 @@ const OfficerManagement = () => {
     <ErrorBoundary>
       <div className="w-full space-y-6">
         {/* Header with Stats */}
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <UserIcon className="h-8 w-8 mr-3 text-blue-600" />
-                BMC Officer Management
-              </h1>
-              <p className="text-gray-600 mt-1">Manage BMC ward officers and department administrators across Mumbai</p>
+        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+            <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="officer-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#officer-grid)" />
+            </svg>
+          </div>
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Users className="h-9 w-9" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold mb-2">BMC Officer Management</h1>
+                  <p className="text-purple-100 text-lg">Manage BMC ward officers and department administrators across Mumbai</p>
+                </div>
+              </div>
+              
+              {userIsSuperAdmin && (
+                <Link
+                  to="/admin/register"
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 font-semibold rounded-xl hover:bg-purple-50 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  <span>Register Officer</span>
+                </Link>
+              )}
             </div>
             
-            {userIsSuperAdmin && (
-              <Link
-                to="/admin/register"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <UserPlusIcon className="h-4 w-4 mr-2" />
-                Register Officer
-              </Link>
-            )}
-          </div>
-          
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{officers.length}</p>
-              <p className="text-sm text-gray-600">Total Officers</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{officers.filter(o => o.is_active).length}</p>
-              <p className="text-sm text-gray-600">Active</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">{officers.filter(o => !o.is_active).length}</p>
-              <p className="text-sm text-gray-600">Inactive</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">{new Set(officers.map(o => o.department)).size}</p>
-              <p className="text-sm text-gray-600">Departments</p>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium mb-1">Total Officers</p>
+                    <p className="text-3xl font-bold">{officers.length}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Users className="h-7 w-7" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium mb-1">Active</p>
+                    <p className="text-3xl font-bold text-green-300">{officers.filter(o => o.is_active).length}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                    <CheckCircleIcon2 className="h-7 w-7 text-green-300" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium mb-1">Inactive</p>
+                    <p className="text-3xl font-bold text-red-300">{officers.filter(o => !o.is_active).length}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                    <XCircle className="h-7 w-7 text-red-300" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium mb-1">Departments</p>
+                    <p className="text-3xl font-bold text-blue-300">{new Set(officers.map(o => o.department)).size}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <Building2 className="h-7 w-7 text-blue-300" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-6">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+            <Filter className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Filters & Search</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search officers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             />
           </div>
 
@@ -321,7 +379,7 @@ const OfficerManagement = () => {
           <select
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
           >
             <option value="">All Departments</option>
             {DEPARTMENTS.map((dept) => (
@@ -335,7 +393,7 @@ const OfficerManagement = () => {
           <select
             value={selectedWard}
             onChange={(e) => setSelectedWard(e.target.value)}
-            className="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
           >
             <option value="">All Mumbai Wards</option>
             {mumbaiWards.map((ward) => (
@@ -349,7 +407,7 @@ const OfficerManagement = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -359,56 +417,74 @@ const OfficerManagement = () => {
       </div>
 
       {/* Officers Table */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
-            BMC Officers ({filteredOfficers.length})
-          </h3>
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+        <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">
+                BMC Officers ({filteredOfficers.length})
+              </h3>
+            </div>
+          </div>
         </div>
 
         {filteredOfficers.length === 0 ? (
-          <div className="p-8 text-center">
-            <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No BMC officers found</h3>
-            <p className="mt-1 text-sm text-gray-500">
+          <div className="p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mb-6">
+              <Users className="h-12 w-12 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No BMC officers found</h3>
+            <p className="text-gray-600 mb-6">
               {searchTerm || selectedDepartment || selectedWard || selectedStatus
                 ? 'Try adjusting your search criteria'
                 : 'Get started by registering a new BMC officer'}
             </p>
+            {userIsSuperAdmin && (
+              <Link
+                to="/admin/register"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <UserPlus className="h-5 w-5" />
+                <span>Register Officer</span>
+              </Link>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Officer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-48">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider min-w-48">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-40">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider min-w-40">
                     Mumbai Ward
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOfficers.map((officer) => (
-                  <tr key={officer.id} className="hover:bg-gray-50">
+                  <tr key={officer.id} className="hover:bg-blue-50 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-700">
+                        <div className="flex-shrink-0 h-12 w-12">
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                            <span className="text-base font-bold text-white">
                               {officer.first_name?.charAt(0)}{officer.last_name?.charAt(0)}
                             </span>
                           </div>
@@ -424,11 +500,13 @@ const OfficerManagement = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-start">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <BuildingOffice2Icon className="h-4 w-4 text-purple-600" />
+                        <div className="flex-shrink-0 mt-1">
+                          <div className="h-8 w-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                            <Building2 className="h-5 w-5 text-white" />
+                          </div>
                         </div>
                         <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900">
                             {getDepartmentName(officer.department)}
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
@@ -443,11 +521,13 @@ const OfficerManagement = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-start">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <MapPinIcon className="h-4 w-4 text-green-600" />
+                        <div className="flex-shrink-0 mt-1">
+                          <div className="h-8 w-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
+                            <MapPin className="h-5 w-5 text-white" />
+                          </div>
                         </div>
                         <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900">
                             {officer.assigned_ward}
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
@@ -457,8 +537,8 @@ const OfficerManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(officer.role, officer.is_superuser)}`}>
-                        <ShieldCheckIcon className="h-3 w-3 mr-1" />
+                      <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border-2 ${getRoleBadgeColor(officer.role, officer.is_superuser)}`}>
+                        <Shield className="h-4 w-4" />
                         {getRoleLabel(officer.role, officer.is_superuser)}
                       </span>
                     </td>
@@ -466,77 +546,79 @@ const OfficerManagement = () => {
                       <button
                         onClick={() => handleStatusToggle(officer)}
                         disabled={updateStatusMutation.isLoading}
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
                           officer.is_active
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200 border-2 border-green-300'
+                            : 'bg-red-100 text-red-800 hover:bg-red-200 border-2 border-red-300'
                         }`}
                       >
                         {officer.is_active ? (
                           <>
-                            <CheckCircleIcon className="h-3 w-3 mr-1" />
+                            <CheckCircleIcon2 className="h-4 w-4" />
                             Active
                           </>
                         ) : (
                           <>
-                            <XCircleIcon className="h-3 w-3 mr-1" />
+                            <XCircle className="h-4 w-4" />
                             Inactive
                           </>
                         )}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => navigate(`/admin/officers/${officer.id}`)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="View Details"
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                      </button>
-                      
-                      {(userIsSuperAdmin || (userIsAdmin && officer.department === user?.department)) && (
-                        <>
-                          {userIsSuperAdmin && (
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigate(`/admin/officers/${officer.id}`)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
+                        
+                        {(userIsSuperAdmin || (userIsAdmin && officer.department === user?.department)) && (
+                          <>
+                            {userIsSuperAdmin && (
+                              <button
+                                onClick={() => navigate(`/admin/officers/${officer.id}/edit`)}
+                                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                title="Edit Officer"
+                              >
+                                <Edit className="h-5 w-5" />
+                              </button>
+                            )}
+                            
+                            {userIsSuperAdmin && (
+                              <button
+                                onClick={() => resetPasswordMutation.mutate(officer.id)}
+                                disabled={resetPasswordMutation.isLoading}
+                                className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                title="Reset Password"
+                              >
+                                <Key className="h-5 w-5" />
+                              </button>
+                            )}
+                            
                             <button
-                              onClick={() => navigate(`/admin/officers/${officer.id}/edit`)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="Edit Officer"
+                              onClick={() => sendInvitationMutation.mutate(officer.id)}
+                              disabled={sendInvitationMutation.isLoading}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Send Invitation"
                             >
-                              <PencilIcon className="h-4 w-4" />
+                              <Mail className="h-5 w-5" />
                             </button>
-                          )}
-                          
-                          {userIsSuperAdmin && (
-                            <button
-                              onClick={() => resetPasswordMutation.mutate(officer.id)}
-                              disabled={resetPasswordMutation.isLoading}
-                              className="text-orange-600 hover:text-orange-900"
-                              title="Reset Password"
-                            >
-                              <KeyIcon className="h-4 w-4" />
-                            </button>
-                          )}
-                          
-                          <button
-                            onClick={() => sendInvitationMutation.mutate(officer.id)}
-                            disabled={sendInvitationMutation.isLoading}
-                            className="text-green-600 hover:text-green-900"
-                            title="Send Invitation"
-                          >
-                            <EnvelopeIcon className="h-4 w-4" />
-                          </button>
-                          
-                          {userIsSuperAdmin && (
-                            <button
-                              onClick={() => setShowDeleteDialog(officer)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete Officer"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </button>
-                          )}
-                        </>
-                      )}
+                            
+                            {userIsSuperAdmin && (
+                              <button
+                                onClick={() => setShowDeleteDialog(officer)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete Officer"
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -548,30 +630,34 @@ const OfficerManagement = () => {
 
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600 mr-3" />
-              <h3 className="text-lg font-medium text-gray-900">Delete Officer</h3>
-            </div>
-            <p className="mt-2 text-sm text-gray-500">
-              Are you sure you want to delete <strong>{showDeleteDialog.first_name} {showDeleteDialog.last_name}</strong>? 
-              This action cannot be undone.
-            </p>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowDeleteDialog(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteOfficer(showDeleteDialog.id)}
-                disabled={deleteOfficerMutation.isLoading}
-                className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
-              >
-                {deleteOfficerMutation.isLoading ? 'Deleting...' : 'Delete'}
-              </button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-12 w-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="h-7 w-7 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Delete Officer</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete <strong className="text-gray-900">{showDeleteDialog.first_name} {showDeleteDialog.last_name}</strong>? 
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteDialog(null)}
+                  className="px-6 py-3 border-2 border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteOfficer(showDeleteDialog.id)}
+                  disabled={deleteOfficerMutation.isLoading}
+                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {deleteOfficerMutation.isLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

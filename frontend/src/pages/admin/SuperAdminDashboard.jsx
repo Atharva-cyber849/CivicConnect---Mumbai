@@ -54,85 +54,108 @@ const SuperAdminDashboard = () => {
     gcTime: 5 * 60 * 1000,
   });
 
-  // Fetch all complaints data
-  const { data: complaintsData, isLoading: complaintsLoading } = useQuery({
-    queryKey: ['all-complaints'],
-    queryFn: () => adminApi.getComplaints({ limit: 10000 }),
-    refetchInterval: 30000,
+  // Fetch departments data
+  const { data: departmentsData } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => adminApi.getDepartments(),
     enabled: !!user,
-    retry: 1,
-    staleTime: 10000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 60000,
   });
 
-  // Calculate stats from real complaints data
-  const calculateStatsFromComplaints = () => {
-    let complaints = [];
-    
-    if (complaintsData?.results) {
-      complaints = complaintsData.results;
-    } else if (Array.isArray(complaintsData)) {
-      complaints = complaintsData;
+  // Fetch officers data
+  const { data: officersData } = useQuery({
+    queryKey: ['officers'],
+    queryFn: () => adminApi.getOfficers(),
+    enabled: !!user,
+    staleTime: 60000,
+  });
+
+  // Calculate dashboard stats from API data
+  const dashboardStats = useMemo(() => {
+    if (!stats) {
+      return {
+        total: 0,
+        pending: 0,
+        in_progress: 0,
+        resolved: 0,
+        rejected: 0,
+        by_category: {},
+        by_priority: {}
+      };
     }
 
-    const today = new Date().toDateString();
-    const todayComplaints = complaints.filter(c => new Date(c.created_at).toDateString() === today).length;
-    const resolved = complaints.filter(c => c.status === 'resolved').length;
-    const pending = complaints.filter(c => c.status === 'pending').length;
+    const apiStats = stats.data || stats;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculate departments count
+    let departmentsCount = 0;
+    if (Array.isArray(departmentsData)) {
+      departmentsCount = departmentsData.length;
+    } else if (departmentsData?.results) {
+      departmentsCount = departmentsData.results.length;
+    } else if (departmentsData?.count) {
+      departmentsCount = departmentsData.count;
+    }
+
+    // Calculate officers count
+    let officersCount = 0;
+    if (Array.isArray(officersData)) {
+      officersCount = officersData.length;
+    } else if (officersData?.results) {
+      officersCount = officersData.results.length;
+    } else if (officersData?.count) {
+      officersCount = officersData.count;
+    }
+
+    // Calculate average resolution time (mock for now - would need timeline data)
+    const totalResolved = apiStats.resolved || 0;
+    const avgResolutionTime = totalResolved > 0 ? 18.5 : 0;
 
     return {
-      complaints_today: todayComplaints,
-      total_complaints: complaints.length,
-      resolved_complaints: resolved,
-      pending_complaints: pending,
-      average_resolution_time: 18.5,
-      citizen_satisfaction: 4.2,
-      departments_count: 6,
-      officers_count: 24,
-      wards_count: 24
+      complaints_today: apiStats.pending || 0, // Using pending as proxy for new today
+      total_complaints: apiStats.total || 0,
+      resolved_complaints: apiStats.resolved || 0,
+      pending_complaints: apiStats.pending || 0,
+      in_progress_complaints: apiStats.in_progress || 0,
+      rejected_complaints: apiStats.rejected || 0,
+      average_resolution_time: avgResolutionTime,
+      citizen_satisfaction: 4.2, // Mock - would need ratings data
+      departments_count: departmentsCount,
+      officers_count: officersCount,
+      wards_count: 24, // Mumbai has 24 wards
+      by_category: apiStats.by_category || {},
+      by_priority: apiStats.by_priority || {}
     };
-  };
+  }, [stats, departmentsData, officersData]);
 
-  // Mock data for development
-  const mockStats = {
-    complaints_today: 0,
-    total_complaints: 0,
-    resolved_complaints: 0,
-    pending_complaints: 0,
-    average_resolution_time: 0,
-    citizen_satisfaction: 0,
-    departments_count: 0,
-    officers_count: 0,
-    wards_count: 0
-  };
-
-  // Use real data if available, otherwise use API stats, otherwise use mock
-  let dashboardStats = mockStats;
-  if (complaintsData) {
-    dashboardStats = calculateStatsFromComplaints();
-  } else if (stats) {
-    dashboardStats = stats.data || stats || mockStats;
-  }
-
-  // Generate chart data
+  // Generate chart data based on real stats
   const generateChartData = useMemo(() => {
     const days = parseInt(dateFilter);
     const chartData = [];
+    
+    const totalComplaints = dashboardStats.total_complaints || 0;
+    const totalResolved = dashboardStats.resolved_complaints || 0;
+    const totalPending = dashboardStats.pending_complaints || 0;
+    
+    // Calculate daily averages
+    const avgComplaintsPerDay = Math.max(1, Math.round(totalComplaints / days));
+    const avgResolvedPerDay = Math.max(1, Math.round(totalResolved / days));
+    const avgPendingPerDay = Math.max(1, Math.round(totalPending / days));
     
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       
-      const avgComplaints = Math.round(dashboardStats.total_complaints / days);
-      const avgResolved = Math.round(dashboardStats.resolved_complaints / days);
+      // Add some variance to make the chart look realistic
       const variance = Math.floor(Math.random() * 20) - 10;
       
       chartData.push({
         name: dayName,
-        complaints: Math.max(1, avgComplaints + variance),
-        resolved: Math.max(1, avgResolved + Math.floor(variance * 0.8)),
-        pending: Math.max(1, Math.round(dashboardStats.pending_complaints / days) + Math.floor(variance * 0.4))
+        complaints: Math.max(1, avgComplaintsPerDay + variance),
+        resolved: Math.max(1, avgResolvedPerDay + Math.floor(variance * 0.8)),
+        pending: Math.max(1, avgPendingPerDay + Math.floor(variance * 0.4))
       });
     }
     
@@ -140,19 +163,27 @@ const SuperAdminDashboard = () => {
   }, [dateFilter, dashboardStats]);
 
   const getDailySummary = () => {
+    const totalComplaints = dashboardStats.total_complaints || 0;
+    const resolvedComplaints = dashboardStats.resolved_complaints || 0;
+    const resolutionRate = totalComplaints > 0 
+      ? Math.round((resolvedComplaints / totalComplaints) * 100) 
+      : 0;
+
     return {
       title: "Today's System Overview",
       items: [
-        `${dashboardStats.complaints_today || 45} new complaints filed across all departments`,
-        `${Math.round((dashboardStats.resolved_complaints / dashboardStats.total_complaints) * 100) || 92}% complaints resolved system-wide`,
-        `${dashboardStats.pending_complaints || 97} critical issues awaiting action`,
-        `${dashboardStats.departments_count || 6} departments active`,
-        `${dashboardStats.officers_count || 24} officers deployed across ${dashboardStats.wards_count || 24} wards`
+        `${dashboardStats.complaints_today || 0} new complaints filed across all departments`,
+        `${resolutionRate}% complaints resolved system-wide`,
+        `${dashboardStats.pending_complaints || 0} critical issues awaiting action`,
+        `${dashboardStats.departments_count || 0} departments active`,
+        `${dashboardStats.officers_count || 0} officers deployed across ${dashboardStats.wards_count || 24} wards`
       ]
     };
   };
 
   const dailySummary = getDailySummary();
+
+  const isLoading = statsLoading;
 
   const statCards = [
     {
@@ -161,7 +192,7 @@ const SuperAdminDashboard = () => {
       icon: DocumentTextIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      trend: '+12%'
+      trend: null
     },
     {
       title: 'Resolution Rate',
@@ -169,7 +200,7 @@ const SuperAdminDashboard = () => {
       icon: CheckCircleIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      trend: '+5%'
+      trend: null
     },
     {
       title: 'Pending Issues',
@@ -177,7 +208,7 @@ const SuperAdminDashboard = () => {
       icon: ExclamationTriangleIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
-      trend: '-8%'
+      trend: null
     },
     {
       title: 'Avg Resolution Time',
@@ -185,7 +216,7 @@ const SuperAdminDashboard = () => {
       icon: ClockIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      trend: '-3%'
+      trend: null
     },
     {
       title: 'Departments',
@@ -205,7 +236,7 @@ const SuperAdminDashboard = () => {
     }
   ];
 
-  if (statsLoading || complaintsLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
@@ -241,29 +272,49 @@ const SuperAdminDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-lg p-8 text-white">
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl p-10 text-white relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+        </div>
+        <div className="relative z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold flex items-center">
-              <ShieldCheckIcon className="h-8 w-8 mr-3" />
+            <h1 className="text-4xl font-bold flex items-center gap-3 mb-2">
+              <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <ShieldCheckIcon className="h-8 w-8" />
+              </div>
               System Overview
+              <span className="text-sm font-normal bg-white/20 px-3 py-1 rounded-full">Super Admin</span>
             </h1>
-            <p className="text-purple-100 mt-2">Mumbai BMC - System Administration</p>
+            <p className="text-purple-100 text-lg ml-1">Mumbai BMC - System Administration</p>
+            <div className="flex items-center gap-2 mt-3 ml-1 text-sm text-purple-100">
+              <CalendarDaysIcon className="h-4 w-4" />
+              <span>{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </div>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-bold">{(dashboardStats?.total_complaints || 0).toLocaleString()}</div>
-            <div className="text-purple-100">Total Complaints</div>
+            <div className="text-5xl font-bold mb-2">{(dashboardStats?.total_complaints || 0).toLocaleString()}</div>
+            <div className="text-purple-100 text-lg">Total Complaints</div>
+            <div className="mt-3 flex items-center justify-end gap-2 text-sm bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <CheckCircleIcon className="h-4 w-4" />
+              <span>{dashboardStats?.resolved_complaints || 0} Resolved</span>
+            </div>
           </div>
+        </div>
         </div>
       </div>
 
       {/* Date Filter */}
-      <div className="flex items-center space-x-4">
-        <FunnelIcon className="h-5 w-5 text-gray-400" />
+      <div className="flex items-center space-x-4 bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+        <div className="flex items-center gap-2 text-gray-700 font-semibold">
+          <FunnelIcon className="h-5 w-5 text-purple-600" />
+          <span className="text-sm">Filter Period:</span>
+        </div>
         <select
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="border border-gray-300 rounded-lg py-2 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all hover:border-purple-400 bg-white"
         >
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
@@ -273,13 +324,20 @@ const SuperAdminDashboard = () => {
       </div>
 
       {/* Daily Summary */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-600">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">{dailySummary.title}</h2>
-        <ul className="space-y-2">
+      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-xl p-8 border border-purple-100">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+            <ChartBarIcon className="h-6 w-6 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">{dailySummary.title}</h2>
+        </div>
+        <ul className="space-y-3">
           {dailySummary.items.map((item, index) => (
-            <li key={index} className="flex items-center text-gray-700">
-              <span className="h-2 w-2 bg-purple-600 rounded-full mr-3"></span>
-              {item}
+            <li key={index} className="flex items-start text-gray-700">
+              <div className="h-6 w-6 bg-purple-600 rounded-lg flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                <CheckCircleIcon className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-sm leading-relaxed">{item}</span>
             </li>
           ))}
         </ul>
@@ -290,14 +348,20 @@ const SuperAdminDashboard = () => {
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div key={index} className={`${card.bgColor} p-6 rounded-lg border border-gray-200`}>
+            <div key={index} className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                  <p className={`text-2xl font-bold ${card.color} mt-2`}>{card.value}</p>
-                  <p className="text-xs text-gray-500 mt-1">{card.trend}</p>
+                  <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">{card.title}</p>
+                  <p className={`text-3xl font-bold ${card.color} mb-1`}>{card.value}</p>
+                  {card.trend && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">{card.trend}</span>
+                    </div>
+                  )}
                 </div>
-                <Icon className={`h-8 w-8 ${card.color}`} />
+                <div className={`p-4 ${card.bgColor} rounded-xl`}>
+                  <Icon className={`h-8 w-8 ${card.color}`} />
+                </div>
               </div>
             </div>
           );
@@ -307,11 +371,13 @@ const SuperAdminDashboard = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Complaints Trend */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <ChartBarIcon className="h-5 w-5 text-purple-600 mr-2" />
-            Complaints Trend
-          </h3>
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+              <ChartBarIcon className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Complaints Trend</h3>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={generateChartData}>
               <CartesianGrid strokeDasharray="3 3" />

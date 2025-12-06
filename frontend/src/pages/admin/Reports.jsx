@@ -13,6 +13,7 @@ import {
   DocumentChartBarIcon,
   FunnelIcon
 } from '@heroicons/react/24/outline';
+import { FileText, Download, Calendar, Clock as ClockIcon2, Trophy, Building2, MapPin, Users as UsersIcon2, BarChart3, Filter, Shield, AlertTriangle, Target, TrendingUp } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -84,80 +85,21 @@ const Reports = () => {
     refetchInterval: 300000 // Refresh every 5 minutes
   });
 
-  // Generate mock analytics data dynamically based on filters
-  const generateMockAnalytics = useMemo(() => {
-    const days = parseInt(dateRange);
-    const multiplier = days === 7 ? 0.5 : days === 30 ? 1 : days === 90 ? 2.5 : 8;
-    
-    // Filter departments based on selection
-    const filteredDepts = selectedDepartment 
-      ? DEPARTMENTS.filter(d => d.id === selectedDepartment)
-      : DEPARTMENTS;
-    
-    // Generate department performance based on filters
-    const deptPerformance = filteredDepts.map(dept => {
-      const baseComplaints = Math.floor(Math.random() * 100 + 50) * multiplier;
-      const resolved = Math.floor(baseComplaints * (0.85 + Math.random() * 0.15));
-      return {
-        department: dept.name,
-        complaints: Math.floor(baseComplaints),
-        resolved: Math.floor(resolved),
-        avgTime: Math.floor(Math.random() * 20 + 10),
-        satisfaction: Math.floor(Math.random() * 20 + 75)
-      };
-    });
-    
-    const totalComplaints = deptPerformance.reduce((sum, d) => sum + d.complaints, 0);
-    const totalResolved = deptPerformance.reduce((sum, d) => sum + d.resolved, 0);
-    
-    // Filter wards based on selection
-    const filteredWards = selectedWard
-      ? WARD_CHOICES.filter(w => w.value === selectedWard)
-      : WARD_CHOICES;
-    
-    return {
-      summary: {
-        total_complaints: totalComplaints,
-        resolved_rate: Math.round((totalResolved / totalComplaints) * 100),
-        avg_resolution_time: Math.floor(Math.random() * 15 + 10),
-        citizen_satisfaction: (Math.random() * 1 + 3.5).toFixed(1),
-        officer_performance: Math.floor(Math.random() * 20 + 75)
-      },
-      departmentPerformance: deptPerformance,
-      wardWiseData: filteredWards.map(ward => ({
-        ward: ward.value,
-        label: ward.label,
-        complaints: Math.floor(Math.random() * 80 + 20) * (multiplier * 0.5),
-        resolved: Math.floor(Math.random() * 70 + 15) * (multiplier * 0.5),
-        resolutionRate: Math.floor(Math.random() * 15 + 80)
-      })),
-      categoryTrends: deptPerformance.map((dept, idx) => ({
-        category: dept.department,
-        jan: Math.floor(dept.complaints * 0.1),
-        feb: Math.floor(dept.complaints * 0.12),
-        mar: Math.floor(dept.complaints * 0.11),
-        apr: Math.floor(dept.complaints * 0.13),
-        may: Math.floor(dept.complaints * 0.14),
-        jun: Math.floor(dept.complaints * 0.12)
-      })),
-      resolutionTrends: Array.from({ length: Math.min(days, 6) }, (_, i) => ({
-        month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i],
-        avgTime: Math.floor(Math.random() * 10 + 12),
-        complaints: Math.floor(totalComplaints / Math.min(days, 6) + (Math.random() * 20 - 10))
-      })),
-      topOfficers: deptPerformance.slice(0, 5).map((dept, idx) => ({
-        name: `Officer ${['Patil', 'Singh', 'Kumar', 'Sharma', 'Joshi'][idx]}`,
-        department: dept.department,
-        resolved: Math.floor(dept.resolved * 0.7),
-        satisfaction: (Math.random() * 0.5 + 4).toFixed(1),
-        avgTime: dept.avgTime
-      }))
-    };
-  }, [dateRange, selectedDepartment, selectedWard]);
-
-  const mockAnalytics = generateMockAnalytics;
-
-  const analytics = analyticsData || mockAnalytics;
+  // Use real analytics data from API
+  const analytics = analyticsData || {
+    summary: {
+      total_complaints: 0,
+      resolved_rate: 0,
+      avg_resolution_time: 0,
+      citizen_satisfaction: 0,
+      officer_performance: 0
+    },
+    departmentPerformance: [],
+    wardWiseData: [],
+    categoryTrends: [],
+    resolutionTrends: [],
+    topOfficers: []
+  };
 
   // Chart colors
   const COLORS = ['#0078D7', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
@@ -207,7 +149,6 @@ const Reports = () => {
 
   const exportReport = (format) => {
     // Mock export functionality
-    console.log(`Exporting report in ${format} format`);
     // In real implementation, this would trigger a download
   };
 
@@ -255,14 +196,10 @@ const Reports = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 h-24 rounded"></div>
-            ))}
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+          <p className="text-gray-600 font-medium">Loading Reports & Analytics...</p>
         </div>
       </div>
     );
@@ -271,16 +208,20 @@ const Reports = () => {
   // Access Denial Screen - Check if user can access reports
   if (!canAccessReports) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="text-center max-w-md">
-          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-4">
-            You don't have permission to access the Reports & Analytics page.
-          </p>
-          <p className="text-sm text-gray-500">
-            Please contact your administrator if you believe this is an error.
-          </p>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mb-6">
+              <Shield className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h2>
+            <p className="text-gray-600 mb-2">
+              You don't have permission to access the Reports & Analytics page.
+            </p>
+            <p className="text-sm text-gray-500 mt-4">
+              Please contact your administrator if you believe this is an error.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -289,32 +230,45 @@ const Reports = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border-l-4 border-[#0078D7] p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <ChartBarIcon className="h-8 w-8 text-[#0078D7] mr-3" />
-              Reports & Analytics
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Comprehensive insights and performance analytics for Mumbai BMC
-            </p>
+      <div className="bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="reports-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#reports-grid)" />
+          </svg>
+        </div>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <FileText className="h-9 w-9" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Reports & Analytics</h1>
+              <p className="text-teal-100 text-lg mt-1">
+                Comprehensive insights and performance analytics for Mumbai BMC
+              </p>
+            </div>
           </div>
           
           {canExportReports(user) && (
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <button
                 onClick={() => exportReport('pdf')}
-                className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl text-white font-semibold hover:bg-white/30 hover:scale-105 transition-all duration-300"
               >
-                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Export PDF
               </button>
               <button
                 onClick={() => exportReport('csv')}
-                className="flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-[#0078D7] hover:bg-blue-700"
+                className="flex items-center gap-2 px-5 py-3 bg-white text-teal-600 rounded-xl font-semibold hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Export CSV
               </button>
             </div>
@@ -323,21 +277,21 @@ const Reports = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
-            <h3 className="text-lg font-medium text-gray-900">Filters</h3>
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+            <Filter className="h-6 w-6 text-white" />
           </div>
+          <h3 className="text-lg font-bold text-gray-900">Filters</h3>
         </div>
         
         <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-3' : userIsDepartmentAdmin ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Date Range</label>
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             >
               <option value="7">Last 7 days</option>
               <option value="30">Last 30 days</option>
@@ -349,12 +303,12 @@ const Reports = () => {
           {/* Department filter - visible for Super Admin and Department Admin (locked for Dept Admin) */}
           {(userIsSuperAdmin || userIsDepartmentAdmin) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
                 disabled={userIsDepartmentAdmin && user?.department}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">{userIsDepartmentAdmin && user?.department ? 'Department (Locked)' : 'All Departments'}</option>
                 {DEPARTMENTS.map(dept => (
@@ -367,12 +321,12 @@ const Reports = () => {
           {/* Ward filter - visible for Super Admin and Officer */}
           {(userIsSuperAdmin || userIsOfficer) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ward</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Ward</label>
               <select
                 value={selectedWard}
                 onChange={(e) => setSelectedWard(e.target.value)}
                 disabled={userIsOfficer && user?.assigned_ward}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D7] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">{userIsOfficer && user?.assigned_ward ? 'Ward (Locked)' : 'All Wards'}</option>
                 {WARD_CHOICES.map(ward => (

@@ -19,6 +19,7 @@ import {
   EnvelopeOpenIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
+import { ArrowLeft, User, Mail, Phone, Building2, MapPin, Calendar, Shield, CheckCircle, XCircle, AlertTriangle, Edit, Key, Send, Trash2, TrendingUp, Clock } from 'lucide-react';
 
 import { officersApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -53,26 +54,7 @@ const OfficerDetails = () => {
     retry: 1
   });
 
-  // Mock officer data for development
-  const mockOfficer = {
-    id: id || 65,
-    first_name: 'Ravi',
-    last_name: 'Kumar',
-    email: 'officer.bandra@test.bmc.gov.in',
-    username: 'ravi_kumar',
-    phone: '+91 9876543210',
-    role: 'OFFICER',
-    department: 'ROADS',
-    assigned_ward: 'H/W',
-    designation: 'Ward Officer',
-    is_active: true,
-    created_at: '2024-01-15T10:30:00Z',
-    updated_at: '2024-11-12T15:45:00Z',
-    complaints_handled: 45,
-    average_resolution_time: 3.2
-  };
-
-  const officerData = officer || mockOfficer;
+  const officerData = officer;
 
   // Delete officer mutation
   const deleteOfficerMutation = useMutation({
@@ -147,13 +129,10 @@ const OfficerDetails = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Officer Details</h1>
         </div>
-        <div className="bg-white shadow rounded-lg p-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-            </div>
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+            <p className="text-sm text-gray-600 font-medium">Loading officer details...</p>
           </div>
         </div>
       </div>
@@ -162,19 +141,23 @@ const OfficerDetails = () => {
 
   if (error) {
     return (
-      <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
-          <h2 className="mt-4 text-lg font-medium text-gray-900">Error Loading Officer</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {error.response?.data?.message || 'Failed to load officer details'}
-          </p>
-          <button
-            onClick={() => navigate('/admin/officers')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Officers
-          </button>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Officer</h2>
+            <p className="text-gray-600 mb-6">
+              {error.response?.data?.message || 'Failed to load officer details'}
+            </p>
+            <button
+              onClick={() => navigate('/admin/officers')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            >
+              Back to Officers
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -192,19 +175,23 @@ const OfficerDetails = () => {
   // Access denial screen
   if (!canAccessOfficer) {
     return (
-      <div className="min-h-96 flex items-center justify-center bg-gray-50 p-4">
-        <div className="text-center max-w-md">
-          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-4">
-            You don't have permission to view this officer's details.
-          </p>
-          <button
-            onClick={() => navigate('/admin/officers')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Officers
-          </button>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="h-12 w-12 text-amber-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h1>
+            <p className="text-gray-600 mb-6">
+              You don't have permission to view this officer's details.
+            </p>
+            <button
+              onClick={() => navigate('/admin/officers')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            >
+              Back to Officers
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -213,49 +200,69 @@ const OfficerDetails = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-blue-400">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center flex-1">
-            <button
-              onClick={() => navigate('/admin/officers')}
-              className="text-blue-600 hover:text-blue-800 mr-4 transition-colors"
-            >
-              <ArrowLeftIcon className="h-5 w-5" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {officerData.first_name} {officerData.last_name}
-              </h1>
-              <p className="text-gray-600 mt-2 text-base">@{officerData.username}</p>
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="officer-detail-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#officer-detail-grid)" />
+          </svg>
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4 flex-1">
+              <button
+                onClick={() => navigate('/admin/officers')}
+                className="h-12 w-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl flex items-center justify-center transition-all duration-200 transform hover:scale-105"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+              <div className="flex items-center gap-4 flex-1">
+                <div className="h-20 w-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-2xl border-4 border-white/30">
+                  <span className="text-3xl font-bold">
+                    {officerData.first_name?.charAt(0)}{officerData.last_name?.charAt(0)}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-4xl font-bold mb-2">
+                    {officerData.first_name} {officerData.last_name}
+                  </h1>
+                  <p className="text-blue-100 text-lg">@{officerData.username}</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-          <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border-2 ${getRoleBadgeColor(officerData.role)}`}>
-            <ShieldCheckIcon className="h-5 w-5 mr-2" />
-            {officerData.role}
-          </span>
-          <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-            officerData.is_active
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {officerData.is_active ? (
-              <>
-                <CheckCircleIcon className="h-5 w-5 mr-2" />
-                Active
-              </>
-            ) : (
-              <>
-                <XCircleIcon className="h-5 w-5 mr-2" />
-                Inactive
-              </>
-            )}
-          </span>
-          <span className="text-xs text-gray-500 ml-auto">
-            Joined: {new Date(officerData.created_at).toLocaleDateString('en-IN')}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 bg-white/20 backdrop-blur-sm border-white/30 text-white`}>
+              <Shield className="h-5 w-5" />
+              {officerData.role}
+            </span>
+            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${
+              officerData.is_active
+                ? 'bg-green-500/20 backdrop-blur-sm border-2 border-green-300 text-green-100'
+                : 'bg-red-500/20 backdrop-blur-sm border-2 border-red-300 text-red-100'
+            }`}>
+              {officerData.is_active ? (
+                <>
+                  <CheckCircle className="h-5 w-5" />
+                  Active
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5" />
+                  Inactive
+                </>
+              )}
+            </span>
+            <span className="text-xs text-gray-500 ml-auto">
+              Joined: {new Date(officerData.created_at).toLocaleDateString('en-IN')}
+            </span>
+          </div>
         </div>
       </div>
 

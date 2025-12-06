@@ -154,9 +154,9 @@ const Notifications = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="card">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex space-x-1">
+          <div className="flex space-x-2">
             {[
               { key: 'all', label: 'All', count: notifications.length },
               { key: 'unread', label: 'Unread', count: unreadCount },
@@ -165,9 +165,9 @@ const Notifications = () => {
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   filter === tab.key
-                    ? 'bg-civic-blue-600 text-white'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -177,22 +177,21 @@ const Notifications = () => {
           </div>
 
           {selectedNotifications.length > 0 && (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-600">
                 {selectedNotifications.length} selected
               </span>
               <button
                 onClick={handleMarkSelectedAsRead}
-                disabled={markAsReadMutation.isPending}
-                className="btn btn-sm btn-primary"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:scale-105 transition-all duration-300 shadow-lg text-sm"
               >
                 Mark as Read
               </button>
               <button
                 onClick={() => setSelectedNotifications([])}
-                className="btn btn-sm btn-secondary"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300 text-sm"
               >
-                Clear Selection
+                Clear
               </button>
             </div>
           )}

@@ -15,7 +15,6 @@ import {
 import { useAuth } from '../../context/AuthContext'
 
 const UserLayout = ({ children }) => {
-  console.log('📐 UserLayout rendering...')
   const location = useLocation()
   const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)

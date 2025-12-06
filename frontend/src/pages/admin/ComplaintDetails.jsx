@@ -29,12 +29,13 @@ import {
   XMarkIcon,
   ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
+import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, Building2, Tag, Clock, CheckCircle, AlertTriangle, XCircle, MessageSquare, Paperclip, Image as ImageIcon, Edit, Eye, Star, Shield, Flag } from 'lucide-react';
 import L from 'leaflet';
 
 import { complaintsApi, complaintDetailsApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../hooks/useRole';
 import { DEPARTMENTS } from '../../config/constants';
-import { isSuperAdmin, isDepartmentAdmin, isOfficer } from '../../utils/roleBasedAccess';
 
 // Fix Leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,12 +49,13 @@ const ComplaintDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const role = useRole();
   const queryClient = useQueryClient();
   
-  // Role-based access control - 3-tier admin hierarchy
-  const userIsSuperAdmin = isSuperAdmin(user);
-  const userIsDepartmentAdmin = isDepartmentAdmin(user);
-  const userIsOfficer = isOfficer(user);
+  // Role-based access control using useRole hook
+  const userIsSuperAdmin = role.isSuperAdmin;
+  const userIsDepartmentAdmin = role.isDeptAdmin;
+  const userIsOfficer = role.isWardAdmin;
   
   const [newStatus, setNewStatus] = useState('');
   const [officerNotes, setOfficerNotes] = useState('');
@@ -114,83 +116,9 @@ const ComplaintDetails = () => {
     enabled: !!id
   });
 
-  // Mock complaint data for development
-  const mockComplaint = {
-    id: id || 1,
-    title: 'Broken street light on SV Road',
-    description: 'The street light outside the Municipal School has been non-functional for the past week. This creates safety concerns for pedestrians and school children during evening hours.',
-    category: 'Infrastructure',
-    subcategory: 'Street Lighting',
-    status: 'IN_PROGRESS',
-    priority: 'HIGH',
-    department: 'ROADS',
-    assigned_ward: 'H/W',
-    citizen: {
-      first_name: 'Priya',
-      last_name: 'Sharma',
-      email: 'priya.sharma@gmail.com',
-      phone: '+91 9876543210'
-    },
-    address: 'Outside Municipal School, SV Road, Bandra West',
-    latitude: 19.0596,
-    longitude: 72.8295,
-    images: [
-      '/api/placeholder/400/300',
-      '/api/placeholder/400/300'
-    ],
-    attachments: [
-      {name: 'location_photo.jpg', size: '2.3 MB', type: 'image/jpeg'},
-      {name: 'complaint_form.pdf', size: '456 KB', type: 'application/pdf'}
-    ],
-    created_at: '2024-11-08T14:30:00Z',
-    updated_at: '2024-11-09T10:15:00Z',
-    timeline: [
-      {
-        status: 'SUBMITTED',
-        timestamp: '2024-11-08T14:30:00Z',
-        description: 'Complaint submitted by citizen',
-        user: 'Priya Sharma'
-      },
-      {
-        status: 'ACKNOWLEDGED',
-        timestamp: '2024-11-08T16:45:00Z',
-        description: 'Complaint acknowledged and assigned to department',
-        user: 'System'
-      },
-      {
-        status: 'IN_PROGRESS',
-        timestamp: '2024-11-09T10:15:00Z',
-        description: 'Field inspection completed. Parts ordered for repair.',
-        user: 'Officer Patil'
-      }
-    ],
-    officer_notes: [
-      {
-        id: 1,
-        note: 'Visited the location. Confirmed that the street light is not working. Need to replace the LED bulb and check wiring.',
-        created_by: 'Officer Patil',
-        created_at: '2024-11-09T10:15:00Z'
-      }
-    ],
-    internal_notes: [
-      {
-        id: 1,
-        notes: 'Contractor quote received: ₹2,500 for LED replacement. Budget approval pending.',
-        created_by: 'Admin Shah',
-        created_at: '2024-11-09T12:30:00Z'
-      },
-      {
-        id: 2,
-        notes: 'Similar complaints in this area. Consider bulk procurement for cost efficiency.',
-        created_by: 'Supervisor Kumar',
-        created_at: '2024-11-09T14:15:00Z'
-      }
-    ]
-  };
-
-  // Normalize complaint data - ensure images is always an array
+  // Normalize complaint data - ensure arrays exist
   const normalizeComplaintData = (data) => {
-    if (!data) return mockComplaint;
+    if (!data) return null;
     
     return {
       ...data,
@@ -204,7 +132,7 @@ const ComplaintDetails = () => {
     };
   };
 
-  const complaintData = normalizeComplaintData(complaint) || mockComplaint;
+  const complaintData = normalizeComplaintData(complaint);
 
   // Process images to ensure full URLs - must be after complaintData is defined
   const complaintImages = useMemo(() => {

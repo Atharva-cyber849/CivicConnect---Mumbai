@@ -1,5 +1,28 @@
+/**
+ * AdminSidebar Component (Vertical Navigation)
+ * 
+ * This is a vertical sidebar navigation for admin interfaces.
+ * It complements the new horizontal top navigation system (RoleBasedNavigation).
+ * 
+ * For top navigation bar, use: RoleBasedNavigation component
+ * For vertical sidebar, use: This AdminSidebar component
+ * 
+ * Choose based on your layout preference:
+ * - Top navigation: Modern, space-efficient, better for mobile
+ * - Sidebar: Traditional admin panel layout, more navigation space
+ * 
+ * Features:
+ * - Role-based navigation items (Super Admin, Dept Admin, Ward Admin/Officer)
+ * - Collapsible/expandable (desktop)
+ * - Mobile drawer
+ * - Active state highlighting
+ * - User profile display
+ * - Logout functionality
+ */
+
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
@@ -19,13 +42,16 @@ import {
   ArrowLeftOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
-import { USER_ROLES } from '../../config/constants';
+import { useRole } from '../../hooks/useRole';
+import { adminApi } from '../../api/adminApi';
+import { BMC_DEPARTMENTS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const role = useRole();
   
   // Handle logout with navigation
   const handleLogout = () => {
@@ -38,7 +64,6 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
         navigate('/admin/auth/login', { replace: true });
       }, 100);
     } catch (error) {
-      console.error('Logout error:', error);
       toast.error('Error logging out');
     }
   };
@@ -52,14 +77,73 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
         setOpen(false);
       }
     } catch (error) {
-      console.error('Navigation error:', error);
+      // Navigation error handled silently
     }
   };
   
-  // Determine admin tier for 3-tier hierarchy
-  const isSuperAdmin = user?.role === USER_ROLES.ADMIN && user?.is_superuser;
-  const isDepartmentAdmin = user?.role === USER_ROLES.ADMIN && !user?.is_superuser;
-  const isBMCOfficer = user?.role === USER_ROLES.DEPARTMENT_STAFF;
+  // Role-based access using useRole hook
+  const isSuperAdmin = role.isSuperAdmin;
+  const isDepartmentAdmin = role.isExactlyDeptAdmin;
+  const isBMCOfficer = role.isExactlyWardAdmin;
+
+  // Fetch real-time data for badges based on role
+  // Super Admin: Pending registration requests
+  const { data: registrationsData } = useQuery({
+    queryKey: ['pending-registrations-count'],
+    queryFn: async () => {
+      if (!isSuperAdmin) return [];
+      const data = await adminApi.getRegistrationRequests();
+      return data?.filter(r => r.status === 'PENDING') || [];
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: isSuperAdmin,
+  });
+
+  // Department Admin: Unassigned complaints for department
+  const { data: deptComplaintsData } = useQuery({
+    queryKey: ['dept-unassigned-complaints', user?.department],
+    queryFn: async () => {
+      if (!isDepartmentAdmin || !user?.department) return [];
+      const data = await adminApi.getComplaints({ status: 'UNASSIGNED' });
+      return data?.filter(c => c.department === user?.department) || [];
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: isDepartmentAdmin && !!user?.department,
+  });
+
+  // Ward Admin/Officer: Pending complaints for ward
+  const { data: wardComplaintsData } = useQuery({
+    queryKey: ['ward-pending-complaints', user?.ward],
+    queryFn: async () => {
+      if (!isBMCOfficer || !user?.ward) return [];
+      const data = await adminApi.getComplaints({ status: 'PENDING' });
+      return data?.filter(c => c.ward === user?.ward) || [];
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: isBMCOfficer && !!user?.ward,
+  });
+
+  // Calculate badge counts
+  const pendingRegistrations = registrationsData?.length || 0;
+  const unassignedComplaints = deptComplaintsData?.length || 0;
+  const pendingComplaints = wardComplaintsData?.length || 0;
+
+  // Fetch department data if user.department is an ID
+  const { data: departmentData } = useQuery({
+    queryKey: ['department-name', user?.department],
+    queryFn: async () => {
+      if (!user?.department || !isDepartmentAdmin) return null;
+      try {
+        const departments = await adminApi.getDepartments();
+        return departments?.find(d => d.id === user.department || d.id === parseInt(user.department));
+      } catch (error) {
+        console.error('Error fetching department:', error);
+        return null;
+      }
+    },
+    enabled: !!user?.department && isDepartmentAdmin,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   // Define navigation items based on user role and admin tier
   const getNavigationItems = () => {
@@ -74,7 +158,8 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
         name: 'Complaints',
         href: '/admin/complaints',
         icon: ClipboardDocumentListIcon,
-        description: isSuperAdmin ? 'All City Complaints' : isDepartmentAdmin ? 'Department Complaints' : 'Assigned Complaints'
+        description: isSuperAdmin ? 'All City Complaints' : isDepartmentAdmin ? 'Department Complaints' : 'Assigned Complaints',
+        badge: isDepartmentAdmin ? unassignedComplaints : isBMCOfficer ? pendingComplaints : undefined
       },
       {
         name: 'Map View',
@@ -83,6 +168,24 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
         description: isSuperAdmin ? 'City-wide Geographic View' : 'Ward Geographic View'
       }
     ];
+
+    // Analytics - Available for all admin roles
+    baseItems.push({
+      name: 'Analytics',
+      href: '/admin/analytics',
+      icon: ChartPieIcon,
+      description: isSuperAdmin ? 'System Analytics' : isDepartmentAdmin ? 'Department Trends' : 'Performance Metrics'
+    });
+
+    // SLA Dashboard - Available for Ward Admin and above
+    if (!isBMCOfficer || isDepartmentAdmin || isSuperAdmin) {
+      baseItems.push({
+        name: 'SLA Tracking',
+        href: '/admin/sla-dashboard',
+        icon: ClockIcon,
+        description: 'Service Level Agreement Monitoring'
+      });
+    }
 
     // BMC Ward Dashboard - Super Admin sees all wards, Department Admin sees their ward only
     if (isSuperAdmin) {
@@ -131,32 +234,13 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
 
     // ===== SUPER ADMIN ONLY SECTIONS =====
     if (isSuperAdmin) {
+      // User Management - Consolidated registration management
       baseItems.push({
-        name: 'Self Registrations',
+        name: 'User Management',
         href: '/admin/self-register',
-        icon: UserPlusIcon,
-        description: 'Review Self-Registered Users'
-      });
-      
-      baseItems.push({
-        name: 'Registration Requests',
-        href: '/admin/registration-requests',
         icon: UserGroupIcon,
-        description: 'Pending Registration Approvals'
-      });
-      
-      baseItems.push({
-        name: 'Create Admin',
-        href: '/admin/create-admin',
-        icon: ShieldCheckIcon,
-        description: 'Create Department Admin'
-      });
-
-      baseItems.push({
-        name: 'Create Super Admin',
-        href: '/admin/create-super-admin',
-        icon: ShieldCheckIcon,
-        description: 'Create Super Admin Account'
+        description: 'Manage Users & Registrations',
+        badge: pendingRegistrations
       });
 
       // System Settings - Super Admin only
@@ -183,10 +267,34 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
 
   // Get user role display label based on admin tier
   const getRoleLabel = () => {
-    if (isSuperAdmin) return 'Super Admin';
-    if (isDepartmentAdmin) return 'Department Admin';
-    if (isBMCOfficer) return 'BMC Officer';
-    return user?.role || 'User';
+    return role.getTierName();
+  };
+
+  // Format department name for display
+  const getDepartmentName = () => {
+    if (!user?.department) return null;
+    
+    // If we have department data from API, use it
+    if (departmentData) {
+      return departmentData.name || departmentData.label || 'Department';
+    }
+    
+    // If user.department is a number (ID), show loading or ID
+    if (!isNaN(user.department)) {
+      return `Department ${user.department}`;
+    }
+    
+    // Try to find department in constants
+    const dept = BMC_DEPARTMENTS?.find(d => d.value === user.department);
+    if (dept) return dept.label;
+    
+    // Fallback: format the raw department value
+    return user.department
+      .toString()
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   const navigationItems = getNavigationItems();
@@ -220,8 +328,15 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
                       {user?.first_name} {user?.last_name}
                     </p>
                     <p className="text-xs text-blue-100">
-                      {getRoleLabel()} {user?.assigned_ward && `• ${user.assigned_ward} Ward`}
+                      {getRoleLabel()}
+                      {user?.assigned_ward && ` • ${user.assigned_ward} Ward`}
+                      {isDepartmentAdmin && getDepartmentName() && ` • ${getDepartmentName()}`}
                     </p>
+                    {user?.email && (
+                      <p className="text-xs text-blue-200 mt-0.5">
+                        {user.email}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -289,7 +404,7 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
                 <div className="flex items-center">
                   <BuildingOffice2Icon className="h-5 w-5 text-gray-400 mr-2" />
                   <div>
-                    <p className="text-xs font-medium text-gray-900">{user.department}</p>
+                    <p className="text-xs font-medium text-gray-900">{getDepartmentName()}</p>
                     <p className="text-xs text-gray-500">Department</p>
                   </div>
                 </div>
@@ -299,7 +414,7 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
             {/* Help/Support Link */}
             <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
               <button
-                onClick={() => handleNavigation('/help')}
+                onClick={() => handleNavigation('/admin/help')}
                 title="Help & Support"
                 className={`w-full flex items-center ${isMinimized ? 'justify-center' : ''} px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200`}
               >
@@ -345,7 +460,15 @@ const AdminSidebar = ({ open, setOpen, user, isMinimized, setIsMinimized }) => {
                   <p className="text-sm font-medium text-white">
                     {user?.first_name} {user?.last_name}
                   </p>
-                  <p className="text-xs text-blue-100">{getRoleLabel()}</p>
+                  <p className="text-xs text-blue-100">
+                    {getRoleLabel()}
+                    {isDepartmentAdmin && getDepartmentName() && ` • ${getDepartmentName()}`}
+                  </p>
+                  {user?.email && (
+                    <p className="text-xs text-blue-200 mt-0.5 truncate max-w-[180px]">
+                      {user.email}
+                    </p>
+                  )}
                 </div>
               </div>
               {/* Close button for mobile */}

@@ -1,28 +1,26 @@
 import React from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { USER_ROLES } from '../../config/constants';
+import { useRole } from '../../hooks/useRole';
 import SuperAdminDashboard from './SuperAdminDashboard';
 import DepartmentAdminDashboard from './DepartmentAdminDashboard';
 import BMCOfficerDashboard from '../officer/BMCOfficerDashboard';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const role = useRole();
 
-  // Route to appropriate dashboard based on role
-  // Super admins have role ADMIN with is_superuser flag
-  if (user?.role === USER_ROLES.ADMIN && user?.is_superuser) {
+  // Route to appropriate dashboard based on role tier
+  if (role.isSuperAdmin) {
     return <SuperAdminDashboard />;
   }
   
-  if (user?.role === USER_ROLES.ADMIN) {
+  if (role.isDeptAdmin) {
     return <DepartmentAdminDashboard />;
   }
   
-  if (user?.role === USER_ROLES.DEPARTMENT_STAFF) {
+  if (role.isWardAdmin) {
     return <BMCOfficerDashboard />;
   }
 
-  // Fallback for unknown roles
+  // Fallback for citizens or unknown roles
   return (
     <div className="text-center py-12">
       <p className="text-gray-600">Dashboard not available for your role</p>

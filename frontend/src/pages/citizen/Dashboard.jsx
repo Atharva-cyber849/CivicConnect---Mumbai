@@ -15,16 +15,13 @@ import { Link } from 'react-router-dom'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
 
 const UserDashboard = () => {
-  console.log('🎯 Dashboard component rendering...')
-  
   const { data: complaints, isLoading, error } = useQuery({
     queryKey: ['userComplaints'],
     queryFn: async () => {
       try {
-        console.log('📡 Fetching user complaints...')
         return await complaintsApi.getUserComplaints()
       } catch (err) {
-        console.error('❌ Error fetching complaints:', err)
+        console.error('Error fetching complaints:', err)
         throw err
       }
     },
@@ -42,10 +39,9 @@ const UserDashboard = () => {
     queryKey: ['userStats'],
     queryFn: async () => {
       try {
-        console.log('📡 Fetching user stats...')
         return await complaintsApi.getUserStats()
       } catch (err) {
-        console.error('❌ Error fetching stats:', err)
+        console.error('Error fetching stats:', err)
         // Return default stats on error
         return { total: 0, pending: 0, in_progress: 0, resolved: 0, rejected: 0 }
       }
@@ -57,12 +53,8 @@ const UserDashboard = () => {
     refetchOnMount: false,
   })
 
-  // Log current state
-  console.log('📊 Dashboard state:', { isLoading, statsLoading, error, hasComplaints: !!complaints })
-  
   // Show loading state
   if (isLoading || statsLoading) {
-    console.log('⏳ Showing loading state...')
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -94,7 +86,6 @@ const UserDashboard = () => {
 
   // Handle different response structures
   const complaintsList = complaints?.results || complaints?.data?.results || complaints || []
-  console.log('✅ Dashboard rendering with data. Complaints count:', complaintsList.length)
   
   const stats = {
     total: complaintsList.length,
@@ -124,74 +115,105 @@ const UserDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-2xl relative overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+        </div>
+        <div className="relative z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back! 👋</h1>
+            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+              Welcome back! 👋
+              <span className="text-sm font-normal bg-white/20 px-3 py-1 rounded-full">v2.0</span>
+            </h1>
             <p className="text-blue-100 text-lg">
               Track your complaints and help improve Mumbai together
             </p>
+            <div className="flex items-center gap-4 mt-4">
+              <div className="flex items-center gap-2 text-sm bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <FiCalendar className="w-4 h-4" />
+                <span>{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <FiTrendingUp className="w-4 h-4" />
+                <span>Active Citizen</span>
+              </div>
+            </div>
           </div>
           <Link 
             to="/dashboard/report"
-            className="bg-white text-blue-600 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2 shadow-lg"
+            className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-xl font-semibold transition-all flex items-center space-x-2 shadow-xl hover:shadow-2xl transform hover:scale-105 duration-200"
           >
-            <FiPlus className="w-5 h-5" />
+            <FiPlus className="w-6 h-6" />
             <span>Report New Issue</span>
           </Link>
+        </div>
         </div>
       </div>
 
       {/* Main Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-1">Total Complaints</p>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.total}</h3>
-              <p className="text-sm text-gray-500 mt-1">All time</p>
+              <p className="text-gray-600 text-sm font-semibold mb-1 uppercase tracking-wide">Total Complaints</p>
+              <h3 className="text-4xl font-bold text-gray-900 mb-1">{stats.total}</h3>
+              <p className="text-sm text-gray-500 flex items-center gap-1">
+                <FiCalendar className="w-3 h-3" />
+                All time
+              </p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FiFileText className="w-6 h-6 text-blue-600" />
+            <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+              <FiFileText className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-1">Pending</p>
-              <h3 className="text-3xl font-bold text-yellow-600">{stats.pending}</h3>
-              <p className="text-sm text-gray-500 mt-1">Awaiting action</p>
+              <p className="text-gray-600 text-sm font-semibold mb-1 uppercase tracking-wide">Pending</p>
+              <h3 className="text-4xl font-bold text-yellow-600 mb-1">{stats.pending}</h3>
+              <p className="text-sm text-gray-500 flex items-center gap-1">
+                <FiClock className="w-3 h-3" />
+                Awaiting action
+              </p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <FiClock className="w-6 h-6 text-yellow-600" />
+            <div className="p-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg">
+              <FiClock className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-1">In Progress</p>
-              <h3 className="text-3xl font-bold text-blue-600">{stats.inProgress}</h3>
-              <p className="text-sm text-gray-500 mt-1">Being resolved</p>
+              <p className="text-gray-600 text-sm font-semibold mb-1 uppercase tracking-wide">In Progress</p>
+              <h3 className="text-4xl font-bold text-blue-600 mb-1">{stats.inProgress}</h3>
+              <p className="text-sm text-gray-500 flex items-center gap-1">
+                <FiTrendingUp className="w-3 h-3" />
+                Being resolved
+              </p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FiAlertCircle className="w-6 h-6 text-blue-600" />
+            <div className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg">
+              <FiAlertCircle className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-1">Resolved</p>
-              <h3 className="text-3xl font-bold text-green-600">{stats.resolved}</h3>
-              <p className="text-sm text-gray-500 mt-1">Successfully closed</p>
+              <p className="text-gray-600 text-sm font-semibold mb-1 uppercase tracking-wide">Resolved</p>
+              <h3 className="text-4xl font-bold text-green-600 mb-1">{stats.resolved}</h3>
+              <p className="text-sm text-gray-500 flex items-center gap-1">
+                <FiCheckCircle className="w-3 h-3" />
+                Successfully closed
+              </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <FiCheckCircle className="w-6 h-6 text-green-600" />
+            <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+              <FiCheckCircle className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
@@ -200,8 +222,13 @@ const UserDashboard = () => {
       {/* Charts and Map Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Resolution Chart */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resolution Status</h3>
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <FiCheckCircle className="w-4 h-4 text-white" />
+            </div>
+            Resolution Status
+          </h3>
           {stats.total > 0 ? (
             <div className="flex items-center space-x-4">
               <div className="w-32 h-32">

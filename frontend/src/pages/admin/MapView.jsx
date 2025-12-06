@@ -12,6 +12,7 @@ import {
   CalendarDaysIcon,
   PhotoIcon
 } from '@heroicons/react/24/outline';
+import { Map, MapPin, Filter, Eye, Clock, CheckCircle, AlertTriangle, Building2, Calendar, Image, Layers, Target } from 'lucide-react';
 import L from 'leaflet';
 
 // Import Mumbai ward data
@@ -120,71 +121,8 @@ const MapView = () => {
     enabled: userIsSuperAdmin || userIsDepartmentAdmin || userIsOfficer
   });
 
-  // Mock data for development
-  const mockComplaints = [
-    {
-      id: 1,
-      title: 'Broken street light on SV Road',
-      status: 'PENDING',
-      category: 'Infrastructure',
-      latitude: 19.0596,
-      longitude: 72.8295,
-      ward: 'H/W',
-      department: 'ROADS',
-      created_at: '2024-11-10T10:00:00Z',
-      image: null
-    },
-    {
-      id: 2,
-      title: 'Garbage not collected for 3 days',
-      status: 'IN_PROGRESS',
-      category: 'Waste Management',
-      latitude: 19.0896,
-      longitude: 72.8656,
-      ward: 'K/E',
-      department: 'SWM',
-      created_at: '2024-11-09T14:30:00Z',
-      image: null
-    },
-    {
-      id: 3,
-      title: 'Water leakage near bus stop',
-      status: 'RESOLVED',
-      category: 'Water Supply',
-      latitude: 19.1136,
-      longitude: 72.8697,
-      ward: 'R/C',
-      department: 'HYDRAULIC',
-      created_at: '2024-11-08T09:15:00Z',
-      image: null
-    },
-    {
-      id: 4,
-      title: 'Pothole on main road',
-      status: 'PENDING',
-      category: 'Roads',
-      latitude: 19.0176,
-      longitude: 72.8562,
-      ward: 'A',
-      department: 'ROADS',
-      created_at: '2024-11-09T16:45:00Z',
-      image: null
-    },
-    {
-      id: 5,
-      title: 'Illegal construction',
-      status: 'IN_PROGRESS',
-      category: 'Building',
-      latitude: 19.0560,
-      longitude: 72.8365,
-      ward: 'D',
-      department: 'BUILDING',
-      created_at: '2024-11-07T11:20:00Z',
-      image: null
-    }
-  ];
-
-  const complaints = mapComplaints.length > 0 ? mapComplaints : mockComplaints;
+  // Use real data from API
+  const complaints = mapComplaints || [];
 
   // Filter complaints based on current filters
   const filteredComplaints = complaints.filter(complaint => {

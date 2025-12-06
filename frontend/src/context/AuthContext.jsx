@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
     
     // Show message if provided
     if (message && state.isAuthenticated) {
-      console.log('AuthContext -', message);
+      // User was logged out
     }
   }, [state.isAuthenticated]);
 
@@ -120,7 +120,6 @@ export const AuthProvider = ({ children }) => {
     setAuthCheckComplete(true);
     
     const checkAuth = async () => {
-      console.log('AuthContext - Checking for existing auth');
       
       // Check both old and new storage keys for compatibility
       let token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -138,12 +137,10 @@ export const AuthProvider = ({ children }) => {
       if (token && userData) {
         try {
           const user = JSON.parse(userData);
-          console.log('AuthContext - Found existing auth for:', user.email);
           
           // If is_superuser field is missing, we need to refresh the user data
           // This handles the case where user data was stored before the is_superuser field was added
           if (user.is_superuser === undefined) {
-            console.log('AuthContext - is_superuser field missing, clearing old session');
             // Clear old session data to force fresh login
             localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
             localStorage.removeItem(STORAGE_KEYS.USER_DATA);
@@ -159,7 +156,6 @@ export const AuthProvider = ({ children }) => {
             payload: { token, user }
           });
         } catch (error) {
-          console.log('AuthContext - Invalid stored auth data, clearing');
           // Clear all auth data
           localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
           localStorage.removeItem(STORAGE_KEYS.USER_DATA);
@@ -169,10 +165,10 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('user');
         }
       } else {
-        console.log('AuthContext - No existing auth found');
+        // No auth found
       }
       
-      console.log('AuthContext - Auth check complete');
+      // Auth check complete
     };
 
     checkAuth();
@@ -240,10 +236,8 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const response = await authApi.login(credentials);
-      console.log('AuthContext - Login response:', response);
       
       const { access, refresh, user } = response;
-      console.log('AuthContext - Extracted data:', { access: !!access, refresh: !!refresh, user });
       
       if (!access) {
         throw new Error('No access token received');
@@ -255,8 +249,6 @@ export const AuthProvider = ({ children }) => {
       
       if (user) {
         localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-      } else {
-        console.warn('AuthContext - No user data in login response, user data missing');
       }
       
       dispatch({

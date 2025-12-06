@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.complaints',
     'apps.departments',
     'apps.notifications',
+    'apps.audit',
 ]
 
 MIDDLEWARE = [
@@ -140,8 +141,9 @@ REST_FRAMEWORK = {
 }
 
 # JWT Configuration
+# For RBAC security, short-lived access tokens with refresh tokens
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=config('JWT_ACCESS_TOKEN_LIFETIME_HOURS', default=4, cast=int)),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=config('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', default=15, cast=int)),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=config('JWT_REFRESH_TOKEN_LIFETIME_DAYS', default=7, cast=int)),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -151,6 +153,7 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
     'USER_ID_FIELD': 'email',  # Use email as the user identifier
     'USER_ID_CLAIM': 'email',  # Use email in the token claims
+    'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.CustomTokenObtainPairSerializer',
 }
 
 # CORS Configuration

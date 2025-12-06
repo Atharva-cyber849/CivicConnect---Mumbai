@@ -16,6 +16,7 @@ import { getAssignedDepartment } from '../../utils/helpers'
 import { MUMBAI_CENTER, DEFAULT_ZOOM, createCustomIcon, reverseGeocode, getCurrentLocation, isWithinMumbai } from '../../utils/mapUtils'
 import { MapContainer, TileLayer, Marker, useMapEvents, GeoJSON } from 'react-leaflet'
 import L from 'leaflet'
+import { AlertCircle, MapPin, Camera, FileText, Send } from 'lucide-react'
 
 // Fix Leaflet default icon issues with bundlers
 import 'leaflet/dist/leaflet.css'
@@ -365,14 +366,33 @@ const ReportIssue = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8">Report an Issue</h1>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-12 w-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <FileText className="h-7 w-7" />
+            </div>
+            <h1 className="text-4xl font-bold">Report an Issue</h1>
+          </div>
+          <p className="text-blue-100 text-lg ml-1">Help us improve Mumbai by reporting civic issues in your area</p>
+        </div>
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Map & Image Column */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">📍 Location</h2>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Location</h2>
+            </div>
             <div className="h-72 relative rounded-lg overflow-hidden">
               <MapContainer
                 center={MUMBAI_CENTER}
@@ -425,8 +445,9 @@ const ReportIssue = () => {
                 type="button"
                 onClick={handleUseMyLocation}
                 disabled={loadingLocation}
-                className="btn btn-secondary"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
               >
+                <MapPin className="h-4 w-4" />
                 {loadingLocation ? 'Detecting...' : 'Use My Location'}
               </button>
               {autoDetectedWard && (
@@ -435,8 +456,13 @@ const ReportIssue = () => {
             </div>
           </div>
 
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">📷 Photo</h2>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
+                <Camera className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Photo Evidence</h2>
+            </div>
             <div className={`border-2 border-dashed rounded-lg p-4 text-center 
               ${formErrors.image ? 'border-red-500' : 'border-gray-300'}`}
             >
@@ -496,15 +522,15 @@ const ReportIssue = () => {
         </div>
 
         {/* Form Column */}
-        <form onSubmit={handleSubmit} className="space-y-6 lg:col-span-2 card">
+        <form onSubmit={handleSubmit} className="space-y-6 lg:col-span-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div>
-            <label className="block text-sm font-medium mb-2">Issue Title *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Issue Title *</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className={`input ${formErrors.title ? 'border-red-500' : ''}`}
+              className={`w-full px-4 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 ${formErrors.title ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
               placeholder="e.g., Pothole on Main Street"
               required
             />

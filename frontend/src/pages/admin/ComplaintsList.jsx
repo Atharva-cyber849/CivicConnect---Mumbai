@@ -15,6 +15,7 @@ import {
   ExclamationTriangleIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
+import { FileText, Search, Filter, Eye, Edit, Check, X, AlertTriangle, Shield, Target } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 
 const ComplaintsList = () => {
@@ -107,13 +108,17 @@ const ComplaintsList = () => {
   // Check access
   if (!userIsSuperAdmin && !userIsDepartmentAdmin && !userIsOfficer) {
     return (
-      <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500" />
-          <h2 className="mt-4 text-lg font-medium text-gray-900">Access Denied</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            You don't have permission to view complaints.
-          </p>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mb-6">
+              <Shield className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h2>
+            <p className="text-gray-600">
+              You don't have permission to view complaints.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -121,16 +126,27 @@ const ComplaintsList = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+          <p className="text-gray-600 font-medium">Loading Complaints...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">Error loading complaints: {error.message}</p>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Data</h2>
+            <p className="text-gray-600">Error loading complaints: {error.message}</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -141,50 +157,81 @@ const ComplaintsList = () => {
   return (
     <div className="space-y-6">
       {/* Header with Stats */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <DocumentTextIcon className="h-8 w-8 text-blue-600 mr-3" />
-              Complaints Management
-            </h1>
-            <p className="text-gray-600 mt-1">Manage and track all citizen complaints</p>
-          </div>
+      <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="complaints-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#complaints-grid)" />
+          </svg>
         </div>
-        
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{data?.results?.length || totalComplaints || 0}</p>
-            <p className="text-sm text-gray-600">Total</p>
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <FileText className="h-9 w-9" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Complaints Management</h1>
+              <p className="text-teal-100 text-lg mt-1">Manage and track all citizen complaints</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-yellow-600">{data?.results?.filter(c => c.status === 'PENDING').length || 0}</p>
-            <p className="text-sm text-gray-600">Pending</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">{data?.results?.filter(c => c.status === 'IN_PROGRESS').length || 0}</p>
-            <p className="text-sm text-gray-600">In Progress</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{data?.results?.filter(c => c.status === 'RESOLVED').length || 0}</p>
-            <p className="text-sm text-gray-600">Resolved</p>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <Target className="h-6 w-6" />
+                <p className="text-3xl font-bold">{data?.results?.length || totalComplaints || 0}</p>
+              </div>
+              <p className="text-sm text-teal-100">Total</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <AlertTriangle className="h-6 w-6 text-yellow-300" />
+                <p className="text-3xl font-bold text-yellow-300">{data?.results?.filter(c => c.status === 'PENDING').length || 0}</p>
+              </div>
+              <p className="text-sm text-teal-100">Pending</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <Edit className="h-6 w-6 text-purple-300" />
+                <p className="text-3xl font-bold text-purple-300">{data?.results?.filter(c => c.status === 'IN_PROGRESS').length || 0}</p>
+              </div>
+              <p className="text-sm text-teal-100">In Progress</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <Check className="h-6 w-6 text-green-300" />
+                <p className="text-3xl font-bold text-green-300">{data?.results?.filter(c => c.status === 'RESOLVED').length || 0}</p>
+              </div>
+              <p className="text-sm text-teal-100">Resolved</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+            <Filter className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Filters</h3>
+        </div>
         <div className={`grid gap-4 ${userIsSuperAdmin ? 'grid-cols-1 md:grid-cols-6' : 'grid-cols-1 md:grid-cols-5'}`}>
           {/* Search */}
           <div className="md:col-span-2 relative">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search complaints..."
               value={filters.search}
               onChange={(e) => setFilters({...filters, search: e.target.value})}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             />
           </div>
 
@@ -192,7 +239,7 @@ const ComplaintsList = () => {
           <select
             value={filters.status}
             onChange={(e) => setFilters({...filters, status: e.target.value})}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>

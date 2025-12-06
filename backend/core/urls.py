@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/complaints/', include('apps.complaints.urls')),
     path('api/departments/', include('apps.departments.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
+    path('api/audit/', include('apps.audit.urls')),
     
     # Admin Management Endpoints (for frontend /admin/ routes)
     path('api/admin/', include('apps.users.admin_urls')),

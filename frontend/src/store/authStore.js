@@ -100,7 +100,7 @@ export const useAuthStore = create(
             await authApi.logout(refreshToken)
           }
         } catch (error) {
-          console.error('Logout error:', error)
+          // Logout error handled
         } finally {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')

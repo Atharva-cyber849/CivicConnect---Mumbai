@@ -166,6 +166,13 @@ api.interceptors.response.use(
     if (error.response?.status === 403 && !error.response?.data?.detail?.includes('CSRF')) {
       // This is a permission error, not an auth error - don't logout
       console.warn('Permission denied:', error.response?.data);
+      
+      // Show user-friendly permission denied message
+      const permissionMessage = error.response?.data?.error || 
+                               error.response?.data?.detail ||
+                               'You do not have permission to perform this action';
+      toast.error(permissionMessage);
+      
       return Promise.reject(error);
     }
 

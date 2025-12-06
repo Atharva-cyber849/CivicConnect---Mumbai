@@ -3,6 +3,8 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import ErrorBoundary from '../components/Common/ErrorBoundary';
 import { useAuth } from '../context/AuthContext';
 import { USER_ROLES } from '../config/constants';
+import ProtectedRoute from './ProtectedRoute';
+import { ADMIN_TIERS } from '../hooks/useRole';
 
 // Layouts
 import PublicLayout from '../components/Layout/PublicLayout';
@@ -14,6 +16,9 @@ import CitizenLayout from '../components/Layout/CitizenLayout';
 import LandingPage from '../pages/citizen/LandingPage';
 import Login from '../pages/citizen/Login';
 import Register from '../pages/citizen/Register';
+import Sitemap from '../pages/citizen/Sitemap';
+import Privacy from '../pages/citizen/Privacy';
+import Terms from '../pages/citizen/Terms';
 
 // Citizen Dashboard Pages
 import CitizenDashboard from '../pages/citizen/Dashboard';
@@ -23,11 +28,15 @@ import ComplaintDetail from '../pages/citizen/ComplaintDetail';
 import CitizenMapView from '../pages/citizen/MapView';
 import NotificationsCenter from '../pages/citizen/NotificationsCenter';
 import Profile from '../pages/citizen/Profile';
+import Help from '../pages/citizen/Help';
+import Emergency from '../pages/citizen/Emergency';
+import WardInfo from '../pages/citizen/WardInfo';
 
 // Admin Pages
 import AdminPortal from '../pages/admin/AdminPortal';
 import AdminLogin from '../pages/admin/Login';
 import AdminSelfRegister from '../pages/admin/AdminSelfRegister';
+import UserManagement from '../pages/admin/UserManagement';
 import AdminDashboard from '../pages/admin/Dashboard';
 import ComplaintsList from '../pages/admin/ComplaintsList';
 import ComplaintDetails from '../pages/admin/ComplaintDetails';
@@ -43,6 +52,9 @@ import AdminProfile from '../pages/admin/Profile';
 import AdminRegister from '../pages/admin/AdminRegister';
 import AdminRegistrationRequests from '../components/admin/AdminRegistrationRequests';
 import CreateSuperAdmin from '../components/admin/CreateSuperAdmin';
+import Departments from '../pages/admin/Departments';
+import Documentation from '../pages/admin/Documentation';
+import AdminHelp from '../pages/admin/Help';
 
 // Mumbai BMC Specific Pages
 import BMCWardDashboard from '../pages/admin/BMCWardDashboard';
@@ -148,6 +160,9 @@ const AppRouter = () => {
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<LandingPage />} />
           <Route path="ward-services" element={<MumbaiWardServices />} />
+          <Route path="sitemap" element={<Sitemap />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
         </Route>
 
         {/* ===== CITIZEN AUTH ROUTES ===== */}
@@ -167,45 +182,104 @@ const AppRouter = () => {
 
         {/* ===== PROTECTED ADMIN ROUTES ===== */}
         <Route path="/admin" element={
-          <RoleBasedRoute requiredRoles={[USER_ROLES.ADMIN, USER_ROLES.DEPARTMENT_STAFF]}>
+          <ProtectedRoute requiredRole="ADMIN">
             <AdminLayout />
-          </RoleBasedRoute>
+          </ProtectedRoute>
         }>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="complaints" element={<ComplaintsList />} />
           <Route path="complaints/:id" element={<ComplaintDetails />} />
+          <Route path="departments" element={<Departments />} />
           <Route path="map" element={<AdminMapView />} />
           <Route path="officer-map" element={<OfficerMapPage />} />
-          <Route path="analytics" element={<MumbaiBMCAnalytics />} />
-          <Route path="sla-dashboard" element={<SLADashboard />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="officers" element={<OfficerManagement />} />
-          <Route path="officers/:id" element={<OfficerDetails />} />
+          
+          {/* Analytics - requires at least Ward Admin tier */}
+          <Route path="analytics" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.WARD_ADMIN} showUnauthorized>
+              <MumbaiBMCAnalytics />
+            </ProtectedRoute>
+          } />
+          <Route path="sla-dashboard" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.WARD_ADMIN} showUnauthorized>
+              <SLADashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="reports" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.WARD_ADMIN} showUnauthorized>
+              <Reports />
+            </ProtectedRoute>
+          } />
+          
+          {/* Officer Management - requires at least Dept Admin tier */}
+          <Route path="officers" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.DEPT_ADMIN} showUnauthorized>
+              <OfficerManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="officers/:id" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.DEPT_ADMIN} showUnauthorized>
+              <OfficerDetails />
+            </ProtectedRoute>
+          } />
+          
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<AdminProfile />} />
-          <Route path="register" element={<AdminRegister />} />
-          <Route path="create-admin" element={<AdminRegister />} />
-          <Route path="self-register" element={<AdminSelfRegister />} />
-          <Route path="registration-requests" element={<AdminRegistrationRequests />} />
-          <Route path="create-super-admin" element={<CreateSuperAdmin />} />
+          <Route path="documentation" element={<Documentation />} />
+          <Route path="help" element={<AdminHelp />} />
+          
+          {/* Admin Registration - requires Super Admin tier */}
+          <Route path="register" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.SUPER_ADMIN} showUnauthorized>
+              <AdminRegister />
+            </ProtectedRoute>
+          } />
+          {/* Unified User Management (Super Admin Only) */}
+          <Route path="self-register" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.SUPER_ADMIN} showUnauthorized>
+              <UserManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="registration-requests" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.SUPER_ADMIN} showUnauthorized>
+              <UserManagement />
+            </ProtectedRoute>
+          } />
+          
+          {/* Individual Admin Creation Forms */}
+          <Route path="create-admin" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.SUPER_ADMIN} showUnauthorized>
+              <AdminRegister />
+            </ProtectedRoute>
+          } />
+          <Route path="create-super-admin" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.SUPER_ADMIN} showUnauthorized>
+              <CreateSuperAdmin />
+            </ProtectedRoute>
+          } />
           
           {/* Mumbai BMC Specific Routes */}
           <Route path="bmc-ward-dashboard" element={<BMCWardDashboard />} />
-          <Route path="bmc-zone-management" element={<BMCZoneManagement />} />
+          <Route path="bmc-zone-management" element={
+            <ProtectedRoute minTier={ADMIN_TIERS.DEPT_ADMIN} showUnauthorized>
+              <BMCZoneManagement />
+            </ProtectedRoute>
+          } />
         </Route>
 
         {/* ===== PROTECTED OFFICER ROUTES ===== */}
         <Route path="/officer" element={
-          <RoleBasedRoute requiredRoles={[USER_ROLES.DEPARTMENT_STAFF]}>
+          <ProtectedRoute requiredRole="ADMIN" minTier={ADMIN_TIERS.WARD_ADMIN}>
             <AdminLayout />
-          </RoleBasedRoute>
+          </ProtectedRoute>
         }>
           <Route path="dashboard" element={<BMCOfficerDashboard />} />
         </Route>
 
         {/* ===== PROTECTED CITIZEN ROUTES ===== */}
         <Route path="/dashboard" element={
-          <CitizenLayout />
+          <ProtectedRoute>
+            <CitizenLayout />
+          </ProtectedRoute>
         }>
           <Route index element={<CitizenDashboard />} />
           <Route path="report" element={<ReportIssue />} />
@@ -214,6 +288,9 @@ const AppRouter = () => {
           <Route path="map" element={<CitizenMapView />} />
           <Route path="notifications" element={<NotificationsCenter />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="help" element={<Help />} />
+          <Route path="emergency" element={<Emergency />} />
+          <Route path="ward-info" element={<WardInfo />} />
           
           {/* Mumbai Ward Services for Citizens */}
           <Route path="mumbai-ward-services" element={<MumbaiWardServices />} />

@@ -6,6 +6,7 @@ import {
   FiSearch, FiFilter, FiMapPin, FiCalendar, 
   FiEye, FiClock, FiCheckCircle, FiAlertCircle 
 } from 'react-icons/fi'
+import { FileText, TrendingUp, AlertCircle } from 'lucide-react'
 import { COMPLAINT_STATUS, COMPLAINT_CATEGORIES } from '../../utils/constants'
 
 const MyComplaints = () => {
@@ -105,23 +106,44 @@ const MyComplaints = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Complaints</h1>
-          <p className="text-gray-600 mt-1">Track and manage your reported issues</p>
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
         </div>
-        <Link
-          to="/dashboard/report"
-          className="bg-civic-blue-600 hover:bg-civic-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          + Report New Issue
-        </Link>
+        <div className="relative z-10">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <FileText className="h-7 w-7" />
+              </div>
+              <h1 className="text-4xl font-bold">My Complaints</h1>
+            </div>
+            <p className="text-blue-100 text-lg ml-1">Track and manage your reported issues</p>
+            <div className="flex items-center gap-2 mt-3 ml-1 text-sm bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg inline-flex">
+              <TrendingUp className="h-4 w-4" />
+              <span>{complaints.length} Total Issues</span>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/report"
+            className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+          >
+            <span className="text-xl">+</span>
+            <span>Report New Issue</span>
+          </Link>
+        </div>
+        </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <FiFilter className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-bold text-gray-900">Filters & Search</h3>
+        </div>
         <div className="grid md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
@@ -131,7 +153,7 @@ const MyComplaints = () => {
               placeholder="Search by ID or keyword..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue-500 focus:border-civic-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             />
           </div>
 
@@ -141,7 +163,7 @@ const MyComplaints = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue-500 focus:border-civic-blue-500 appearance-none"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 appearance-none bg-white"
             >
               <option value="ALL">All Status</option>
               {COMPLAINT_STATUS.map(status => (
@@ -157,7 +179,7 @@ const MyComplaints = () => {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue-500 focus:border-civic-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 bg-white"
             >
               <option value="ALL">All Categories</option>
               {COMPLAINT_CATEGORIES.map(category => (
@@ -172,13 +194,13 @@ const MyComplaints = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setStatusFilter('PENDING')}
-              className="px-3 py-2 text-sm bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors"
+              className="px-4 py-2 text-sm font-medium bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-all border border-yellow-200 hover:shadow-md"
             >
               Pending
             </button>
             <button
               onClick={() => setStatusFilter('IN_PROGRESS')}
-              className="px-3 py-2 text-sm bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors"
+              className="px-4 py-2 text-sm font-medium bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all border border-blue-200 hover:shadow-md"
             >
               Active
             </button>
@@ -188,11 +210,14 @@ const MyComplaints = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="text-red-800 font-semibold">Error Loading Complaints</h3>
-          <p className="text-red-700 text-sm mt-1">
-            {error.message || 'Failed to load complaints. Please try refreshing the page.'}
-          </p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="text-red-800 font-bold text-sm">Error Loading Complaints</h3>
+            <p className="text-red-700 text-sm mt-1">
+              {error.message || 'Failed to load complaints. Please try refreshing the page.'}
+            </p>
+          </div>
         </div>
       )}
 
@@ -216,19 +241,19 @@ const MyComplaints = () => {
             ))}
           </div>
         ) : complaints.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <FiMapPin className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No complaints found</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">No complaints found</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               {searchTerm || statusFilter !== 'ALL' || categoryFilter !== 'ALL' 
                 ? 'Try adjusting your filters or search terms.'
                 : "You haven't reported any issues yet."}
             </p>
             <Link
               to="/dashboard/report"
-              className="inline-flex items-center px-6 py-3 bg-civic-blue-600 text-white rounded-lg hover:bg-civic-blue-700 font-semibold"
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
             >
               <FiMapPin className="w-5 h-5 mr-2" />
               Report Your First Issue
@@ -243,7 +268,7 @@ const MyComplaints = () => {
             return (
               <div
                 key={complaint.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                className="bg-white rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-200 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
                 onClick={() => navigate(`/dashboard/complaints/${complaint.id}`)}
               >
                 <div className="p-6">

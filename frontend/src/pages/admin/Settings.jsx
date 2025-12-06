@@ -78,44 +78,68 @@ const Settings = () => {
   // Department Admins and Officers should use Profile page
   if (!userIsSuperAdmin) {
     return (
-      <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <ShieldExclamationIcon className="mx-auto h-16 w-16 text-amber-500" />
-          <h2 className="mt-4 text-xl font-bold text-gray-900">System Settings</h2>
-          <p className="mt-2 text-gray-600">
-            System Settings are only accessible to Super Admins.
-          </p>
-          <p className="mt-4 text-sm text-gray-500">
-            Use the <strong>My Profile</strong> page to manage your personal preferences and notifications.
-          </p>
-          <a 
-            href="/admin/profile" 
-            className="mt-6 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go to My Profile
-          </a>
+      <div className="min-h-96 flex items-center justify-center p-8">
+        <div className="max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
+            <div className="mx-auto h-20 w-20 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full flex items-center justify-center mb-6">
+              <ShieldExclamationIcon className="h-12 w-12 text-amber-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">System Settings</h2>
+            <p className="text-gray-600 mb-2">
+              System Settings are only accessible to Super Admins.
+            </p>
+            <p className="text-sm text-gray-500 mb-8">
+              Use the <strong>My Profile</strong> page to manage your personal preferences and notifications.
+            </p>
+            <a 
+              href="/admin/profile" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <Users className="h-5 w-5" />
+              <span>Go to My Profile</span>
+            </a>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center">
-        <Cog6ToothIcon className="h-8 w-8 text-gray-600 mr-3" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Manage your account and system preferences</p>
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="settings-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#settings-grid)" />
+          </svg>
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <Cog6ToothIcon className="h-9 w-9" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Settings</h1>
+              <p className="text-purple-100 text-lg">Manage your account and system preferences</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Super Admin Settings */}
       {userIsSuperAdmin && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex items-center mb-6">
-            <ShieldCheckIcon className="h-6 w-6 text-purple-600 mr-3" />
-            <h2 className="text-xl font-semibold text-gray-900">System Administration</h2>
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">System Administration</h2>
           </div>
           
           <div className="space-y-4">
@@ -150,10 +174,12 @@ const Settings = () => {
 
       {/* Department Settings - Super Admin Only (city-wide) */}
       {userIsSuperAdmin && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex items-center mb-6">
-            <BuildingOffice2Icon className="h-6 w-6 text-blue-600 mr-3" />
-            <h2 className="text-xl font-semibold text-gray-900">All Departments Settings</h2>
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Building2 className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">All Departments Settings</h2>
           </div>
           
           <div className="space-y-4">
@@ -187,25 +213,27 @@ const Settings = () => {
       )}
 
       {/* User Preferences (All Roles) */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center mb-6">
-          <UserGroupIcon className="h-6 w-6 text-green-600 mr-3" />
-          <h2 className="text-xl font-semibold text-gray-900">User Preferences</h2>
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-shadow duration-300">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Users className="h-6 w-6 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">User Preferences</h2>
         </div>
         
         <div className="space-y-4">
           <div className="border-t pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Theme</label>
             <select
               value={theme}
               onChange={(e) => handleSettingChange('theme', e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             >
               <option value={THEMES.LIGHT}>Light</option>
               <option value={THEMES.DARK}>Dark</option>
               <option value={THEMES.SYSTEM}>Auto (System)</option>
             </select>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500">
               {theme === THEMES.SYSTEM 
                 ? `Using system theme (${window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light'})`
                 : `Using ${theme} theme`}
@@ -213,11 +241,11 @@ const Settings = () => {
           </div>
           
           <div className="border-t pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Language</label>
             <select
               value={language}
               onChange={(e) => handleSettingChange('language', e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
             >
               {APP_LANGUAGES.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -225,7 +253,7 @@ const Settings = () => {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500">
               Current language: {APP_LANGUAGES.find(l => l.code === language)?.name || 'English'}
             </p>
           </div>
@@ -237,19 +265,22 @@ const Settings = () => {
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          {isSaving ? 'Saving...' : 'Save Settings'}
+          <Save className="h-5 w-5" />
+          <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
         </button>
       </div>
 
       {/* Role Information */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start">
-          <ShieldCheckIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium">Your Role: {userIsSuperAdmin ? 'Super Admin' : userIsAdmin ? 'Department Admin' : 'Officer'}</p>
-            <p className="mt-1">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300">
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+            <CheckCircle className="h-7 w-7 text-white" />
+          </div>
+          <div className="text-sm">
+            <p className="font-bold text-gray-900 text-lg mb-2">Your Role: {userIsSuperAdmin ? 'Super Admin' : userIsAdmin ? 'Department Admin' : 'Officer'}</p>
+            <p className="text-gray-600">
               {userIsSuperAdmin 
                 ? 'You have access to all system settings and can manage the entire platform.'
                 : userIsAdmin

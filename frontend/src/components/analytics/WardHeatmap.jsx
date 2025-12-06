@@ -54,6 +54,11 @@ const WardHeatmap = ({ data }) => {
 
   // Calendar Heatmap View
   const CalendarHeatmap = () => {
+    // Guard against undefined dates
+    if (!dates || !Array.isArray(dates)) {
+      return <div className="text-slate-600">No date data available</div>;
+    }
+    
     // Show every 3rd date to avoid crowding
     const displayDates = dates.filter((_, i) => i % 3 === 0);
 

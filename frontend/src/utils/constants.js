@@ -116,15 +116,15 @@ export const COMPLAINT_CATEGORY_CHOICES = {
 
 // Rich category data for UI components
 export const COMPLAINT_CATEGORIES = [
-  { value: 'POTHOLE', label: 'Pothole', department: 'ROADS', icon: '🕳️' },
+  { value: 'POTHOLE', label: 'Pothole', department: 'ROADS_MAINTENANCE', icon: '🕳️' },
   { value: 'STREETLIGHT', label: 'Street Light', department: 'STREETLIGHTS', icon: '💡' },
   { value: 'GARBAGE', label: 'Garbage/Waste', department: 'SOLID_WASTE', icon: '🗑️' },
   { value: 'WATER', label: 'Water Supply', department: 'WATER_SUPPLY', icon: '💧' },
-  { value: 'SEWAGE', label: 'Sewage', department: 'SEWAGE', icon: '🌊' },
-  { value: 'ROAD_DAMAGE', label: 'Road Damage', department: 'ROADS', icon: '🚧' },
-  { value: 'TRAFFIC_SIGNAL', label: 'Traffic Signal', department: 'ROADS', icon: '🚦' },
+  { value: 'SEWAGE', label: 'Sewage', department: 'SEWERAGE', icon: '🌊' },
+  { value: 'ROAD_DAMAGE', label: 'Road Damage', department: 'ROADS_MAINTENANCE', icon: '🚧' },
+  { value: 'TRAFFIC_SIGNAL', label: 'Traffic Signal', department: 'TRAFFIC', icon: '🚦' },
   { value: 'PARK', label: 'Park/Recreation', department: 'GARDENS', icon: '🌳' },
-  { value: 'NOISE', label: 'Noise Pollution', department: 'OTHER', icon: '🔊' },
+  { value: 'NOISE', label: 'Noise Pollution', department: 'LICENSE', icon: '🔊' },
   { value: 'OTHER', label: 'Other', department: 'OTHER', icon: '📋' }
 ]
 
@@ -1172,5 +1172,391 @@ export const MODULE_IMPLEMENTATION_STATUS = {
       'Add comprehensive audit logging'
     ]
   }
+}
+
+// ============================================================================
+// MULTI-LANGUAGE SUPPORT (English, Marathi, Hindi)
+// ============================================================================
+
+export const LANGUAGE_OPTIONS = [
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', flag: '🇮🇳' },
+]
+
+// English translations
+export const TRANSLATIONS_EN = {
+  // Common
+  common: {
+    appName: 'CivicConnect',
+    dashboard: 'Dashboard',
+    logout: 'Logout',
+    loading: 'Loading...',
+    error: 'Error',
+    success: 'Success',
+    cancel: 'Cancel',
+    submit: 'Submit',
+    back: 'Back',
+    delete: 'Delete',
+    edit: 'Edit',
+    add: 'Add',
+    save: 'Save',
+    search: 'Search',
+    filter: 'Filter',
+    clear: 'Clear',
+    download: 'Download',
+    export: 'Export',
+    import: 'Import',
+  },
+  // Citizen Module
+  citizen: {
+    reportIssue: 'Report Issue',
+    trackComplaint: 'Track Complaint',
+    myComplaints: 'My Complaints',
+    complaintHistory: 'Complaint History',
+    publicDashboard: 'Public Dashboard',
+    feedbackSystem: 'Feedback & Rating',
+    selectCategory: 'Select Category',
+    selectSubcategory: 'Select Subcategory',
+    uploadPhoto: 'Upload Photo',
+    selectLocation: 'Select Location',
+    description: 'Description',
+    complaintID: 'Complaint ID',
+    status: 'Status',
+    resolution: 'Resolution',
+    submitted: 'Submitted',
+    pending: 'Pending',
+    inProgress: 'In Progress',
+    resolved: 'Resolved',
+    verified: 'Verified',
+  },
+  // Ward Admin Module
+  wardAdmin: {
+    wardDashboard: 'Ward Dashboard',
+    assignComplaint: 'Assign Complaint',
+    monitorSLA: 'Monitor SLA',
+    officerManagement: 'Officer Management',
+    verifyResolution: 'Verify Resolution',
+    wardAnalytics: 'Ward Analytics',
+    assignedOfficer: 'Assigned Officer',
+    dueDate: 'Due Date',
+    overdue: 'Overdue',
+  },
+  // Department Admin Module
+  deptAdmin: {
+    departmentDashboard: 'Department Dashboard',
+    complaintControl: 'Complaint Control',
+    resourcePlanning: 'Resource Planning',
+    departmentAnalytics: 'Department Analytics',
+    citywideCoverage: 'City-wide Coverage',
+    allocateResources: 'Allocate Resources',
+  },
+  // Super Admin Module
+  superAdmin: {
+    commandCenter: 'Command Center',
+    systemControl: 'System Control',
+    cityMonitoring: 'City Monitoring',
+    governanceReports: 'Governance Reports',
+    auditLogs: 'Audit Logs',
+    heatmap: 'Heatmap',
+    wardManagement: 'Ward Management',
+    escalationHandling: 'Escalation Handling',
+  },
+  // Analytics
+  analytics: {
+    analyticsTitle: 'Analytics Dashboard',
+    complaintsByCategory: 'Complaints by Category',
+    resolutionTime: 'Average Resolution Time',
+    slaAdherence: 'SLA Adherence',
+    departmentPerformance: 'Department Performance',
+    wardPerformance: 'Ward Performance',
+    complaintTrends: 'Complaint Trends',
+    monthlyReport: 'Monthly Report',
+    weeklyReport: 'Weekly Report',
+    dailyReport: 'Daily Report',
+    totalComplaints: 'Total Complaints',
+    resolvedComplaints: 'Resolved Complaints',
+    pendingComplaints: 'Pending Complaints',
+    averageResolutionDays: 'Average Resolution (Days)',
+  },
+}
+
+// Marathi translations
+export const TRANSLATIONS_MR = {
+  // Common
+  common: {
+    appName: 'सिविकConnectConnect',
+    dashboard: 'डैशबोर्ड',
+    logout: 'बाहेर पडा',
+    loading: 'लोड होत आहे...',
+    error: 'त्रुटी',
+    success: 'यशस्वी',
+    cancel: 'रद्द करा',
+    submit: 'सबमिट करा',
+    back: 'मागे',
+    delete: 'हटवा',
+    edit: 'संपादित करा',
+    add: 'जोडा',
+    save: 'जतन करा',
+    search: 'शोध',
+    filter: 'फिल्टर',
+    clear: 'क्लियर करा',
+    download: 'डाउनलोड',
+    export: 'निर्यात करा',
+    import: 'आयात करा',
+  },
+  // Citizen Module
+  citizen: {
+    reportIssue: 'समस्या अहवाल करा',
+    trackComplaint: 'तक्रार ट्रॅक करा',
+    myComplaints: 'माझी तक्रारी',
+    complaintHistory: 'तक्रारीचा इतिहास',
+    publicDashboard: 'सार्वजनिक डैशबोर्ड',
+    feedbackSystem: 'प्रतिक्रिया व रेटिंग',
+    selectCategory: 'श्रेणी निवडा',
+    selectSubcategory: 'उप-श्रेणी निवडा',
+    uploadPhoto: 'फोटो अपलोड करा',
+    selectLocation: 'स्थान निवडा',
+    description: 'वर्णन',
+    complaintID: 'तक्रार आयडी',
+    status: 'स्थिति',
+    resolution: 'निराकरण',
+    submitted: 'सबमिट केले',
+    pending: 'प्रलंबित',
+    inProgress: 'प्रगतिमध्ये',
+    resolved: 'सुटल्या',
+    verified: 'सत्यापित',
+  },
+  // Ward Admin Module
+  wardAdmin: {
+    wardDashboard: 'वॉर्ड डैशबोर्ड',
+    assignComplaint: 'तक्रार नियुक्त करा',
+    monitorSLA: 'SLA निरीक्षण करा',
+    officerManagement: 'अधिकारी व्यवस्थापन',
+    verifyResolution: 'निराकरण सत्यापित करा',
+    wardAnalytics: 'वॉर्ड विश्लेषण',
+    assignedOfficer: 'नियुक्त अधिकारी',
+    dueDate: 'अंतिम तारीख',
+    overdue: 'मुदतीमुंज',
+  },
+  // Department Admin Module
+  deptAdmin: {
+    departmentDashboard: 'विभाग डैशबोर्ड',
+    complaintControl: 'तक्रार नियंत्रण',
+    resourcePlanning: 'संसाधन नियोजन',
+    departmentAnalytics: 'विभाग विश्लेषण',
+    citywideCoverage: 'शहरव्यापी कव्हरेज',
+    allocateResources: 'संसाधन नियुक्त करा',
+  },
+  // Super Admin Module
+  superAdmin: {
+    commandCenter: 'कमांड सेंटर',
+    systemControl: 'सिस्टम नियंत्रण',
+    cityMonitoring: 'शहर निरीक्षण',
+    governanceReports: 'शासन अहवाल',
+    auditLogs: 'ऑडिट लॉग',
+    heatmap: 'हीटमॅप',
+    wardManagement: 'वॉर्ड व्यवस्थापन',
+    escalationHandling: 'वृद्धीकरण हँडलिंग',
+  },
+  // Analytics
+  analytics: {
+    analyticsTitle: 'विश्लेषण डैशबोर्ड',
+    complaintsByCategory: 'श्रेणी अनुसार तक्रारी',
+    resolutionTime: 'सरासरी निराकरण वेळ',
+    slaAdherence: 'SLA पालन',
+    departmentPerformance: 'विभाग कार्यप्रदर्शन',
+    wardPerformance: 'वॉर्ड कार्यप्रदर्शन',
+    complaintTrends: 'तक्रार ट्रेंड',
+    monthlyReport: 'मासिक अहवाल',
+    weeklyReport: 'साप्ताहिक अहवाल',
+    dailyReport: 'दैनिक अहवाल',
+    totalComplaints: 'एकूण तक्रारी',
+    resolvedComplaints: 'सुटलेली तक्रारी',
+    pendingComplaints: 'प्रलंबित तक्रारी',
+    averageResolutionDays: 'सरासरी निराकरण (दिवस)',
+  },
+}
+
+// Hindi translations
+export const TRANSLATIONS_HI = {
+  // Common
+  common: {
+    appName: 'सिविकConnect',
+    dashboard: 'डैशबोर्ड',
+    logout: 'लॉग आउट',
+    loading: 'लोड हो रहा है...',
+    error: 'त्रुटि',
+    success: 'सफल',
+    cancel: 'रद्द करें',
+    submit: 'जमा करें',
+    back: 'वापस',
+    delete: 'हटाएं',
+    edit: 'संपादित करें',
+    add: 'जोड़ें',
+    save: 'सहेजें',
+    search: 'खोज',
+    filter: 'फ़िल्टर',
+    clear: 'साफ करें',
+    download: 'डाउनलोड',
+    export: 'निर्यात',
+    import: 'आयात',
+  },
+  // Citizen Module
+  citizen: {
+    reportIssue: 'समस्या की रिपोर्ट करें',
+    trackComplaint: 'शिकायत ट्रैक करें',
+    myComplaints: 'मेरी शिकायतें',
+    complaintHistory: 'शिकायत इतिहास',
+    publicDashboard: 'सार्वजनिक डैशबोर्ड',
+    feedbackSystem: 'प्रतिक्रिया और रेटिंग',
+    selectCategory: 'श्रेणी चुनें',
+    selectSubcategory: 'उप-श्रेणी चुनें',
+    uploadPhoto: 'फोटो अपलोड करें',
+    selectLocation: 'स्थान चुनें',
+    description: 'विवरण',
+    complaintID: 'शिकायत आईडी',
+    status: 'स्थिति',
+    resolution: 'समाधान',
+    submitted: 'जमा किया गया',
+    pending: 'लंबित',
+    inProgress: 'प्रगति में',
+    resolved: 'हल किया गया',
+    verified: 'सत्यापित',
+  },
+  // Ward Admin Module
+  wardAdmin: {
+    wardDashboard: 'वार्ड डैशबोर्ड',
+    assignComplaint: 'शिकायत सौंपें',
+    monitorSLA: 'SLA की निगरानी करें',
+    officerManagement: 'अधिकारी प्रबंधन',
+    verifyResolution: 'समाधान सत्यापित करें',
+    wardAnalytics: 'वार्ड विश्लेषण',
+    assignedOfficer: 'नियुक्त अधिकारी',
+    dueDate: 'देय तारीख',
+    overdue: 'विलंबित',
+  },
+  // Department Admin Module
+  deptAdmin: {
+    departmentDashboard: 'विभाग डैशबोर्ड',
+    complaintControl: 'शिकायत नियंत्रण',
+    resourcePlanning: 'संसाधन योजना',
+    departmentAnalytics: 'विभाग विश्लेषण',
+    citywideCoverage: 'शहरव्यापी कवरेज',
+    allocateResources: 'संसाधन आवंटित करें',
+  },
+  // Super Admin Module
+  superAdmin: {
+    commandCenter: 'कमान केंद्र',
+    systemControl: 'सिस्टम नियंत्रण',
+    cityMonitoring: 'शहर निगरानी',
+    governanceReports: 'शासन रिपोर्ट',
+    auditLogs: 'ऑडिट लॉग',
+    heatmap: 'हीटमैप',
+    wardManagement: 'वार्ड प्रबंधन',
+    escalationHandling: 'एस्केलेशन हैंडलिंग',
+  },
+  // Analytics
+  analytics: {
+    analyticsTitle: 'विश्लेषण डैशबोर्ड',
+    complaintsByCategory: 'श्रेणी द्वारा शिकायतें',
+    resolutionTime: 'औसत समाधान समय',
+    slaAdherence: 'SLA अनुपालन',
+    departmentPerformance: 'विभाग प्रदर्शन',
+    wardPerformance: 'वार्ड प्रदर्शन',
+    complaintTrends: 'शिकायत प्रवृत्तियां',
+    monthlyReport: 'मासिक रिपोर्ट',
+    weeklyReport: 'साप्ताहिक रिपोर्ट',
+    dailyReport: 'दैनिक रिपोर्ट',
+    totalComplaints: 'कुल शिकायतें',
+    resolvedComplaints: 'समाधान की गई शिकायतें',
+    pendingComplaints: 'लंबित शिकायतें',
+    averageResolutionDays: 'औसत समाधान (दिन)',
+  },
+}
+
+/**
+ * Get translation for a specific key
+ * @param {String} language - Language code (en, mr, hi)
+ * @param {String} path - Dot notation path (e.g., 'citizen.reportIssue')
+ * @param {String} defaultValue - Fallback value if translation not found
+ * @returns {String} - Translated text
+ */
+export const getTranslation = (language, path, defaultValue = '') => {
+  const translations = {
+    en: TRANSLATIONS_EN,
+    mr: TRANSLATIONS_MR,
+    hi: TRANSLATIONS_HI,
+  }
+
+  const lang = translations[language] || translations.en
+  const keys = path.split('.')
+  let value = lang
+
+  for (const key of keys) {
+    value = value?.[key]
+  }
+
+  return value || defaultValue || path
+}
+
+// ============================================================================
+// ANALYTICS & REPORTING METRICS
+// ============================================================================
+
+export const ANALYTICS_METRICS = {
+  COMPLAINT_DISTRIBUTION: 'complaints_by_category',
+  RESOLUTION_TIME: 'average_resolution_time',
+  SLA_ADHERENCE: 'sla_adherence_percentage',
+  DEPARTMENT_PERFORMANCE: 'department_performance',
+  WARD_PERFORMANCE: 'ward_performance',
+  COMPLAINT_TRENDS: 'complaint_trends_over_time',
+  HOTSPOT_ANALYSIS: 'geographic_hotspot_analysis',
+  OFFICER_EFFICIENCY: 'officer_efficiency_metrics',
+  CITIZEN_SATISFACTION: 'citizen_satisfaction_rating',
+  PEAK_HOURS: 'complaint_peak_hours',
+}
+
+export const REPORT_TYPES = [
+  { value: 'daily', label: 'Daily Report', icon: '📅' },
+  { value: 'weekly', label: 'Weekly Report', icon: '📊' },
+  { value: 'monthly', label: 'Monthly Report', icon: '📈' },
+  { value: 'quarterly', label: 'Quarterly Report', icon: '📉' },
+  { value: 'annual', label: 'Annual Report', icon: '📋' },
+]
+
+export const CHART_TYPES = {
+  BAR: 'bar',
+  LINE: 'line',
+  PIE: 'pie',
+  AREA: 'area',
+  SCATTER: 'scatter',
+  HEATMAP: 'heatmap',
+}
+
+export const ANALYTICS_FILTERS = {
+  DATE_RANGE: 'date_range',
+  DEPARTMENT: 'department',
+  WARD: 'ward',
+  CATEGORY: 'category',
+  STATUS: 'status',
+  PRIORITY: 'priority',
+  OFFICER: 'officer',
+  ZONE: 'zone',
+}
+
+export const HEATMAP_CONFIG = {
+  minOpacity: 0.05,
+  maxZoom: 18,
+  minZoom: 10,
+  radius: 40,
+  blur: 15,
+  gradient: {
+    0.0: 'blue',
+    0.25: 'cyan',
+    0.5: 'lime',
+    0.75: 'yellow',
+    1.0: 'red',
+  },
 }
 

@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 
 const PublicLayout = () => {
   useEffect(() => {
-    console.log('===== PUBLICLAYOUT MOUNTED =====');
     // Any one-time initialization can go here
     return () => {
       // Cleanup if needed
